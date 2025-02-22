@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, MessageCircle, Settings, User } from "lucide-react";
+import { Home, MessageCircle, Settings } from "lucide-react";
+import Calendar from "@/components/Calendar";
 
 const Index = () => {
   return (
@@ -9,34 +9,14 @@ const Index = () => {
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 bg-card z-50 border-b">
         <div className="container py-4">
-          <h1 className="text-2xl font-bold">My App</h1>
+          <h1 className="text-2xl font-bold">Shift Rota</h1>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="container pt-20 pb-24">
         <div className="grid gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Welcome!</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                This is your new mobile app. Start exploring the features below.
-              </p>
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" className="h-24 flex flex-col gap-2">
-              <MessageCircle className="h-6 w-6" />
-              <span>Messages</span>
-            </Button>
-            <Button variant="outline" className="h-24 flex flex-col gap-2">
-              <User className="h-6 w-6" />
-              <span>Profile</span>
-            </Button>
-          </div>
+          <Calendar />
         </div>
       </main>
 
