@@ -1,35 +1,21 @@
+<lov-code>
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Banknote, Clock, CalendarDays, StickyNote, Search, Bell } from "lucide-react";
+import { ChevronLeft, ChevronRight, Banknote, Clock, CalendarDays, StickyNote, Search, Bell, Plus, Check } from "lucide-react";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, differenceInDays, startOfWeek, endOfWeek, addDays, setHours, setMinutes } from "date-fns";
 import { cn } from "@/lib/utils";
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 type ShiftType = {
   name: string;
   color: string;
   gradient: string;
 };
-
-const shiftTypes: ShiftType[] = [
-  {
-    name: "Day",
-    color: "#8B5CF6",
-    gradient: "linear-gradient(135deg, #8B5CF6 0%, #9F75FF 100%)"
-  },
-  {
-    name: "Night",
-    color: "#0EA5E9",
-    gradient: "linear-gradient(135deg, #0EA5E9 0%, #38BDF8 100%)"
-  },
-  {
-    name: "OT",
-    color: "#F97316",
-    gradient: "linear-gradient(135deg, #F97316 0%, #FB923C 100%)"
-  }
-];
 
 type ShiftAssignment = {
   date: string;
@@ -43,9 +29,13 @@ type PaydaySettings = {
 };
 
 type ShiftPattern = {
+  id: string;
+  name: string;
+  color: string;
   shiftType: ShiftType;
   daysOn: number;
   daysOff: number;
+  startDate?: Date;
 };
 
 type Note = {
@@ -72,6 +62,24 @@ type Alarm = {
   enabled: boolean;
 };
 
+const shiftTypes: ShiftType[] = [
+  {
+    name: "Day",
+    color: "#8B5CF6",
+    gradient: "linear-gradient(135deg, #8B5CF6 0%, #9F75FF 100%)"
+  },
+  {
+    name: "Night",
+    color: "#0EA5E9",
+    gradient: "linear-gradient(135deg, #0EA5E9 0%, #38BDF8 100%)"
+  },
+  {
+    name: "OT",
+    color: "#F97316",
+    gradient: "linear-gradient(135deg, #F97316 0%, #FB923C 100%)"
+  }
+];
+
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedShiftType, setSelectedShiftType] = useState<ShiftType>(shiftTypes[0]);
@@ -83,6 +91,9 @@ const Calendar = () => {
     symbol: "£"
   });
   const [pattern, setPattern] = useState<ShiftPattern>({
+    id: 'default',
+    name: 'Default',
+    color: '#CCCCCC',
     shiftType: shiftTypes[0],
     daysOn: 3,
     daysOff: 3
@@ -91,6 +102,18 @@ const Calendar = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [alarms, setAlarms] = useState<Alarm[]>([]);
+
+  const [patterns, setPatterns] = useState<ShiftPattern[]>(() => {
+    const savedPatterns = localStorage.getItem('shiftPatterns');
+    return savedPatterns ? JSON.parse(savedPatterns) : [];
+  });
+  const [showPatternDialog, setShowPatternDialog] = useState(false);
+  const [newPattern, setNewPattern] = useState<Partial<ShiftPattern>>({});
+  const [highlightedPattern, setHighlightedPattern] = useState<string | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem('shiftPatterns', JSON.stringify(patterns));
+  }, [patterns]);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -351,9 +374,10 @@ const Calendar = () => {
     return shifts.find(shift => shift.date === date.toISOString());
   };
 
-  const applyPattern = (startDate: Date) => {
+  const applyPattern = (pattern: ShiftPattern) => {
     const totalDays = pattern.daysOn + pattern.daysOff;
     const cycleLength = 90;
+    const startDate = pattern.startDate || new Date();
     const dateRange = eachDayOfInterval({
       start: startDate,
       end: addDays(startDate, cycleLength)
@@ -398,6 +422,9 @@ const Calendar = () => {
     }
 
     setPattern({
+      id: 'default',
+      name: 'Default',
+      color: '#CCCCCC',
       shiftType: selectedShiftType,
       daysOn: daysOnNum,
       daysOff: daysOffNum
@@ -405,7 +432,7 @@ const Calendar = () => {
 
     const shouldApply = window.confirm(`Apply pattern: ${daysOnNum} days on, ${daysOffNum} days off with ${selectedShiftType.name} shifts?`);
     if (shouldApply) {
-      applyPattern(new Date());
+      applyPattern(pattern);
     }
   };
 
@@ -517,6 +544,45 @@ const Calendar = () => {
       }));
   };
 
+  const handleAddPattern = () => {
+    if (!newPattern.name || !newPattern.color || !newPattern.daysOn || !newPattern.daysOff) {
+      alert('Please fill in all fields');
+      return;
+    }
+
+    const pattern: ShiftPattern = {
+      id: Date.now().toString(),
+      name: newPattern.name,
+      color: newPattern.color,
+      shiftType: selectedShiftType,
+      daysOn: Number(newPattern.daysOn),
+      daysOff: Number(newPattern.daysOff),
+      startDate: new Date()
+    };
+
+    setPatterns([...patterns, pattern]);
+    setShowPatternDialog(false);
+    setNewPattern({});
+  };
+
+  const getNextFreeDayForPattern = (pattern: ShiftPattern) => {
+    if (!pattern.startDate) return null;
+    const today = new Date();
+    let currentDate = today;
+    const totalDays = pattern.daysOn + pattern.daysOff;
+    
+    for (let i = 0; i < 90; i++) {
+      const daysSinceStart = differenceInDays(currentDate, pattern.startDate);
+      const dayInCycle = daysSinceStart % totalDays;
+      
+      if (dayInCycle >= pattern.daysOn && currentDate >= today) {
+        return currentDate;
+      }
+      currentDate = addDays(currentDate, 1);
+    }
+    return null;
+  };
+
   return (
     <Card className="p-4 w-full max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -611,6 +677,57 @@ const Calendar = () => {
             ))}
           </div>
         )}
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-4">
+        {patterns.map((pattern) => (
+          <TooltipProvider key={pattern.id}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "relative",
+                    highlightedPattern === pattern.id && "ring-2 ring-primary"
+                  )}
+                  style={{
+                    backgroundColor: pattern.color,
+                    color: "white"
+                  }}
+                  onClick={() => setHighlightedPattern(
+                    highlightedPattern === pattern.id ? null : pattern.id
+                  )}
+                >
+                  {pattern.name}
+                  {highlightedPattern === pattern.id && (
+                    <div className="absolute -top-2 -right-2">
+                      <Check className="h-4 w-4" />
+                    </div>
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{pattern.name}: {pattern.daysOn} on, {pattern.daysOff} off</p>
+                {highlightedPattern === pattern.id && (
+                  <p>
+                    Next free day:{' '}
+                    {getNextFreeDayForPattern(pattern)
+                      ? format(getNextFreeDayForPattern(pattern)!, 'MMM d')
+                      : 'N/A'}
+                  </p>
+                )}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ))}
+        <Button
+          variant="outline"
+          onClick={() => setShowPatternDialog(true)}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Add Pattern
+        </Button>
       </div>
 
       <div className="grid grid-cols-4 gap-2 mb-4">
@@ -758,8 +875,37 @@ const Calendar = () => {
           </div>
         ))}
       </div>
-    </Card>
-  );
-};
 
-export default Calendar;
+      <Dialog open={showPatternDialog} onOpenChange={setShowPatternDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Shift Pattern</DialogTitle>
+            <DialogDescription>
+              Set up a new named shift pattern with custom colors.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="name"
+                className="col-span-3"
+                value={newPattern.name || ''}
+                onChange={(e) => setNewPattern({ ...newPattern, name: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="color" className="text-right">
+                Color
+              </Label>
+              <Input
+                id="color"
+                type="color"
+                className="col-span-3"
+                value={newPattern.color || '#000000'}
+                onChange={(e) => setNewPattern({ ...newPattern, color: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-
