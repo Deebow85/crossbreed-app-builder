@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +23,7 @@ interface AppSettings {
   };
   paydayDate: number;
   calendarSize: 'default' | 'large';
+  calendarNumberLayout: 'default' | 'large';
 }
 
 const defaultSettings: AppSettings = {
@@ -32,7 +32,8 @@ const defaultSettings: AppSettings = {
     position: 'before'
   },
   paydayDate: 25,
-  calendarSize: 'default'
+  calendarSize: 'default',
+  calendarNumberLayout: 'default'
 };
 
 const Settings = () => {
@@ -84,6 +85,13 @@ const Settings = () => {
     }
   };
 
+  const updateCalendarNumberLayout = (layout: 'default' | 'large') => {
+    saveSettings({
+      ...settings,
+      calendarNumberLayout: layout
+    });
+  };
+
   return (
     <div className="h-dvh flex flex-col p-2 sm:p-4">
       <div className="flex justify-between items-center mb-2 relative">
@@ -102,28 +110,55 @@ const Settings = () => {
       <Card className="flex-1 overflow-auto mb-20">
         <div className="p-2 sm:p-4 space-y-3">
           <div className="grid gap-3 md:grid-cols-2">
-            <div className="space-y-1.5">
-              <h2 className="text-sm font-semibold flex items-center gap-1.5">
-                <CalendarDays className="h-3.5 w-3.5" />
-                Calendar Size
-              </h2>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  className="h-8"
-                  variant={settings.calendarSize === 'default' ? 'default' : 'outline'}
-                  onClick={() => updateCalendarSize('default')}
-                >
-                  Default
-                </Button>
-                <Button
-                  size="sm"
-                  className="h-8"
-                  variant={settings.calendarSize === 'large' ? 'default' : 'outline'}
-                  onClick={() => updateCalendarSize('large')}
-                >
-                  Large
-                </Button>
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <h2 className="text-sm font-semibold flex items-center gap-1.5">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  Calendar Size
+                </h2>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="h-8"
+                    variant={settings.calendarSize === 'default' ? 'default' : 'outline'}
+                    onClick={() => updateCalendarSize('default')}
+                  >
+                    Default
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-8"
+                    variant={settings.calendarSize === 'large' ? 'default' : 'outline'}
+                    onClick={() => updateCalendarSize('large')}
+                  >
+                    Large
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <h2 className="text-sm font-semibold flex items-center gap-1.5">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  Calendar Number Layout
+                </h2>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="h-8"
+                    variant={settings.calendarNumberLayout === 'default' ? 'default' : 'outline'}
+                    onClick={() => updateCalendarNumberLayout('default')}
+                  >
+                    Default
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-8"
+                    variant={settings.calendarNumberLayout === 'large' ? 'default' : 'outline'}
+                    onClick={() => updateCalendarNumberLayout('large')}
+                  >
+                    Large
+                  </Button>
+                </div>
               </div>
             </div>
 
