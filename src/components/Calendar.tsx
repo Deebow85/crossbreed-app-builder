@@ -174,7 +174,7 @@ const Calendar = () => {
           totalDaysInCycle
         });
         
-        const numberOfCyclesToGenerate = 6;
+        const numberOfCyclesToGenerate = 15;
         const totalDaysToGenerate = totalDaysInCycle * numberOfCyclesToGenerate;
         
         let currentDay = 0;
