@@ -304,15 +304,17 @@ const Calendar = () => {
                   </Tooltip>
                 </TooltipProvider>
 
-                <TooltipProvider className="-mt-1">
-                  <Tooltip>
-                    <TooltipTrigger className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      <span>{totalOvertimeHours} hours overtime</span>
-                    </TooltipTrigger>
-                    <TooltipContent>Total overtime hours this pay period</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <div className="-mt-1">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                        <Clock className="h-4 w-4" />
+                        <span>{totalOvertimeHours} hours overtime</span>
+                      </TooltipTrigger>
+                      <TooltipContent>Total overtime hours this pay period</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               </div>
             </div>
           </div>
