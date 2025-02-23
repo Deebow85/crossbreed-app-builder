@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -173,15 +172,6 @@ const Calendar = () => {
         const daysPerYear = 365.25;
         const totalDaysNeeded = Math.ceil(daysPerYear * yearsToGenerate);
         
-        console.log('Pattern metrics:', {
-          sequenceDays,
-          daysOffAfter: pattern.daysOffAfter,
-          totalSequenceDays,
-          repeatTimes: pattern.repeatTimes,
-          yearsToGenerate,
-          totalDaysNeeded
-        });
-        
         // Generate shifts for each day up to totalDaysNeeded
         for (let currentDay = 0; currentDay < totalDaysNeeded; currentDay++) {
           const dayInPattern = currentDay % totalSequenceDays;
@@ -200,13 +190,6 @@ const Calendar = () => {
                 dayInSequence < daysAccumulated + sequence.days) {
               if (sequence.shiftType && !sequence.isOff) {
                 const shiftDate = addDays(startDate, currentDay);
-                console.log('Adding shift:', {
-                  day: currentDay,
-                  dayInPattern,
-                  currentRepetition,
-                  date: shiftDate.toISOString(),
-                  type: sequence.shiftType.name
-                });
                 
                 newShifts.push({
                   date: shiftDate.toISOString(),
@@ -222,14 +205,6 @@ const Calendar = () => {
             daysAccumulated += sequence.days;
           }
         }
-        
-        console.log('Pattern summary:', {
-          totalShifts: newShifts.length,
-          totalDays: totalDaysNeeded,
-          yearsGenerated: yearsToGenerate,
-          firstShift: newShifts[0]?.date,
-          lastShift: newShifts[newShifts.length - 1]?.date
-        });
         
         setShifts(prevShifts => {
           const patternEndDate = addDays(startDate, totalDaysNeeded);
