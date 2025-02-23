@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Banknote, Clock } from "lucide-react";
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, differenceInDays, startOfWeek, endOfWeek } from "date-fns";
+import { ChevronLeft, ChevronRight, Banknote, Clock, CalendarDays } from "lucide-react";
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, differenceInDays, startOfWeek, endOfWeek, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
 
 type ShiftType = {
@@ -41,6 +40,12 @@ type PaydaySettings = {
   symbol: string;
 };
 
+type ShiftPattern = {
+  shiftType: ShiftType;
+  daysOn: number;
+  daysOff: number;
+};
+
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedShiftType, setSelectedShiftType] = useState<ShiftType>(shiftTypes[0]);
@@ -50,6 +55,11 @@ const Calendar = () => {
   const [paydaySettings, setPaydaySettings] = useState<PaydaySettings>({
     date: 25,
     symbol: "£"
+  });
+  const [pattern, setPattern] = useState<ShiftPattern>({
+    shiftType: shiftTypes[0],
+    daysOn: 3,
+    daysOff: 3
   });
 
   const monthStart = startOfMonth(currentDate);
@@ -106,9 +116,8 @@ const Calendar = () => {
       const existingShift = shifts.find(s => s.date === dateStr);
       if (existingShift) {
         if (existingShift.shiftType.name === "OT") {
-          // If it's an OT shift, prompt for hours
           const hours = window.prompt("Enter OT hours:", existingShift.otHours?.toString() || "0");
-          if (hours === null) return; // User cancelled
+          if (hours === null) return;
           
           const otHours = parseFloat(hours);
           if (isNaN(otHours) || otHours < 0) {
@@ -130,9 +139,8 @@ const Calendar = () => {
         }
       } else {
         if (selectedShiftType.name === "OT") {
-          // If assigning an OT shift, prompt for hours
           const hours = window.prompt("Enter OT hours:", "0");
-          if (hours === null) return; // User cancelled
+          if (hours === null) return;
           
           const otHours = parseFloat(hours);
           if (isNaN(otHours) || otHours < 0) {
@@ -172,7 +180,7 @@ const Calendar = () => {
         if (hours === null) {
           setIsSelecting(false);
           setSelectionStart(null);
-          return; // User cancelled
+          return;
         }
         
         otHours = parseFloat(hours);
@@ -209,6 +217,64 @@ const Calendar = () => {
 
   const getShiftForDate = (date: Date) => {
     return shifts.find(shift => shift.date === date.toISOString());
+  };
+
+  const applyPattern = (startDate: Date) => {
+    const totalDays = pattern.daysOn + pattern.daysOff;
+    const cycleLength = 90;
+    const dateRange = eachDayOfInterval({
+      start: startDate,
+      end: addDays(startDate, cycleLength)
+    });
+
+    const newShifts = dateRange.map((date, index) => {
+      const dayInCycle = index % totalDays;
+      if (dayInCycle < pattern.daysOn) {
+        return {
+          date: date.toISOString(),
+          shiftType: pattern.shiftType
+        };
+      }
+      return null;
+    }).filter((shift): shift is ShiftAssignment => shift !== null);
+
+    const existingShifts = shifts.filter(shift => {
+      const shiftDate = new Date(shift.date);
+      return shiftDate < startDate || shiftDate > addDays(startDate, cycleLength);
+    });
+
+    setShifts([...existingShifts, ...newShifts]);
+  };
+
+  const handlePatternInput = () => {
+    const daysOn = window.prompt("Enter number of days ON:", pattern.daysOn.toString());
+    if (!daysOn) return;
+    
+    const daysOnNum = parseInt(daysOn);
+    if (isNaN(daysOnNum) || daysOnNum < 1) {
+      alert("Please enter a valid number of days (minimum 1)");
+      return;
+    }
+
+    const daysOff = window.prompt("Enter number of days OFF:", pattern.daysOff.toString());
+    if (!daysOff) return;
+    
+    const daysOffNum = parseInt(daysOff);
+    if (isNaN(daysOffNum) || daysOffNum < 1) {
+      alert("Please enter a valid number of days (minimum 1)");
+      return;
+    }
+
+    setPattern({
+      shiftType: selectedShiftType,
+      daysOn: daysOnNum,
+      daysOff: daysOffNum
+    });
+
+    const shouldApply = window.confirm(`Apply pattern: ${daysOnNum} days on, ${daysOffNum} days off with ${selectedShiftType.name} shifts?`);
+    if (shouldApply) {
+      applyPattern(new Date());
+    }
   };
 
   return (
@@ -251,7 +317,7 @@ const Calendar = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 mb-4">
+      <div className="grid grid-cols-4 gap-2 mb-4">
         {shiftTypes.map((type) => (
           <Button
             key={type.name}
@@ -269,6 +335,14 @@ const Calendar = () => {
             {type.name}
           </Button>
         ))}
+        <Button
+          variant="outline"
+          className="col-span-4 mt-2 bg-primary text-primary-foreground hover:bg-primary/90"
+          onClick={handlePatternInput}
+        >
+          <CalendarDays className="mr-2 h-4 w-4" />
+          Set Pattern ({pattern.daysOn} on, {pattern.daysOff} off)
+        </Button>
       </div>
 
       <div className="grid grid-cols-7 gap-1 mb-2">
