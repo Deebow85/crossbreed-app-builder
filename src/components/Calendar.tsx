@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -25,29 +26,6 @@ import {
   ShiftType, ShiftAssignment, PaydaySettings, ShiftPattern,
   Note, ShiftSwap, Alarm, PatternCycle
 } from "@/types/calendar";
-
-const shiftTypes: ShiftType[] = [
-  {
-    name: "Day",
-    color: "#4CAF50",
-    gradient: "linear-gradient(135deg, #4CAF50 0%, #81C784 100%)"
-  },
-  {
-    name: "Night",
-    color: "#2196F3",
-    gradient: "linear-gradient(135deg, #2196F3 0%, #64B5F6 100%)"
-  },
-  {
-    name: "Late",
-    color: "#9C27B0",
-    gradient: "linear-gradient(135deg, #9C27B0 0%, #BA68C8 100%)"
-  },
-  {
-    name: "Early",
-    color: "#FF9800",
-    gradient: "linear-gradient(135deg, #FF9800 0%, #FFB74D 100%)"
-  }
-];
 
 const Calendar = () => {
   const navigate = useNavigate();
@@ -125,10 +103,6 @@ const Calendar = () => {
       });
     } else {
       setSelectedDatesForShift([date]);
-      setShowShiftDialog(true);
-    }
-
-    if (isSelectingMultiple && selectedDatesForShift.length > 0) {
       setShowShiftDialog(true);
     }
   };
@@ -286,7 +260,7 @@ const Calendar = () => {
   const numberLayout = settings.calendarNumberLayout || 'centre';
 
   return (
-    <div className="relative flex flex-col min-h-screen">
+    <div className="relative flex flex-col min-h-screen pb-20">
       <Card className="w-full mx-auto px-2 sm:px-4 py-4 flex-1">
         <div className="flex items-center justify-between mb-6">
           <TooltipProvider>
@@ -422,17 +396,26 @@ const Calendar = () => {
         onShiftSelect={handleShiftSelection}
       />
 
+      {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t py-4">
         <div className="container max-w-md mx-auto flex items-center justify-between px-4">
           <Button variant="ghost" size="icon" className="hover:bg-accent">
             <CalendarDays className="h-8 w-8" />
           </Button>
 
-          <div className="relative">
-            <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg">
-              <span className="text-primary-foreground font-semibold text-xl">S</span>
-            </div>
-          </div>
+          <Button
+            variant={isSelectingMultiple ? "secondary" : "ghost"}
+            size="icon"
+            onClick={() => {
+              setIsSelectingMultiple(!isSelectingMultiple);
+              if (isSelectingMultiple) {
+                setSelectedDatesForShift([]);
+              }
+            }}
+            className="h-12 w-12 rounded-full bg-primary hover:bg-primary/90"
+          >
+            <span className="text-primary-foreground font-semibold text-xl">S</span>
+          </Button>
 
           <Button 
             variant="ghost" 
@@ -444,6 +427,36 @@ const Calendar = () => {
           </Button>
         </div>
       </div>
+
+      {/* Selection Mode Popup */}
+      {isSelectingMultiple && (
+        <div className="fixed bottom-24 left-0 right-0 bg-background border-t py-2 px-4 flex items-center justify-between animate-in slide-in-from-bottom">
+          <div className="text-sm">
+            {selectedDatesForShift.length} dates selected
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setIsSelectingMultiple(false);
+                setSelectedDatesForShift([]);
+              }}
+            >
+              Cancel
+            </Button>
+            {selectedDatesForShift.length > 0 && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setShowShiftDialog(true)}
+              >
+                Set Shifts
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
