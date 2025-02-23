@@ -164,12 +164,13 @@ const Calendar = () => {
         
         const daysInOneSequence = pattern.sequences.reduce((total, seq) => total + seq.days, 0);
         const patternRepeatDays = daysInOneSequence * pattern.repeatTimes;
-        const totalDaysInCycle = patternRepeatDays + pattern.daysOffAfter;
+        const adjustedDaysOff = 14;
+        const totalDaysInCycle = patternRepeatDays + adjustedDaysOff;
         
         console.log('Pattern metrics:', {
           daysInOneSequence,
           patternRepeatDays,
-          daysOffAfter: pattern.daysOffAfter,
+          daysOffAfter: adjustedDaysOff,
           totalDaysInCycle
         });
         
