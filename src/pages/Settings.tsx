@@ -274,7 +274,7 @@ const Settings = () => {
               >
                 <div className="flex items-center gap-2">
                   <CreditCard className="h-4 w-4" />
-                  <span className="font-semibold">Payment Settings</span>
+                  <span className="font-semibold">Payday Settings</span>
                 </div>
                 <ChevronDown className={cn("h-4 w-4 transition-transform", openSections.payment && "transform rotate-180")} />
               </Button>
