@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -487,9 +486,11 @@ const Calendar = () => {
           </TooltipProvider>
 
           <div className="text-center">
-            <h2 className="text-lg sm:text-xl font-bold">
-              {format(currentDate, 'MMMM yyyy')}
-            </h2>
+            <div className="flex items-center gap-4">
+              <h2 className="text-lg sm:text-xl font-bold">
+                {format(currentDate, 'MMMM yyyy')}
+              </h2>
+            </div>
             <div className="flex flex-col items-center gap-1 mt-1">
               <TooltipProvider>
                 <Tooltip>
@@ -519,128 +520,6 @@ const Calendar = () => {
           </TooltipProvider>
         </div>
 
-        <div className="relative mb-4">
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                placeholder="Search notes..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-md text-sm"
-              />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            </div>
-          </div>
-          {searchTerm && (
-            <div className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
-              {searchNotes().map(({ date, text }) => (
-                <div key={date} className="p-2 hover:bg-gray-100 cursor-pointer">
-                  <div className="font-medium text-xs sm:text-sm">{date}</div>
-                  <div className="text-xs sm:text-sm text-gray-600">{text}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="flex flex-wrap gap-2 mb-4">
-          <div className="w-full overflow-x-auto pb-2">
-            <div className="flex gap-2">
-              {patterns.map((pattern) => (
-                <TooltipProvider key={pattern.id}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "relative whitespace-nowrap",
-                          highlightedPattern === pattern.id && "ring-2 ring-primary"
-                        )}
-                        style={{
-                          backgroundColor: pattern.color,
-                          color: "white"
-                        }}
-                        onClick={() => setHighlightedPattern(
-                          highlightedPattern === pattern.id ? null : pattern.id
-                        )}
-                      >
-                        {pattern.name}
-                        {highlightedPattern === pattern.id && (
-                          <div className="absolute -top-2 -right-2">
-                            <Check className="h-4 w-4" />
-                          </div>
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="text-xs">{pattern.name}: {pattern.daysOn} on, {pattern.daysOff} off</p>
-                      {highlightedPattern === pattern.id && (
-                        <p className="text-xs">
-                          Next free day:{' '}
-                          {getNextFreeDayForPattern(pattern)
-                            ? format(getNextFreeDayForPattern(pattern)!, 'MMM d')
-                            : 'N/A'}
-                        </p>
-                      )}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ))}
-              <Button
-                variant="outline"
-                onClick={() => setShowPatternDialog(true)}
-                className="flex items-center gap-2 whitespace-nowrap"
-              >
-                <Plus className="h-4 w-4" />
-                Add Pattern
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-          {shiftTypes.map((type) => (
-            <TooltipProvider key={type.name}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "h-10",
-                      selectedShiftType?.name === type.name && "border-2 border-primary"
-                    )}
-                    style={{
-                      background: type.gradient,
-                      color: "white"
-                    }}
-                    onClick={() => setSelectedShiftType(type)}
-                  >
-                    {type.name}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Click to select {type.name} shift</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ))}
-        </div>
-
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full mb-4 bg-primary text-primary-foreground hover:bg-primary/90"
-                onClick={handlePatternInput}
-              >
-                <CalendarDays className="mr-2 h-4 w-4" />
-                Set Pattern ({pattern.daysOn} on, {pattern.daysOff} off)
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Configure recurring shift pattern</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-
         <div className="grid grid-cols-7 gap-1 mb-2">
           {weekDays.map((day) => (
             <div 
@@ -666,7 +545,7 @@ const Calendar = () => {
                 key={date.toISOString()}
                 variant="ghost"
                 className={cn(
-                  "h-10 sm:h-12 p-0 w-full relative hover:bg-accent transition-colors",
+                  "h-10 sm:h-12 p-0 w-full relative hover:bg-accent transition-colors flex items-center justify-center",
                   !isSameMonth(date, currentDate) && "opacity-30",
                   isToday(date) && !shift && "bg-accent"
                 )}
@@ -683,7 +562,7 @@ const Calendar = () => {
                   addOrEditNote(date);
                 }}
               >
-                <span className="absolute top-0.5 right-0.5 text-[10px] sm:text-xs">
+                <span className="absolute top-0.5 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs">
                   {format(date, 'd')}
                 </span>
                 {isPay && (
@@ -696,7 +575,7 @@ const Calendar = () => {
                 )}
                 {note && (
                   <StickyNote 
-                    className="absolute top-0.5 left-0.5 h-2.5 w-2.5 sm:h-3 sm:w-3"
+                    className="absolute bottom-0.5 left-0.5 h-2.5 w-2.5 sm:h-3 sm:w-3"
                     style={{ color: shift ? 'white' : '#F97316' }}
                   />
                 )}
@@ -707,16 +586,9 @@ const Calendar = () => {
                   />
                 )}
                 {shift && (
-                  <>
-                    <span className="absolute bottom-0.5 left-0.5 text-[8px] sm:text-xs font-medium">
-                      {shift.shiftType.name}
-                    </span>
-                    {shift.otHours && (
-                      <span className="absolute bottom-0.5 right-3 text-[8px] sm:text-xs font-medium">
-                        {shift.otHours}h
-                      </span>
-                    )}
-                  </>
+                  <span className="absolute bottom-0.5 text-[8px] sm:text-xs font-medium">
+                    {shift.shiftType.name}
+                  </span>
                 )}
               </Button>
             );
