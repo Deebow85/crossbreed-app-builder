@@ -31,8 +31,8 @@ const Index = () => {
   };
 
   return (
-    <div className="relative">
-      <div className="absolute top-4 right-4 flex gap-2">
+    <div className="h-full flex flex-col">
+      <div className="absolute top-4 right-4 flex gap-2 z-10">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -68,7 +68,9 @@ const Index = () => {
         </TooltipProvider>
       </div>
 
-      <Calendar />
+      <div className="flex-1">
+        <Calendar />
+      </div>
 
       <Dialog open={showTutorial} onOpenChange={setShowTutorial}>
         <DialogContent className="sm:max-w-[425px]">
