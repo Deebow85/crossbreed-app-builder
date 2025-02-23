@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Bell, StickyNote } from "lucide-react";
 import { ShiftAssignment, Note, Alarm } from "@/types/calendar";
 import { useTheme } from "@/lib/theme";
+import { useEffect, useRef } from "react";
 
 type CalendarDayProps = {
   date: Date;
@@ -17,6 +18,7 @@ type CalendarDayProps = {
   calendarSize: 'default' | 'large' | 'small';
   numberLayout: string;
   onDayClick: (date: Date) => void;
+  onLongPress: (date: Date) => void;
   onContextMenu: (e: React.MouseEvent, date: Date) => void;
   isSelected?: boolean;
 };
@@ -32,10 +34,38 @@ const CalendarDay = ({
   calendarSize,
   numberLayout,
   onDayClick,
+  onLongPress,
   onContextMenu,
   isSelected,
 }: CalendarDayProps) => {
   const { theme } = useTheme();
+  const longPressTimer = useRef<NodeJS.Timeout>();
+  const isLongPress = useRef(false);
+
+  const handleTouchStart = () => {
+    isLongPress.current = false;
+    longPressTimer.current = setTimeout(() => {
+      isLongPress.current = true;
+      onLongPress(date);
+    }, 500);
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+    }
+    if (!isLongPress.current) {
+      onDayClick(date);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+      }
+    };
+  }, []);
 
   const numberPositionClasses = {
     'centre': 'left-1/2 -translate-x-1/2',
@@ -61,6 +91,8 @@ const CalendarDay = ({
       } : undefined}
       onClick={() => onDayClick(date)}
       onContextMenu={(e) => onContextMenu(e, date)}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       <span className={cn(
         "absolute top-0.5",

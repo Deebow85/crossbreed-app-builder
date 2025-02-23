@@ -106,6 +106,11 @@ const Calendar = () => {
     }
   };
 
+  const handleLongPress = (date: Date) => {
+    setIsSelectingMultiple(true);
+    setSelectedDatesForShift([date]);
+  };
+
   const handleShiftSelection = (selectedType: ShiftType | null) => {
     if (selectedDatesForShift.length === 0) return;
     
@@ -344,6 +349,7 @@ const Calendar = () => {
                 calendarSize={calendarSize}
                 numberLayout={numberLayout}
                 onDayClick={handleDayClick}
+                onLongPress={handleLongPress}
                 onContextMenu={(e, date) => {
                   e.preventDefault();
                   addOrEditNote(date);
