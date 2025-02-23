@@ -25,6 +25,7 @@ interface ShiftTypeSettings {
 interface ShiftPattern {
   shiftType: ShiftTypeSettings | null;
   days: number;
+  isOff?: boolean;
 }
 
 interface PatternCycle {
@@ -173,12 +174,20 @@ const ShiftSetup = () => {
   };
 
   const addToPattern = () => {
-    setCurrentPattern([...currentPattern, { shiftType: null, days: 1 }]);
+    setCurrentPattern([...currentPattern, { shiftType: null, days: 1, isOff: true }]);
   };
 
   const updatePattern = (index: number, field: keyof ShiftPattern, value: any) => {
     const newPattern = [...currentPattern];
-    newPattern[index] = { ...newPattern[index], [field]: value };
+    if (field === 'shiftType') {
+      newPattern[index] = {
+        ...newPattern[index],
+        shiftType: value,
+        isOff: value === null
+      };
+    } else {
+      newPattern[index] = { ...newPattern[index], [field]: value };
+    }
     setCurrentPattern(newPattern);
   };
 
@@ -439,13 +448,18 @@ const ShiftSetup = () => {
                 <div key={index} className="flex items-center gap-2 p-2 border rounded">
                   <select
                     className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    value={step.shiftType?.name || ""}
+                    value={step.isOff ? "off" : (step.shiftType?.name || "")}
                     onChange={(e) => {
-                      const selectedType = shiftTypes.find(t => t.name === e.target.value);
-                      updatePattern(index, 'shiftType', selectedType || null);
+                      const value = e.target.value;
+                      if (value === "off") {
+                        updatePattern(index, 'shiftType', null);
+                      } else {
+                        const selectedType = shiftTypes.find(t => t.name === value);
+                        updatePattern(index, 'shiftType', selectedType || null);
+                      }
                     }}
                   >
-                    <option value="">Off</option>
+                    <option value="off">Days Off</option>
                     {shiftTypes.map((type) => (
                       <option key={type.name} value={type.name}>
                         {type.name}

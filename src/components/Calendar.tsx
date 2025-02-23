@@ -69,6 +69,7 @@ type PatternCycle = {
   sequences: {
     shiftType: ShiftType | null;
     days: number;
+    isOff?: boolean;
   }[];
   repeatTimes: number;
   daysOffAfter: number;
@@ -154,14 +155,16 @@ const Calendar = () => {
         
         for (let repeat = 0; repeat < pattern.repeatTimes; repeat++) {
           for (const sequence of pattern.sequences) {
-            for (let day = 0; day < sequence.days; day++) {
-              if (sequence.shiftType) {
+            if (sequence.shiftType && !sequence.isOff) {
+              for (let day = 0; day < sequence.days; day++) {
                 newShifts.push({
                   date: new Date(currentDate).toISOString(),
                   shiftType: sequence.shiftType
                 });
+                currentDate = addDays(currentDate, 1);
               }
-              currentDate = addDays(currentDate, 1);
+            } else {
+              currentDate = addDays(currentDate, sequence.days);
             }
           }
           
