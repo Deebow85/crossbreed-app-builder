@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,6 +25,7 @@ const ShiftSetup = () => {
   const { toast } = useToast();
   const [shiftTypes, setShiftTypes] = useState<ShiftTypeSettings[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [colorMode, setColorMode] = useState<'solid' | 'gradient' | null>(null);
   const [startColor, setStartColor] = useState("#4B5563");
@@ -43,7 +43,6 @@ const ShiftSetup = () => {
   }, []);
 
   const saveShiftTypes = (newShiftTypes: ShiftTypeSettings[]) => {
-    // Remove isNew flag before saving to localStorage
     const typesToSave = newShiftTypes.map(({ isNew, ...rest }) => rest);
     setShiftTypes(newShiftTypes);
     const savedSettings = localStorage.getItem('appSettings');
@@ -115,6 +114,15 @@ const ShiftSetup = () => {
   const removeShiftType = (index: number) => {
     const newShiftTypes = shiftTypes.filter((_, i) => i !== index);
     saveShiftTypes(newShiftTypes);
+    setIsRemoveDialogOpen(false);
+    toast({
+      title: "Shift type removed",
+      description: `${shiftTypes[index].name} has been removed.`,
+    });
+  };
+
+  const handleRemoveDialogOpen = () => {
+    setIsRemoveDialogOpen(true);
   };
 
   const handleDialogOpen = (index: number) => {
@@ -164,7 +172,7 @@ const ShiftSetup = () => {
                 <Button 
                   variant="destructive" 
                   size="sm"
-                  onClick={() => removeShiftType(shiftTypes.length - 1)}
+                  onClick={handleRemoveDialogOpen}
                 >
                   <Trash2 className="h-4 w-4 mr-1" />
                   Remove Type
@@ -244,6 +252,34 @@ const ShiftSetup = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isRemoveDialogOpen} onOpenChange={setIsRemoveDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remove Shift Type</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-2 py-4">
+            {shiftTypes.map((type, index) => (
+              <div key={index} className="flex items-center justify-between p-2 border rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-8 h-8 rounded border"
+                    style={{ background: type.gradient }}
+                  />
+                  <span>{type.name}</span>
+                </div>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => removeShiftType(index)}
+                >
+                  Remove
+                </Button>
+              </div>
+            ))}
+          </div>
         </DialogContent>
       </Dialog>
 
