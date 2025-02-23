@@ -335,15 +335,38 @@ const ShiftSetup = () => {
     <div className="h-dvh flex flex-col p-2 sm:p-4">
       <div className="flex justify-between items-center mb-2">
         <h1 className="text-xl font-bold">Shift Setup</h1>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={clearCalendar}
-          className="h-8 px-3 text-xs"
-        >
-          <RefreshCcw className="h-3 w-3 mr-1" />
-          Clear Calendar
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => clearCalendar()}
+            className="h-8 px-3 text-xs"
+          >
+            <RefreshCcw className="h-3 w-3 mr-1" />
+            Clear Calendar
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={openNewPatternDialog}
+            className="h-8 px-3 text-xs"
+          >
+            <Plus className="h-3 w-3 mr-1" />
+            Regular Pattern
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => {
+              setIsContinuousPattern(true);
+              openNewPatternDialog();
+            }}
+            className="h-8 px-3 text-xs"
+          >
+            <CalendarDays className="h-3 w-3 mr-1" />
+            Continuous Pattern
+          </Button>
+        </div>
       </div>
 
       <Card className="flex-1 overflow-auto mb-20">
@@ -523,7 +546,7 @@ const ShiftSetup = () => {
         <DialogContent className="flex h-[85vh] flex-col overflow-hidden">
           <DialogHeader className="flex-none p-4 pb-2">
             <DialogTitle>
-              {editingPattern ? 'Edit Shift Pattern' : 'Generate Shift Pattern'}
+              {editingPattern ? 'Edit Shift Pattern' : (isContinuousPattern ? 'Generate Continuous Pattern' : 'Generate Regular Pattern')}
             </DialogTitle>
           </DialogHeader>
           
@@ -673,17 +696,8 @@ const ShiftSetup = () => {
                   <Button 
                     onClick={() => generateShifts(false)}
                     className="w-full"
-                    variant="outline"
                   >
-                    <RefreshCcw className="h-4 w-4 mr-2" />
-                    Generate Regular Pattern
-                  </Button>
-                  <Button 
-                    onClick={() => generateShifts(true)}
-                    className="w-full"
-                  >
-                    <CalendarDays className="h-4 w-4 mr-2" />
-                    Generate Continuous Pattern
+                    {editingPattern ? 'Update Pattern' : 'Generate Pattern'}
                   </Button>
                 </div>
               </div>
