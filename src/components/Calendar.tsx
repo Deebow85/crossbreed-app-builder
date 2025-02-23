@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, Banknote } from "lucide-react";
-import { format, addMonths, subMonths } from "date-fns";
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, differenceInDays, startOfWeek, endOfWeek, addDays, getDay, addWeeks, lastDayOfMonth } from "date-fns";
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
@@ -46,31 +46,40 @@ const Calendar = () => {
   }, []);
 
   useEffect(() => {
-    const loadShiftTypes = async () => {
-      const savedSettings = localStorage.getItem('appSettings');
-      if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        if (settings.shiftTypes && settings.shiftTypes.length > 0) {
-          setSelectedShiftType(settings.shiftTypes[0]);
+    const handlePatternGeneration = () => {
+      const state = JSON.parse(sessionStorage.getItem('patternData') || 'null');
+      if (state?.pattern && state?.startDate) {
+        const pattern = state.pattern;
+        const startDate = new Date(state.startDate + 'T00:00:00');
+        const yearsToGenerate = Math.min(Math.max(state.years || 1, 0), 10);
+
+        if (isNaN(startDate.getTime())) {
+          console.error('Invalid start date:', state.startDate);
+          return;
+        }
+        
+        try {
+          const newShifts = generatePattern(pattern, startDate, yearsToGenerate);
+          
+          setShifts(prevShifts => {
+            const patternEndDate = addDays(startDate, yearsToGenerate * 365);
+            const filteredPrevShifts = prevShifts.filter(shift => {
+              const shiftDate = new Date(shift.date);
+              return shiftDate < startDate || shiftDate >= patternEndDate;
+            });
+            return [...filteredPrevShifts, ...newShifts];
+          });
+          
+          setCurrentDate(startDate);
+          sessionStorage.removeItem('patternData');
+        } catch (error) {
+          console.error('Error generating pattern:', error);
         }
       }
     };
-    loadShiftTypes();
+
+    handlePatternGeneration();
   }, []);
-
-  const monthStart = startOfMonth(currentDate);
-  const monthEnd = endOfMonth(currentDate);
-  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
-  const weekStart = startOfWeek(currentDate);
-  const weekEnd = endOfWeek(currentDate);
-
-  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-  const getDaysUntilPayday = () => {
-    const today = new Date();
-    const nextPayday = getNextPayday();
-    return differenceInDays(nextPayday, today);
-  };
 
   const getNextPayday = () => {
     const savedSettings = localStorage.getItem('appSettings');
@@ -140,6 +149,12 @@ const Calendar = () => {
     return nextPayday;
   };
 
+  const getDaysUntilPayday = () => {
+    const today = new Date();
+    const nextPayday = getNextPayday();
+    return differenceInDays(nextPayday, today);
+  };
+
   const isPayday = (date: Date): boolean => {
     const savedSettings = localStorage.getItem('appSettings');
     if (!savedSettings) return false;
@@ -152,8 +167,8 @@ const Calendar = () => {
 
       case 'fortnightly': {
         if (getDay(date) !== settings.paydayDate) return false;
-        const startOfMonthDate = startOfMonth(date);
-        const weeksSinceStart = Math.floor(differenceInDays(date, startOfMonthDate) / 7);
+        const monthStart = startOfMonth(date);
+        const weeksSinceStart = Math.floor(differenceInDays(date, monthStart) / 7);
         return weeksSinceStart % 2 === 0;
       }
 
