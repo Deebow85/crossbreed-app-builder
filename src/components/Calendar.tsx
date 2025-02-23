@@ -82,7 +82,10 @@ const Calendar = () => {
   const { theme } = useTheme();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedShiftType, setSelectedShiftType] = useState<ShiftType | null>(null);
-  const [shifts, setShifts] = useState<ShiftAssignment[]>([]);
+  const [shifts, setShifts] = useState<ShiftAssignment[]>(() => {
+    const savedShifts = localStorage.getItem('calendarShifts');
+    return savedShifts ? JSON.parse(savedShifts) : [];
+  });
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState<string | null>(null);
   const [paydaySettings, setPaydaySettings] = useState<PaydaySettings>({
@@ -113,8 +116,8 @@ const Calendar = () => {
   const [calendarSize, setCalendarSize] = useState<'default' | 'large' | 'small'>('default');
 
   useEffect(() => {
-    localStorage.setItem('shiftPatterns', JSON.stringify(patterns));
-  }, [patterns]);
+    localStorage.setItem('calendarShifts', JSON.stringify(shifts));
+  }, [shifts]);
 
   useEffect(() => {
     const loadSettings = () => {
@@ -146,7 +149,7 @@ const Calendar = () => {
   useEffect(() => {
     const handlePatternGeneration = () => {
       const state = JSON.parse(sessionStorage.getItem('patternData') || 'null');
-      console.log('Pattern state:', state); // Debug log
+      console.log('Pattern state:', state);
 
       if (state?.pattern && state?.startDate) {
         const pattern: PatternCycle = state.pattern;
@@ -157,17 +160,11 @@ const Calendar = () => {
           return;
         }
         
-        console.log('Processing pattern:', pattern); // Debug log
-        console.log('Start date:', startDate); // Debug log
-        
         let currentDate = startDate;
         const newShifts: ShiftAssignment[] = [];
         
-        // Generate shifts for each repeat of the pattern
         for (let repeat = 0; repeat < pattern.repeatTimes; repeat++) {
-          // Generate shifts for each sequence in the pattern
           for (const sequence of pattern.sequences) {
-            // Only add to shifts if it's not a days off period
             if (sequence.shiftType && !sequence.isOff) {
               const shiftType = {
                 name: sequence.shiftType.name,
@@ -188,24 +185,26 @@ const Calendar = () => {
                 currentDate = addDays(currentDate, 1);
               }
             } else {
-              // Skip the days for off periods
               currentDate = addDays(currentDate, sequence.days);
             }
           }
           
-          // Add days off after each cycle
           currentDate = addDays(currentDate, pattern.daysOffAfter);
         }
         
-        console.log('Generated shifts:', newShifts); // Debug log
+        console.log('Generated shifts:', newShifts);
         
-        // Set new shifts immediately
-        setShifts(newShifts);
+        setShifts(prevShifts => {
+          const filteredPrevShifts = prevShifts.filter(shift => {
+            const shiftDate = new Date(shift.date);
+            const isOutsideRange = shiftDate < startDate || shiftDate > currentDate;
+            return isOutsideRange;
+          });
+          return [...filteredPrevShifts, ...newShifts];
+        });
         
-        // Set calendar to show the month of the start date
         setCurrentDate(startDate);
         
-        // Clear the pattern data after processing
         sessionStorage.removeItem('patternData');
       }
     };
@@ -214,7 +213,7 @@ const Calendar = () => {
   }, []); // Run once when component mounts
 
   useEffect(() => {
-    console.log('Current shifts:', shifts); // Debug log
+    console.log('Current shifts:', shifts);
   }, [shifts]);
 
   const monthStart = startOfMonth(currentDate);
@@ -260,7 +259,6 @@ const Calendar = () => {
         if (daysToAdd2 <= 0) {
           nextPayday = addDays(nextPayday, 7);
         }
-        // Add another week if we're in the off week
         if (Math.floor(differenceInDays(nextPayday, startOfMonth(today)) / 14) % 2 === 0) {
           nextPayday = addWeeks(nextPayday, 1);
         }
