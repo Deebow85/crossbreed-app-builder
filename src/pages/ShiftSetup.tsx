@@ -39,6 +39,7 @@ interface PatternCycle {
   repeatTimes: number;
   daysOffAfter: number;
   patternName?: string;
+  isContinuous?: boolean;
 }
 
 interface EditingPattern {
@@ -77,6 +78,7 @@ const ShiftSetup = () => {
   }[]>([]);
   const [isOpen, setIsOpen] = useState(true);
   const [editingPattern, setEditingPattern] = useState<EditingPattern | null>(null);
+  const [isContinuousPattern, setIsContinuousPattern] = useState(false);
 
   useEffect(() => {
     const savedSettings = localStorage.getItem('appSettings');
@@ -259,7 +261,8 @@ const ShiftSetup = () => {
       })),
       repeatTimes,
       daysOffAfter,
-      patternName
+      patternName,
+      isContinuous: isContinuousPattern
     };
 
     const shifts = generatePattern(pattern, startDate, yearsToGenerate);
@@ -601,40 +604,67 @@ const ShiftSetup = () => {
                 ))}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Repeat Pattern</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    value={repeatTimes}
-                    onChange={(e) => setRepeatTimes(parseInt(e.target.value))}
+              <div className="space-y-2">
+                <Label>Pattern Mode</Label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="repeat"
+                    name="patternMode"
+                    checked={!isContinuousPattern}
+                    onChange={() => setIsContinuousPattern(false)}
+                    className="h-4 w-4"
                   />
-                  <span className="text-sm text-muted-foreground">times</span>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Days Off After Cycle</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    value={daysOffAfter}
-                    onChange={(e) => setDaysOffAfter(parseInt(e.target.value))}
+                  <label htmlFor="repeat">Repeat Pattern</label>
+                  
+                  <input
+                    type="radio"
+                    id="continuous"
+                    name="patternMode"
+                    checked={isContinuousPattern}
+                    onChange={() => setIsContinuousPattern(true)}
+                    className="h-4 w-4 ml-4"
                   />
-                  <span className="text-sm text-muted-foreground">days</span>
+                  <label htmlFor="continuous">Continuous Pattern</label>
                 </div>
               </div>
+
+              {!isContinuousPattern && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Repeat Pattern</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={repeatTimes}
+                      onChange={(e) => setRepeatTimes(parseInt(e.target.value))}
+                    />
+                    <span className="text-sm text-muted-foreground">times</span>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Days Off After Cycle</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={daysOffAfter}
+                      onChange={(e) => setDaysOffAfter(parseInt(e.target.value))}
+                    />
+                    <span className="text-sm text-muted-foreground">days</span>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label>Generate Pattern For</Label>
                 <Input
                   type="number"
-                  min="0"
+                  min="1"
                   max="10"
                   value={yearsToGenerate}
-                  onChange={(e) => setYearsToGenerate(Math.min(Math.max(parseInt(e.target.value) || 0, 0), 10))}
+                  onChange={(e) => setYearsToGenerate(Math.min(Math.max(parseInt(e.target.value) || 1, 1), 10))}
                 />
-                <span className="text-sm text-muted-foreground">years (0-10)</span>
+                <span className="text-sm text-muted-foreground">years (1-10)</span>
               </div>
             </div>
           </div>
