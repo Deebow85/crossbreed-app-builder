@@ -156,7 +156,7 @@ const ShiftSetup = () => {
             <div className="flex gap-1">
               <Button 
                 variant="outline" 
-                size="xs"
+                size="sm"
                 className="h-7 px-2 text-xs"
                 onClick={toggleEditing}
               >
@@ -165,7 +165,7 @@ const ShiftSetup = () => {
               </Button>
               <Button 
                 variant="outline"
-                size="xs"
+                size="sm"
                 className="h-7 px-2 text-xs"
                 onClick={addShiftType}
               >
@@ -175,7 +175,7 @@ const ShiftSetup = () => {
               {shiftTypes.length > 0 && (
                 <Button 
                   variant="destructive"
-                  size="xs"
+                  size="sm"
                   className="h-7 px-2 text-xs"
                   onClick={handleRemoveDialogOpen}
                 >
