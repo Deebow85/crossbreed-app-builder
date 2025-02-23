@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Banknote, Clock, CalendarDays, StickyNote, Search } from "lucide-react";
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, differenceInDays, startOfWeek, endOfWeek, addDays } from "date-fns";
+import { ChevronLeft, ChevronRight, Banknote, Clock, CalendarDays, StickyNote, Search, Bell } from "lucide-react";
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, differenceInDays, startOfWeek, endOfWeek, addDays, setHours, setMinutes } from "date-fns";
 import { cn } from "@/lib/utils";
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 type ShiftType = {
   name: string;
@@ -63,6 +64,13 @@ type ShiftSwap = {
   note?: string;
 };
 
+type Alarm = {
+  date: string;
+  shiftId: string;
+  time: string;
+  enabled: boolean;
+};
+
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedShiftType, setSelectedShiftType] = useState<ShiftType>(shiftTypes[0]);
@@ -81,6 +89,7 @@ const Calendar = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [alarms, setAlarms] = useState<Alarm[]>([]);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -129,9 +138,111 @@ const Calendar = () => {
     return date.getDate() === paydaySettings.date;
   };
 
+  useEffect(() => {
+    const requestPermissions = async () => {
+      try {
+        await LocalNotifications.requestPermissions();
+      } catch (error) {
+        console.error('Error requesting notification permissions:', error);
+      }
+    };
+    requestPermissions();
+  }, []);
+
+  const setAlarmForShift = async (date: Date, shift: ShiftAssignment) => {
+    const dateStr = date.toISOString();
+    const existingAlarm = alarms.find(a => a.date === dateStr);
+    
+    const timeStr = window.prompt(
+      "Enter alarm time (HH:mm):",
+      existingAlarm?.time || "07:00"
+    );
+    
+    if (!timeStr) return;
+    
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(timeStr)) {
+      alert("Please enter a valid time in HH:mm format");
+      return;
+    }
+
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    const alarmDate = new Date(date);
+    alarmDate.setHours(hours, minutes, 0);
+
+    if (alarmDate < new Date()) {
+      alert("Cannot set alarm for past dates");
+      return;
+    }
+
+    const alarmId = `${dateStr}-${shift.shiftType.name}`;
+
+    try {
+      await LocalNotifications.schedule({
+        notifications: [{
+          id: Math.abs(alarmId.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)),
+          title: `Shift Alert: ${shift.shiftType.name}`,
+          body: `Your ${shift.shiftType.name} shift starts at ${timeStr}`,
+          schedule: { at: alarmDate },
+          sound: 'notification.wav',
+          actionTypeId: 'OPEN_SHIFT',
+        }]
+      });
+
+      setAlarms(prevAlarms => {
+        const filtered = prevAlarms.filter(a => a.date !== dateStr);
+        return [...filtered, {
+          date: dateStr,
+          shiftId: alarmId,
+          time: timeStr,
+          enabled: true
+        }];
+      });
+    } catch (error) {
+      console.error('Error scheduling notification:', error);
+      alert('Failed to set alarm. Please check notification permissions.');
+    }
+  };
+
+  const removeAlarm = async (date: Date) => {
+    const dateStr = date.toISOString();
+    const alarm = alarms.find(a => a.date === dateStr);
+    
+    if (!alarm) return;
+
+    try {
+      const alarmId = Math.abs(alarm.shiftId.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0));
+      await LocalNotifications.cancel({ notifications: [{ id: alarmId }] });
+      setAlarms(alarms.filter(a => a.date !== dateStr));
+    } catch (error) {
+      console.error('Error removing notification:', error);
+      alert('Failed to remove alarm');
+    }
+  };
+
   const handleDayClick = (date: Date) => {
     const dateStr = date.toISOString();
+    const shift = getShiftForDate(date);
     
+    if (window.event && (window.event as MouseEvent).button === 2) {
+      addOrEditNote(date);
+      return;
+    }
+
+    if (window.event && (window.event as MouseEvent).button === 1) {
+      if (shift) {
+        const hasAlarm = alarms.some(a => a.date === dateStr);
+        if (hasAlarm) {
+          if (window.confirm('Remove alarm for this shift?')) {
+            removeAlarm(date);
+          }
+        } else {
+          setAlarmForShift(date, shift);
+        }
+      }
+      return;
+    }
+
     if (!isSelecting) {
       const existingShift = shifts.find(s => s.date === dateStr);
       if (existingShift) {
@@ -516,6 +627,7 @@ const Calendar = () => {
           const shift = getShiftForDate(date);
           const isPay = isPayday(date);
           const note = getNote(date);
+          const alarm = alarms.find(a => a.date === date.toISOString());
           
           return (
             <Button
@@ -556,13 +668,19 @@ const Calendar = () => {
                   style={{ color: shift ? 'white' : '#F97316' }}
                 />
               )}
+              {alarm && (
+                <Bell 
+                  className="absolute bottom-1 right-1 h-3 w-3"
+                  style={{ color: shift ? 'white' : '#F97316' }}
+                />
+              )}
               {shift && (
                 <>
                   <span className="absolute bottom-1 left-1 text-xs font-medium">
                     {shift.shiftType.name}
                   </span>
                   {shift.otHours && (
-                    <span className="absolute bottom-1 right-1 text-xs font-medium">
+                    <span className="absolute bottom-1 right-4 text-xs font-medium">
                       {shift.otHours}h
                     </span>
                   )}
