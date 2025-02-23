@@ -146,15 +146,27 @@ const Calendar = () => {
   useEffect(() => {
     const handlePatternGeneration = () => {
       const state = window.history.state?.usr;
+      console.log('Route state:', state); // Debug log
+
       if (state?.pattern && state?.startDate) {
         const pattern: PatternCycle = state.pattern;
         const startDate = new Date(state.startDate);
         
+        console.log('Processing pattern:', pattern); // Debug log
+        console.log('Start date:', startDate); // Debug log
+        
         let currentDate = startDate;
         const newShifts: ShiftAssignment[] = [];
         
+        // Generate shifts for each repeat of the pattern
         for (let repeat = 0; repeat < pattern.repeatTimes; repeat++) {
+          console.log(`Processing repeat ${repeat + 1} of ${pattern.repeatTimes}`); // Debug log
+          
+          // Generate shifts for each sequence in the pattern
           for (const sequence of pattern.sequences) {
+            console.log('Processing sequence:', sequence); // Debug log
+            
+            // Only add to shifts if it's not a days off period
             if (sequence.shiftType && !sequence.isOff) {
               for (let day = 0; day < sequence.days; day++) {
                 newShifts.push({
@@ -164,20 +176,38 @@ const Calendar = () => {
                 currentDate = addDays(currentDate, 1);
               }
             } else {
+              // Skip the days for off periods
               currentDate = addDays(currentDate, sequence.days);
             }
           }
           
+          // Add days off after each cycle
           currentDate = addDays(currentDate, pattern.daysOffAfter);
         }
         
-        setShifts(newShifts);
+        console.log('Generated shifts:', newShifts); // Debug log
+        
+        // Clear existing shifts and set new ones
+        setShifts(prevShifts => {
+          // Keep shifts outside the pattern date range
+          const otherShifts = prevShifts.filter(shift => {
+            const shiftDate = new Date(shift.date);
+            return shiftDate < startDate || shiftDate > currentDate;
+          });
+          return [...otherShifts, ...newShifts];
+        });
+        
+        // Set calendar to show the month of the start date
         setCurrentDate(startDate);
       }
     };
 
     handlePatternGeneration();
-  }, []);
+  }, []); // Run once when component mounts
+
+  useEffect(() => {
+    console.log('Current shifts:', shifts); // Debug log
+  }, [shifts]);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);

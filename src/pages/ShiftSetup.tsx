@@ -196,14 +196,26 @@ const ShiftSetup = () => {
   };
 
   const generateShifts = () => {
+    if (currentPattern.length === 0) {
+      alert('Please add at least one step to your pattern');
+      return;
+    }
+    
     const savedSettings = localStorage.getItem('appSettings');
     const settings = savedSettings ? JSON.parse(savedSettings) : {};
     
     const pattern: PatternCycle = {
-      sequences: currentPattern,
+      sequences: currentPattern.map(p => ({
+        shiftType: p.shiftType,
+        days: p.days,
+        isOff: p.isOff
+      })),
       repeatTimes,
       daysOffAfter
     };
+    
+    console.log('Generating pattern:', pattern); // Debug log
+    console.log('Start date:', patternStartDate); // Debug log
     
     settings.lastPattern = pattern;
     localStorage.setItem('appSettings', JSON.stringify(settings));
