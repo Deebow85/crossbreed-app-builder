@@ -22,7 +22,7 @@ interface AppSettings {
     position: 'before' | 'after';
   };
   paydayDate: number;
-  calendarSize: 'default' | 'large';
+  calendarSize: 'small' | 'large';
   calendarNumberLayout: 'centre' | 'top-left' | 'top-right';
 }
 
@@ -32,7 +32,7 @@ const defaultSettings: AppSettings = {
     position: 'before'
   },
   paydayDate: 25,
-  calendarSize: 'default',
+  calendarSize: 'small',
   calendarNumberLayout: 'centre'
 };
 
@@ -59,7 +59,7 @@ const Settings = () => {
     });
   };
 
-  const updateCalendarSize = (size: 'default' | 'large') => {
+  const updateCalendarSize = (size: 'small' | 'large') => {
     saveSettings({
       ...settings,
       calendarSize: size
@@ -120,10 +120,10 @@ const Settings = () => {
                   <Button
                     size="sm"
                     className="h-8"
-                    variant={settings.calendarSize === 'default' ? 'default' : 'outline'}
-                    onClick={() => updateCalendarSize('default')}
+                    variant={settings.calendarSize === 'small' ? 'default' : 'outline'}
+                    onClick={() => updateCalendarSize('small')}
                   >
-                    Default
+                    Small
                   </Button>
                   <Button
                     size="sm"
