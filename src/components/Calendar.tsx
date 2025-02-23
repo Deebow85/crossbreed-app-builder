@@ -57,6 +57,7 @@ const Calendar = () => {
     const savedShifts = localStorage.getItem('calendarShifts');
     return savedShifts ? JSON.parse(savedShifts) : [];
   });
+  const [shiftTypes, setShiftTypes] = useState<ShiftType[]>([]);
   const [paydaySettings, setPaydaySettings] = useState<PaydaySettings>({
     date: 25,
     symbol: "£",
@@ -79,6 +80,9 @@ const Calendar = () => {
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
         setCalendarSize(settings.calendarSize || 'small');
+        if (settings.shiftTypes) {
+          setShiftTypes(settings.shiftTypes);
+        }
       }
     };
 
