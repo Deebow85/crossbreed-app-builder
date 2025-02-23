@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Banknote, CalendarDays, Settings, CheckSquare, Clock } from "lucide-react"; // Added Clock icon
+import { Banknote, CalendarDays, Settings, CheckSquare, Clock } from "lucide-react";
 import { 
   format, 
   addMonths, 
@@ -293,7 +293,7 @@ const Calendar = () => {
               </h2>
             </div>
             <div className="flex flex-col items-center gap-1 mt-1">
-              <div className="flex flex-wrap items-center justify-center gap-4">
+              <div className="flex flex-col items-center gap-2">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
