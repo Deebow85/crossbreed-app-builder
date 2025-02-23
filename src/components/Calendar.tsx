@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -115,6 +114,8 @@ const Calendar = () => {
   const [newPattern, setNewPattern] = useState<Partial<ShiftPattern>>({});
   const [highlightedPattern, setHighlightedPattern] = useState<string | null>(null);
   const [calendarSize, setCalendarSize] = useState<'default' | 'large' | 'small'>('default');
+  const [showShiftDialog, setShowShiftDialog] = useState(false);
+  const [selectedDateForShift, setSelectedDateForShift] = useState<Date | null>(null);
 
   useEffect(() => {
     localStorage.setItem('calendarShifts', JSON.stringify(shifts));
@@ -164,12 +165,10 @@ const Calendar = () => {
         
         const newShifts: ShiftAssignment[] = [];
         
-        // Calculate total days in one sequence including the days off after repeats
         const sequenceDays = pattern.sequences.reduce((total, seq) => total + seq.days, 0);
         const totalSequenceDays = sequenceDays * pattern.repeatTimes + pattern.daysOffAfter;
         const daysInOneSequence = totalSequenceDays;
         
-        // Calculate total days needed for the requested years
         const daysPerYear = 365.25;
         const totalDaysNeeded = Math.ceil(daysPerYear * yearsToGenerate);
         
@@ -182,12 +181,10 @@ const Calendar = () => {
           totalDaysNeeded
         });
         
-        // Generate shifts for each day up to totalDaysNeeded
         for (let currentDay = 0; currentDay < totalDaysNeeded; currentDay++) {
           const dayInPattern = currentDay % totalSequenceDays;
           const currentRepetition = Math.floor(dayInPattern / sequenceDays);
           
-          // Skip days during the off period after repetitions
           if (currentRepetition >= pattern.repeatTimes) {
             continue;
           }
@@ -391,46 +388,25 @@ const Calendar = () => {
       return;
     }
 
-    if (!isSelecting && selectedShiftType) {
+    setSelectedDateForShift(date);
+    setShowShiftDialog(true);
+  };
+
+  const handleShiftSelection = (selectedType: ShiftType | null) => {
+    if (!selectedDateForShift) return;
+    
+    const dateStr = selectedDateForShift.toISOString();
+    if (selectedType) {
       const existingShift = shifts.find(s => s.date === dateStr);
       if (existingShift) {
         setShifts(shifts.filter(s => s.date !== dateStr));
-      } else {
-        setShifts([...shifts, { date: dateStr, shiftType: selectedShiftType }]);
       }
+      setShifts([...shifts.filter(s => s.date !== dateStr), { date: dateStr, shiftType: selectedType }]);
+    } else {
+      setShifts(shifts.filter(s => s.date !== dateStr));
     }
-  };
-
-  const handleDayMouseDown = (date: Date) => {
-    setIsSelecting(true);
-    setSelectionStart(date.toISOString());
-  };
-
-  const handleDayMouseUp = (date: Date) => {
-    if (selectionStart && isSelecting && selectedShiftType) {
-      const startDate = new Date(selectionStart);
-      const endDate = date;
-      
-      const [finalStart, finalEnd] = startDate < endDate 
-        ? [startDate, endDate] 
-        : [endDate, startDate];
-
-      const dateRange = eachDayOfInterval({ start: finalStart, end: finalEnd });
-      
-      const newShifts = dateRange.map(date => ({
-        date: date.toISOString(),
-        shiftType: selectedShiftType
-      }));
-
-      const filteredShifts = shifts.filter(shift => 
-        !newShifts.some(newShift => newShift.date === shift.date)
-      );
-
-      setShifts([...filteredShifts, ...newShifts]);
-    }
-    
-    setIsSelecting(false);
-    setSelectionStart(null);
+    setShowShiftDialog(false);
+    setSelectedDateForShift(null);
   };
 
   const getShiftForDate = (date: Date) => {
@@ -859,6 +835,47 @@ const Calendar = () => {
           })()}
         </div>
       </Card>
+
+      <Dialog 
+        open={showShiftDialog} 
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowShiftDialog(false);
+            setSelectedDateForShift(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Select Shift</DialogTitle>
+            <DialogDescription>
+              {selectedDateForShift && `Select shift type for ${format(selectedDateForShift, 'MMMM d, yyyy')}`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {shiftTypes.map((type) => (
+              <Button
+                key={type.name}
+                onClick={() => handleShiftSelection(type)}
+                className="w-full justify-start"
+                style={{
+                  background: type.gradient,
+                  color: 'white'
+                }}
+              >
+                {type.name}
+              </Button>
+            ))}
+            <Button
+              variant="outline"
+              onClick={() => handleShiftSelection(null)}
+              className="w-full justify-start"
+            >
+              Remove Shift
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t py-4">
         <div className="container max-w-md mx-auto flex items-center justify-between px-4">
