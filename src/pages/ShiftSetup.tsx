@@ -50,6 +50,7 @@ const ShiftSetup = () => {
   const [currentPattern, setCurrentPattern] = useState<ShiftPattern[]>([]);
   const [repeatTimes, setRepeatTimes] = useState(1);
   const [daysOffAfter, setDaysOffAfter] = useState(0);
+  const [yearsToGenerate, setYearsToGenerate] = useState(1);
 
   useEffect(() => {
     const savedSettings = localStorage.getItem('appSettings');
@@ -217,12 +218,13 @@ const ShiftSetup = () => {
       daysOffAfter
     };
     
-    console.log('Generating pattern:', pattern); // Debug log
-    console.log('Start date:', startDate.toISOString()); // Debug log
+    console.log('Generating pattern:', pattern);
+    console.log('Start date:', startDate.toISOString());
     
     sessionStorage.setItem('patternData', JSON.stringify({
       pattern,
-      startDate: startDate.toISOString().split('T')[0] // Store as YYYY-MM-DD
+      startDate: startDate.toISOString().split('T')[0],
+      years: yearsToGenerate
     }));
     
     setShowPatternDialog(false);
@@ -520,6 +522,18 @@ const ShiftSetup = () => {
                 />
                 <span className="text-sm text-muted-foreground">days</span>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Generate Pattern For</Label>
+              <Input
+                type="number"
+                min="0"
+                max="10"
+                value={yearsToGenerate}
+                onChange={(e) => setYearsToGenerate(Math.min(Math.max(parseInt(e.target.value) || 0, 0), 10))}
+              />
+              <span className="text-sm text-muted-foreground">years (0-10)</span>
             </div>
           </div>
           <DialogFooter>
