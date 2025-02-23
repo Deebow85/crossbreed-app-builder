@@ -112,129 +112,128 @@ const Settings = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Settings</h1>
+    <div className="container max-w-2xl mx-auto p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Settings</h1>
         <Button variant="outline" onClick={() => navigate("/")}>
           Back to Calendar
         </Button>
       </div>
 
-      <Card className="p-6 space-y-6">
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold flex items-center gap-2">
-            <CalendarDays className="h-5 w-5" />
-            Calendar
-          </h2>
-          <div className="flex items-center gap-4">
-            <Button
-              variant={settings.calendarSize === 'default' ? 'default' : 'outline'}
-              onClick={() => updateCalendarSize('default')}
-              className="flex items-center gap-2"
-            >
-              Default Size
-            </Button>
-            <Button
-              variant={settings.calendarSize === 'large' ? 'default' : 'outline'}
-              onClick={() => updateCalendarSize('large')}
-              className="flex items-center gap-2"
-            >
-              Large Size
-            </Button>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold flex items-center gap-2">
-            <Paintbrush className="h-5 w-5" />
-            Theme
-          </h2>
-          <div className="flex items-center gap-4">
-            <Button
-              variant={theme === 'light' ? 'default' : 'outline'}
-              onClick={() => setTheme('light')}
-              className="flex items-center gap-2"
-            >
-              <Sun className="h-4 w-4" />
-              Light
-            </Button>
-            <Button
-              variant={theme === 'dark' ? 'default' : 'outline'}
-              onClick={() => setTheme('dark')}
-              className="flex items-center gap-2"
-            >
-              <Moon className="h-4 w-4" />
-              Dark
-            </Button>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Currency
-          </h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="currency-symbol">Symbol</Label>
-              <Input
-                id="currency-symbol"
-                value={settings.currency.symbol}
-                onChange={(e) => updateCurrency(e.target.value)}
-                maxLength={3}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="payday-date">Payday Date</Label>
-              <Input
-                id="payday-date"
-                type="number"
-                min={1}
-                max={31}
-                value={settings.paydayDate}
-                onChange={(e) => updatePaydayDate(parseInt(e.target.value))}
-              />
+      <Card className="space-y-4 p-4">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <CalendarDays className="h-4 w-4" />
+              Calendar Size
+            </h2>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant={settings.calendarSize === 'default' ? 'default' : 'outline'}
+                onClick={() => updateCalendarSize('default')}
+              >
+                Default
+              </Button>
+              <Button
+                size="sm"
+                variant={settings.calendarSize === 'large' ? 'default' : 'outline'}
+                onClick={() => updateCalendarSize('large')}
+              >
+                Large
+              </Button>
             </div>
           </div>
-        </div>
 
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Shift Types</h2>
-          {settings.shiftTypes.map((type, index) => (
-            <div key={index} className="grid grid-cols-2 gap-4 p-4 border rounded-lg">
-              <div className="space-y-2">
-                <Label htmlFor={`shift-name-${index}`}>Name</Label>
+          <div className="space-y-2">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Paintbrush className="h-4 w-4" />
+              Theme
+            </h2>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant={theme === 'light' ? 'default' : 'outline'}
+                onClick={() => setTheme('light')}
+              >
+                <Sun className="h-4 w-4 mr-1" />
+                Light
+              </Button>
+              <Button
+                size="sm"
+                variant={theme === 'dark' ? 'default' : 'outline'}
+                onClick={() => setTheme('dark')}
+              >
+                <Moon className="h-4 w-4 mr-1" />
+                Dark
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Payment Settings
+            </h2>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label htmlFor="currency-symbol" className="text-sm">Symbol</Label>
                 <Input
-                  id={`shift-name-${index}`}
-                  value={type.name}
-                  onChange={(e) => updateShiftType(index, 'name', e.target.value)}
+                  id="currency-symbol"
+                  value={settings.currency.symbol}
+                  onChange={(e) => updateCurrency(e.target.value)}
+                  maxLength={3}
+                  className="h-8"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor={`shift-color-${index}`}>Color</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id={`shift-color-${index}`}
-                    type="color"
-                    value={type.color}
-                    onChange={(e) => updateShiftType(index, 'color', e.target.value)}
-                    className="w-16"
-                  />
-                  <Button
-                    onClick={() => {
-                      const color = type.color;
-                      const gradient = `linear-gradient(135deg, ${color} 0%, ${color}99 100%)`;
-                      updateShiftType(index, 'gradient', gradient);
-                    }}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    Generate Gradient
-                  </Button>
-                </div>
+              <div>
+                <Label htmlFor="payday-date" className="text-sm">Payday</Label>
+                <Input
+                  id="payday-date"
+                  type="number"
+                  min={1}
+                  max={31}
+                  value={settings.paydayDate}
+                  onChange={(e) => updatePaydayDate(parseInt(e.target.value))}
+                  className="h-8"
+                />
               </div>
             </div>
-          ))}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold">Shift Types</h2>
+          <div className="grid gap-2">
+            {settings.shiftTypes.map((type, index) => (
+              <div key={index} className="flex gap-2 items-center p-2 border rounded-lg">
+                <Input
+                  value={type.name}
+                  onChange={(e) => updateShiftType(index, 'name', e.target.value)}
+                  className="w-24 h-8"
+                  placeholder="Name"
+                />
+                <Input
+                  type="color"
+                  value={type.color}
+                  onChange={(e) => updateShiftType(index, 'color', e.target.value)}
+                  className="w-16 h-8"
+                />
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    const color = type.color;
+                    const gradient = `linear-gradient(135deg, ${color} 0%, ${color}99 100%)`;
+                    updateShiftType(index, 'gradient', gradient);
+                  }}
+                  variant="outline"
+                  className="flex-1 h-8"
+                >
+                  Generate Gradient
+                </Button>
+              </div>
+            ))}
+          </div>
         </div>
       </Card>
     </div>

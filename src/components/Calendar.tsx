@@ -562,7 +562,7 @@ const Calendar = () => {
                 variant="ghost"
                 className={cn(
                   "p-0 w-full relative hover:bg-accent transition-colors flex items-center justify-center",
-                  calendarSize === 'large' ? "h-16 sm:h-20" : "h-10 sm:h-12",
+                  calendarSize === 'large' ? "h-24 sm:h-32" : "h-10 sm:h-12",
                   !isSameMonth(date, currentDate) && "opacity-30",
                   isToday(date) && !shift && "bg-accent"
                 )}
@@ -581,7 +581,7 @@ const Calendar = () => {
               >
                 <span className={cn(
                   "absolute top-0.5 left-1/2 -translate-x-1/2",
-                  calendarSize === 'large' ? "text-sm sm:text-base" : "text-[10px] sm:text-xs"
+                  calendarSize === 'large' ? "text-base sm:text-lg" : "text-[10px] sm:text-xs"
                 )}>
                   {format(date, 'd')}
                 </span>
@@ -589,7 +589,7 @@ const Calendar = () => {
                   <span 
                     className={cn(
                       "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-bold",
-                      calendarSize === 'large' ? "text-xl sm:text-2xl" : "text-base sm:text-lg"
+                      calendarSize === 'large' ? "text-2xl sm:text-3xl" : "text-base sm:text-lg"
                     )}
                     style={{ color: shift ? 'white' : '#F97316' }}
                   >
@@ -600,7 +600,7 @@ const Calendar = () => {
                   <StickyNote 
                     className={cn(
                       "absolute bottom-0.5 left-0.5",
-                      calendarSize === 'large' ? "h-3.5 w-3.5 sm:h-4 sm:w-4" : "h-2.5 w-2.5 sm:h-3 sm:w-3"
+                      calendarSize === 'large' ? "h-5 w-5 sm:h-6 sm:w-6" : "h-2.5 w-2.5 sm:h-3 sm:w-3"
                     )}
                     style={{ color: shift ? 'white' : '#F97316' }}
                   />
@@ -609,7 +609,7 @@ const Calendar = () => {
                   <Bell 
                     className={cn(
                       "absolute bottom-0.5 right-0.5",
-                      calendarSize === 'large' ? "h-3.5 w-3.5 sm:h-4 sm:w-4" : "h-2.5 w-2.5 sm:h-3 sm:w-3"
+                      calendarSize === 'large' ? "h-5 w-5 sm:h-6 sm:w-6" : "h-2.5 w-2.5 sm:h-3 sm:w-3"
                     )}
                     style={{ color: shift ? 'white' : '#F97316' }}
                   />
@@ -617,7 +617,7 @@ const Calendar = () => {
                 {shift && (
                   <span className={cn(
                     "absolute bottom-0.5 font-medium",
-                    calendarSize === 'large' ? "text-xs sm:text-sm" : "text-[8px] sm:text-xs"
+                    calendarSize === 'large' ? "text-sm sm:text-base" : "text-[8px] sm:text-xs"
                   )}>
                     {shift.shiftType.name}
                   </span>
