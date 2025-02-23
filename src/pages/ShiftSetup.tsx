@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -196,15 +195,11 @@ const ShiftSetup = () => {
                 <Input
                   value={type.symbol}
                   onChange={(e) => {
-                    const value = e.target.value;
-                    if (value.length <= 1) {
-                      updateShiftType(index, 'symbol', value.toUpperCase());
-                    }
+                    updateShiftType(index, 'symbol', e.target.value.toUpperCase());
                   }}
-                  className="w-12 h-7 text-center font-semibold uppercase"
+                  className="w-16 h-7 text-center font-semibold uppercase"
                   placeholder=""
                   disabled={!isEditing && !type.isNew}
-                  maxLength={1}
                 />
                 <div 
                   className="w-14 h-7 rounded border"
