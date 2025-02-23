@@ -195,9 +195,9 @@ const ShiftSetup = () => {
                       {type.name} ({type.symbol})
                     </span>
                     <Input
-                      value="Label text goes here"
+                      value={type.symbol}
                       readOnly
-                      className="h-7 flex-1"
+                      className="h-7 flex-1 text-center font-semibold"
                     />
                     <div 
                       className="w-14 h-7 rounded border"
@@ -223,9 +223,9 @@ const ShiftSetup = () => {
                       placeholder=""
                     />
                     <Input
-                      value=""
-                      placeholder="Label text"
-                      className="h-7 flex-1"
+                      value={type.symbol}
+                      readOnly
+                      className="h-7 flex-1 text-center font-semibold"
                     />
                     <div 
                       className="w-14 h-7 rounded border"
