@@ -1,52 +1,15 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Banknote, Clock, CalendarDays, StickyNote, Search, Bell, Plus, Check } from "lucide-react";
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, differenceInDays, startOfWeek, endOfWeek, addDays, setHours, setMinutes, getDay, addWeeks, lastDayOfMonth } from "date-fns";
-import { cn } from "@/lib/utils";
+import { ChevronLeft, ChevronRight, Banknote } from "lucide-react";
+import { format, addMonths, subMonths } from "date-fns";
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useTheme } from "@/lib/theme";
 import { CalendarNavigation } from "./calendar/CalendarNavigation";
-import { ShiftType, ShiftAssignment, PatternCycle } from "@/types/calendar";
+import { CalendarGrid } from "./calendar/CalendarGrid";
+import { ShiftType, ShiftAssignment } from "@/types/calendar";
 import { generatePattern } from "@/utils/patternGenerator";
-import { Button } from "@/components/ui/button";
-
-type ShiftPattern = {
-  id: string;
-  name: string;
-  color: string;
-  shiftType: ShiftType;
-  daysOn: number;
-  daysOff: number;
-  startDate?: Date;
-};
-
-type Note = {
-  date: string;
-  text: string;
-  swap?: ShiftSwap;
-};
-
-type SwapType = "owed" | "payback";
-
-type ShiftSwap = {
-  date: string;
-  workerName: string;
-  type: SwapType;
-  hours: number;
-  monetaryValue?: number;
-  note?: string;
-};
-
-type Alarm = {
-  date: string;
-  shiftId: string;
-  time: string;
-  enabled: boolean;
-};
 
 const shiftTypes: ShiftType[] = [];
 
@@ -60,31 +23,8 @@ const Calendar = () => {
   });
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState<string | null>(null);
-  const [paydaySettings, setPaydaySettings] = useState<any>({
-    date: 25,
-    symbol: "£",
-    paydayType: "monthly",
-    paydayDate: 15
-  });
-  const [pattern, setPattern] = useState<ShiftPattern>({
-    id: 'default',
-    name: 'Default',
-    color: '#CCCCCC',
-    shiftType: shiftTypes[0],
-    daysOn: 3,
-    daysOff: 3
-  });
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [alarms, setAlarms] = useState<Alarm[]>([]);
-  const [patterns, setPatterns] = useState<ShiftPattern[]>(() => {
-    const savedPatterns = localStorage.getItem('shiftPatterns');
-    return savedPatterns ? JSON.parse(savedPatterns) : [];
-  });
-  const [showPatternDialog, setShowPatternDialog] = useState(false);
-  const [newPattern, setNewPattern] = useState<Partial<ShiftPattern>>({});
-  const [highlightedPattern, setHighlightedPattern] = useState<string | null>(null);
+  const [notes, setNotes] = useState<{ date: string; text: string; }[]>([]);
+  const [alarms, setAlarms] = useState<{ date: string; }[]>([]);
   const [calendarSize, setCalendarSize] = useState<'default' | 'large' | 'small'>('default');
 
   useEffect(() => {
@@ -116,39 +56,6 @@ const Calendar = () => {
       }
     };
     loadShiftTypes();
-  }, []);
-
-  useEffect(() => {
-    const handlePatternGeneration = () => {
-      const state = JSON.parse(sessionStorage.getItem('patternData') || 'null');
-
-      if (state?.pattern && state?.startDate) {
-        const pattern: PatternCycle = state.pattern;
-        const startDate = new Date(state.startDate + 'T00:00:00');
-        const yearsToGenerate = Math.min(Math.max(state.years || 1, 0), 10);
-        
-        try {
-          const newShifts = generatePattern(pattern, startDate, yearsToGenerate);
-          
-          setShifts(prevShifts => {
-            const patternEndDate = addDays(startDate, yearsToGenerate * 365);
-            const filteredPrevShifts = prevShifts.filter(shift => {
-              const shiftDate = new Date(shift.date);
-              const isOutsideRange = shiftDate < startDate || shiftDate >= patternEndDate;
-              return isOutsideRange;
-            });
-            return [...filteredPrevShifts, ...newShifts];
-          });
-          
-          setCurrentDate(startDate);
-          sessionStorage.removeItem('patternData');
-        } catch (error) {
-          console.error('Error generating pattern:', error);
-        }
-      }
-    };
-
-    handlePatternGeneration();
   }, []);
 
   const monthStart = startOfMonth(currentDate);
@@ -646,116 +553,18 @@ const Calendar = () => {
           </TooltipProvider>
         </div>
 
-        <div className="grid grid-cols-7 gap-1 mb-2">
-          {weekDays.map((day) => (
-            <div 
-              key={day} 
-              className="text-center text-xs sm:text-sm font-medium text-muted-foreground"
-            >
-              {day}
-            </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-7 gap-1">
-          {(() => {
-            const firstDayOfMonth = startOfMonth(currentDate);
-            const lastDayOfMonth = endOfMonth(currentDate);
-            const startWeek = startOfWeek(firstDayOfMonth, { weekStartsOn: 1 });
-            const endWeek = endOfWeek(lastDayOfMonth, { weekStartsOn: 1 });
-            const daysToDisplay = eachDayOfInterval({ start: startWeek, end: endWeek });
-
-            const savedSettings = localStorage.getItem('appSettings');
-            const settings = savedSettings ? JSON.parse(savedSettings) : { calendarNumberLayout: 'centre' };
-            const numberLayout = settings.calendarNumberLayout || 'centre';
-
-            return daysToDisplay.map((date) => {
-              const shift = getShiftForDate(date);
-              const isPay = isPayday(date);
-              const note = getNote(date);
-              const alarm = alarms.find(a => a.date === date.toISOString());
-              
-              const numberPositionClasses = {
-                'centre': 'left-1/2 -translate-x-1/2',
-                'top-left': 'left-1',
-                'top-right': 'right-1'
-              }[numberLayout];
-              
-              return (
-                <Button
-                  key={date.toISOString()}
-                  variant="ghost"
-                  className={cn(
-                    "p-0 w-full relative hover:bg-accent transition-colors flex items-center justify-center",
-                    calendarSize === 'large' ? "h-20 sm:h-24" : "h-10 sm:h-12",
-                    !isSameMonth(date, currentDate) && "opacity-30",
-                    isToday(date) && !shift && "bg-accent",
-                    theme === 'dark' && !shift && "hover:bg-accent/50 data-[state=open]:bg-accent/50"
-                  )}
-                  style={shift ? {
-                    background: shift.shiftType.gradient,
-                    color: theme === 'dark' ? 'white' : 'inherit'
-                  } : undefined}
-                  onClick={() => handleDayClick(date)}
-                  onMouseDown={() => handleDayMouseDown(date)}
-                  onMouseUp={() => handleDayMouseUp(date)}
-                  onMouseEnter={() => isSelecting && handleDayMouseUp(date)}
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    addOrEditNote(date);
-                  }}
-                >
-                  <span className={cn(
-                    "absolute top-0.5",
-                    numberPositionClasses,
-                    calendarSize === 'large' ? "text-base sm:text-lg" : "text-[10px] sm:text-xs",
-                    theme === 'dark' && "text-foreground"
-                  )}>
-                    {format(date, 'd')}
-                  </span>
-                  {isPay && (
-                    <span 
-                      className={cn(
-                        "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-bold",
-                        calendarSize === 'large' ? "text-2xl sm:text-3xl" : "text-base sm:text-lg"
-                      )}
-                      style={{ color: shift ? 'white' : theme === 'dark' ? '#F97316' : '#F97316' }}
-                    >
-                      {paydaySettings.symbol}
-                    </span>
-                  )}
-                  {note && (
-                    <StickyNote 
-                      className={cn(
-                        "absolute bottom-0.5 left-0.5",
-                        calendarSize === 'large' ? "h-5 w-5 sm:h-6 sm:w-6" : "h-2.5 w-2.5 sm:h-3 sm:w-3"
-                      )}
-                      style={{ color: shift ? 'white' : theme === 'dark' ? '#F97316' : '#F97316' }}
-                    />
-                  )}
-                  {alarm && (
-                    <Bell 
-                      className={cn(
-                        "absolute bottom-0.5 right-0.5",
-                        calendarSize === 'large' ? "h-5 w-5 sm:h-6 sm:w-6" : "h-2.5 w-2.5 sm:h-3 sm:w-3"
-                      )}
-                      style={{ color: shift ? 'white' : theme === 'dark' ? '#F97316' : '#F97316' }}
-                    />
-                  )}
-                  {shift && (
-                    <span className={cn(
-                      "absolute bottom-0.5 font-medium",
-                      calendarSize === 'large' ? "text-sm sm:text-base" : "text-[8px] sm:text-xs",
-                      theme === 'dark' && "text-foreground"
-                    )}>
-                      {shift.shiftType.name}
-                    </span>
-                  )}
-                </Button>
-              );
-            });
-          })()}
-        </div>
+        <CalendarGrid
+          currentDate={currentDate}
+          shifts={shifts}
+          notes={notes}
+          alarms={alarms}
+          theme={theme}
+          calendarSize={calendarSize}
+          isPayday={isPayday}
+          onDayClick={handleDayClick}
+          onDayMouseDown={handleDayMouseDown}
+          onDayMouseUp={handleDayMouseUp}
+        />
       </Card>
       <CalendarNavigation />
     </div>
