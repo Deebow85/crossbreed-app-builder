@@ -293,7 +293,7 @@ const Calendar = () => {
               </h2>
             </div>
             <div className="flex flex-col items-center gap-1 mt-1">
-              <div className="flex flex-col items-center gap-2">
+              <div className="flex flex-col items-center gap-1">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
