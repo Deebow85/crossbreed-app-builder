@@ -164,23 +164,35 @@ const Calendar = () => {
         
         const newShifts: ShiftAssignment[] = [];
         
-        // Calculate total days in one sequence
-        const daysInOneSequence = pattern.sequences.reduce((total, seq) => total + seq.days, 0);
+        // Calculate total days in one sequence including the days off after repeats
+        const sequenceDays = pattern.sequences.reduce((total, seq) => total + seq.days, 0);
+        const totalSequenceDays = sequenceDays * pattern.repeatTimes + pattern.daysOffAfter;
+        const daysInOneSequence = totalSequenceDays;
         
-        // Calculate total days needed for the requested years (365.25 days per year to account for leap years)
+        // Calculate total days needed for the requested years
         const daysPerYear = 365.25;
         const totalDaysNeeded = Math.ceil(daysPerYear * yearsToGenerate);
         
         console.log('Pattern metrics:', {
-          daysInOneSequence,
+          sequenceDays,
+          daysOffAfter: pattern.daysOffAfter,
+          totalSequenceDays,
+          repeatTimes: pattern.repeatTimes,
           yearsToGenerate,
-          totalDaysNeeded,
-          daysPerYear
+          totalDaysNeeded
         });
         
         // Generate shifts for each day up to totalDaysNeeded
         for (let currentDay = 0; currentDay < totalDaysNeeded; currentDay++) {
-          const dayInSequence = currentDay % daysInOneSequence;
+          const dayInPattern = currentDay % totalSequenceDays;
+          const currentRepetition = Math.floor(dayInPattern / sequenceDays);
+          
+          // Skip days during the off period after repetitions
+          if (currentRepetition >= pattern.repeatTimes) {
+            continue;
+          }
+          
+          const dayInSequence = dayInPattern % sequenceDays;
           let daysAccumulated = 0;
           
           for (const sequence of pattern.sequences) {
@@ -190,10 +202,10 @@ const Calendar = () => {
                 const shiftDate = addDays(startDate, currentDay);
                 console.log('Adding shift:', {
                   day: currentDay,
-                  dayInSequence,
+                  dayInPattern,
+                  currentRepetition,
                   date: shiftDate.toISOString(),
-                  type: sequence.shiftType.name,
-                  yearProgress: currentDay / daysPerYear
+                  type: sequence.shiftType.name
                 });
                 
                 newShifts.push({
@@ -216,8 +228,7 @@ const Calendar = () => {
           totalDays: totalDaysNeeded,
           yearsGenerated: yearsToGenerate,
           firstShift: newShifts[0]?.date,
-          lastShift: newShifts[newShifts.length - 1]?.date,
-          approximateYearsGenerated: newShifts.length / (daysPerYear * (pattern.sequences.find(s => !s.isOff)?.days || 1) / daysInOneSequence)
+          lastShift: newShifts[newShifts.length - 1]?.date
         });
         
         setShifts(prevShifts => {
