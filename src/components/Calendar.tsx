@@ -548,83 +548,89 @@ const Calendar = () => {
         </div>
 
         <div className="grid grid-cols-7 gap-1">
-          {Array.from({ length: 7 * Math.ceil(daysInMonth.length / 7) }).map((_, index) => {
-            const date = new Date(monthStart);
-            date.setDate(date.getDate() - (date.getDay() || 7) + 1 + index);
-            const shift = getShiftForDate(date);
-            const isPay = isPayday(date);
-            const note = getNote(date);
-            const alarm = alarms.find(a => a.date === date.toISOString());
-            
-            return (
-              <Button
-                key={date.toISOString()}
-                variant="ghost"
-                className={cn(
-                  "p-0 w-full relative hover:bg-accent transition-colors flex items-center justify-center",
-                  calendarSize === 'large' ? "h-24 sm:h-32" : "h-10 sm:h-12",
-                  !isSameMonth(date, currentDate) && "opacity-30",
-                  isToday(date) && !shift && "bg-accent"
-                )}
-                style={shift ? {
-                  background: shift.shiftType.gradient,
-                  color: "white"
-                } : undefined}
-                onClick={() => handleDayClick(date)}
-                onMouseDown={() => handleDayMouseDown(date)}
-                onMouseUp={() => handleDayMouseUp(date)}
-                onMouseEnter={() => isSelecting && handleDayMouseUp(date)}
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  addOrEditNote(date);
-                }}
-              >
-                <span className={cn(
-                  "absolute top-0.5 left-1/2 -translate-x-1/2",
-                  calendarSize === 'large' ? "text-base sm:text-lg" : "text-[10px] sm:text-xs"
-                )}>
-                  {format(date, 'd')}
-                </span>
-                {isPay && (
-                  <span 
-                    className={cn(
-                      "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-bold",
-                      calendarSize === 'large' ? "text-2xl sm:text-3xl" : "text-base sm:text-lg"
-                    )}
-                    style={{ color: shift ? 'white' : '#F97316' }}
-                  >
-                    {paydaySettings.symbol}
-                  </span>
-                )}
-                {note && (
-                  <StickyNote 
-                    className={cn(
-                      "absolute bottom-0.5 left-0.5",
-                      calendarSize === 'large' ? "h-5 w-5 sm:h-6 sm:w-6" : "h-2.5 w-2.5 sm:h-3 sm:w-3"
-                    )}
-                    style={{ color: shift ? 'white' : '#F97316' }}
-                  />
-                )}
-                {alarm && (
-                  <Bell 
-                    className={cn(
-                      "absolute bottom-0.5 right-0.5",
-                      calendarSize === 'large' ? "h-5 w-5 sm:h-6 sm:w-6" : "h-2.5 w-2.5 sm:h-3 sm:w-3"
-                    )}
-                    style={{ color: shift ? 'white' : '#F97316' }}
-                  />
-                )}
-                {shift && (
+          {(() => {
+            const firstDayOfMonth = startOfMonth(currentDate);
+            const lastDayOfMonth = endOfMonth(currentDate);
+            const startWeek = startOfWeek(firstDayOfMonth, { weekStartsOn: 1 });
+            const endWeek = endOfWeek(lastDayOfMonth, { weekStartsOn: 1 });
+            const daysToDisplay = eachDayOfInterval({ start: startWeek, end: endWeek });
+
+            return daysToDisplay.map((date) => {
+              const shift = getShiftForDate(date);
+              const isPay = isPayday(date);
+              const note = getNote(date);
+              const alarm = alarms.find(a => a.date === date.toISOString());
+              
+              return (
+                <Button
+                  key={date.toISOString()}
+                  variant="ghost"
+                  className={cn(
+                    "p-0 w-full relative hover:bg-accent transition-colors flex items-center justify-center",
+                    calendarSize === 'large' ? "h-24 sm:h-32" : "h-10 sm:h-12",
+                    !isSameMonth(date, currentDate) && "opacity-30",
+                    isToday(date) && !shift && "bg-accent"
+                  )}
+                  style={shift ? {
+                    background: shift.shiftType.gradient,
+                    color: "white"
+                  } : undefined}
+                  onClick={() => handleDayClick(date)}
+                  onMouseDown={() => handleDayMouseDown(date)}
+                  onMouseUp={() => handleDayMouseUp(date)}
+                  onMouseEnter={() => isSelecting && handleDayMouseUp(date)}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    addOrEditNote(date);
+                  }}
+                >
                   <span className={cn(
-                    "absolute bottom-0.5 font-medium",
-                    calendarSize === 'large' ? "text-sm sm:text-base" : "text-[8px] sm:text-xs"
+                    "absolute top-0.5 left-1/2 -translate-x-1/2",
+                    calendarSize === 'large' ? "text-base sm:text-lg" : "text-[10px] sm:text-xs"
                   )}>
-                    {shift.shiftType.name}
+                    {format(date, 'd')}
                   </span>
-                )}
-              </Button>
-            );
-          })}
+                  {isPay && (
+                    <span 
+                      className={cn(
+                        "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-bold",
+                        calendarSize === 'large' ? "text-2xl sm:text-3xl" : "text-base sm:text-lg"
+                      )}
+                      style={{ color: shift ? 'white' : '#F97316' }}
+                    >
+                      {paydaySettings.symbol}
+                    </span>
+                  )}
+                  {note && (
+                    <StickyNote 
+                      className={cn(
+                        "absolute bottom-0.5 left-0.5",
+                        calendarSize === 'large' ? "h-5 w-5 sm:h-6 sm:w-6" : "h-2.5 w-2.5 sm:h-3 sm:w-3"
+                      )}
+                      style={{ color: shift ? 'white' : '#F97316' }}
+                    />
+                  )}
+                  {alarm && (
+                    <Bell 
+                      className={cn(
+                        "absolute bottom-0.5 right-0.5",
+                        calendarSize === 'large' ? "h-5 w-5 sm:h-6 sm:w-6" : "h-2.5 w-2.5 sm:h-3 sm:w-3"
+                      )}
+                      style={{ color: shift ? 'white' : '#F97316' }}
+                    />
+                  )}
+                  {shift && (
+                    <span className={cn(
+                      "absolute bottom-0.5 font-medium",
+                      calendarSize === 'large' ? "text-sm sm:text-base" : "text-[8px] sm:text-xs"
+                    )}>
+                      {shift.shiftType.name}
+                    </span>
+                  )}
+                </Button>
+              );
+            });
+          })()}
         </div>
       </Card>
 
