@@ -26,6 +26,9 @@ const ShiftSetup = () => {
   const [shiftTypes, setShiftTypes] = useState<ShiftTypeSettings[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [colorMode, setColorMode] = useState<'solid' | 'gradient' | null>(null);
+  const [startColor, setStartColor] = useState("#4B5563");
+  const [endColor, setEndColor] = useState("#6B7280");
 
   useEffect(() => {
     // Clear existing shift types from localStorage on first load
@@ -56,19 +59,33 @@ const ShiftSetup = () => {
   };
 
   const handleSolidColor = () => {
+    setColorMode('solid');
     if (selectedIndex !== null) {
-      const color = shiftTypes[selectedIndex].color;
-      updateShiftType(selectedIndex, 'gradient', `linear-gradient(135deg, ${color} 0%, ${color} 100%)`);
+      setStartColor(shiftTypes[selectedIndex].color);
     }
-    setIsDialogOpen(false);
   };
 
   const handleGradient = () => {
+    setColorMode('gradient');
     if (selectedIndex !== null) {
-      const color = shiftTypes[selectedIndex].color;
-      updateShiftType(selectedIndex, 'gradient', `linear-gradient(135deg, ${color} 0%, ${color}99 100%)`);
+      setStartColor(shiftTypes[selectedIndex].color);
+      setEndColor(shiftTypes[selectedIndex].color + "99");
     }
+  };
+
+  const handleColorConfirm = () => {
+    if (selectedIndex === null) return;
+    
+    if (colorMode === 'solid') {
+      updateShiftType(selectedIndex, 'color', startColor);
+      updateShiftType(selectedIndex, 'gradient', `linear-gradient(135deg, ${startColor} 0%, ${startColor} 100%)`);
+    } else if (colorMode === 'gradient') {
+      updateShiftType(selectedIndex, 'color', startColor);
+      updateShiftType(selectedIndex, 'gradient', `linear-gradient(135deg, ${startColor} 0%, ${endColor} 100%)`);
+    }
+    
     setIsDialogOpen(false);
+    setColorMode(null);
   };
 
   const addShiftType = () => {
@@ -83,6 +100,14 @@ const ShiftSetup = () => {
   const removeShiftType = (index: number) => {
     const newShiftTypes = shiftTypes.filter((_, i) => i !== index);
     saveShiftTypes(newShiftTypes);
+  };
+
+  const handleDialogOpen = (index: number) => {
+    setSelectedIndex(index);
+    setStartColor(shiftTypes[index].color);
+    setEndColor(shiftTypes[index].color + "99");
+    setIsDialogOpen(true);
+    setColorMode(null);
   };
 
   return (
@@ -121,10 +146,7 @@ const ShiftSetup = () => {
                 />
                 <Button
                   size="sm"
-                  onClick={() => {
-                    setSelectedIndex(index);
-                    setIsDialogOpen(true);
-                  }}
+                  onClick={() => handleDialogOpen(index)}
                   variant="outline"
                   className="flex-1 h-7 text-xs"
                 >
@@ -149,10 +171,41 @@ const ShiftSetup = () => {
           <DialogHeader>
             <DialogTitle>Select Colour Type</DialogTitle>
           </DialogHeader>
-          <div className="flex justify-center gap-4 pt-4">
-            <Button onClick={handleSolidColor}>Solid Colour</Button>
-            <Button onClick={handleGradient}>Gradient</Button>
-          </div>
+          {!colorMode ? (
+            <div className="flex justify-center gap-4 pt-4">
+              <Button onClick={handleSolidColor}>Solid Colour</Button>
+              <Button onClick={handleGradient}>Gradient</Button>
+            </div>
+          ) : (
+            <div className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label>{colorMode === 'solid' ? 'Colour' : 'Start Colour'}</Label>
+                <Input
+                  type="color"
+                  value={startColor}
+                  onChange={(e) => setStartColor(e.target.value)}
+                  className="w-full h-10"
+                />
+              </div>
+              
+              {colorMode === 'gradient' && (
+                <div className="space-y-2">
+                  <Label>End Colour</Label>
+                  <Input
+                    type="color"
+                    value={endColor}
+                    onChange={(e) => setEndColor(e.target.value)}
+                    className="w-full h-10"
+                  />
+                </div>
+              )}
+              
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setColorMode(null)}>Back</Button>
+                <Button onClick={handleColorConfirm}>Confirm</Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
