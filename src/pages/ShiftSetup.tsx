@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -188,6 +189,7 @@ const ShiftSetup = () => {
                   onChange={(e) => updateShiftType(index, 'name', e.target.value)}
                   className="w-24 h-7"
                   placeholder="Name"
+                  disabled={!isEditing && !type.isNew}
                 />
                 <div 
                   className="w-14 h-7 rounded border"
