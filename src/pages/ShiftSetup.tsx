@@ -105,7 +105,7 @@ const ShiftSetup = () => {
                   variant="outline"
                   className="flex-1 h-7 text-xs"
                 >
-                  Colour
+                  Select Colour
                 </Button>
                 <Button
                   size="sm"
