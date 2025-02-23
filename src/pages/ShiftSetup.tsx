@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { CalendarDays, Settings, Plus } from "lucide-react";
+import { CalendarDays, Settings, Plus, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -124,16 +124,28 @@ const ShiftSetup = () => {
 
       <Card className="flex-1 overflow-auto mb-20">
         <div className="p-2 sm:p-4 space-y-3">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center gap-2">
             <h2 className="text-lg font-semibold">Shift Types</h2>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={addShiftType}
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Add Type
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={addShiftType}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Type
+              </Button>
+              {shiftTypes.length > 0 && (
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  onClick={() => removeShiftType(shiftTypes.length - 1)}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Remove Type
+                </Button>
+              )}
+            </div>
           </div>
           <div className="grid gap-1.5">
             {shiftTypes.map((type, index) => (
@@ -141,14 +153,12 @@ const ShiftSetup = () => {
                 <Input
                   value={type.name}
                   onChange={(e) => updateShiftType(index, 'name', e.target.value)}
-                  className="w-20 h-7"
+                  className="w-24 h-7"
                   placeholder="Name"
                 />
-                <Input
-                  type="color"
-                  value={type.color}
-                  onChange={(e) => updateShiftType(index, 'color', e.target.value)}
-                  className="w-14 h-7"
+                <div 
+                  className="w-14 h-7 rounded border"
+                  style={{ background: type.gradient }}
                 />
                 <Button
                   size="sm"
@@ -157,14 +167,6 @@ const ShiftSetup = () => {
                   className="flex-1 h-7 text-xs"
                 >
                   Select Colour
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  className="h-7"
-                  onClick={() => removeShiftType(index)}
-                >
-                  Remove
                 </Button>
               </div>
             ))}
