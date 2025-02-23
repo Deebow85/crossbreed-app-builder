@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -187,39 +188,46 @@ const ShiftSetup = () => {
           </div>
           <div className="grid gap-1.5">
             {shiftTypes.map((type, index) => (
-              <div key={index} className="flex gap-2 items-center p-1.5 border rounded-lg">
-                <Input
-                  value={type.name}
-                  onChange={(e) => updateShiftType(index, 'name', e.target.value)}
-                  className="w-24 h-7"
-                  placeholder="Name"
-                  disabled={!isEditing && !type.isNew}
-                />
-                <Input
-                  value={type.symbol}
-                  onChange={(e) => {
-                    updateShiftType(index, 'symbol', e.target.value.toUpperCase());
-                  }}
-                  className="w-16 h-7 text-center font-semibold uppercase"
-                  placeholder=""
-                  disabled={!isEditing && !type.isNew}
-                />
-                <div 
-                  className="w-14 h-7 rounded border"
-                  style={{ background: type.gradient }}
-                  onClick={() => isEditing && handleDialogOpen(index)}
-                  role="button"
-                  aria-label="Select color"
-                />
+              <div key={index} className="flex items-center p-1.5 border rounded-lg">
+                <div className="flex items-center gap-2 flex-1">
+                  <div 
+                    className="w-14 h-7 rounded border"
+                    style={{ background: type.gradient }}
+                    onClick={() => isEditing && handleDialogOpen(index)}
+                    role="button"
+                    aria-label="Select color"
+                  />
+                  <Input
+                    value={type.name}
+                    onChange={(e) => updateShiftType(index, 'name', e.target.value)}
+                    className="w-24 h-7"
+                    placeholder="Name"
+                    disabled={!isEditing && !type.isNew}
+                  />
+                  <Input
+                    value={type.symbol}
+                    onChange={(e) => {
+                      updateShiftType(index, 'symbol', e.target.value.toUpperCase());
+                    }}
+                    className="w-16 h-7 text-center font-semibold uppercase"
+                    placeholder=""
+                    disabled={!isEditing && !type.isNew}
+                  />
+                </div>
                 {(type.isNew || isEditing) && (
                   <Button
                     size="sm"
                     onClick={() => handleDialogOpen(index)}
                     variant="outline"
-                    className="flex-1 h-7 text-xs"
+                    className="h-7 px-2 text-xs ml-2"
                   >
                     Select Colour
                   </Button>
+                )}
+                {!type.isNew && !isEditing && (
+                  <div className="ml-2 text-sm">
+                    {type.name} ({type.symbol})
+                  </div>
                 )}
               </div>
             ))}
