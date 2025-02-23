@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,13 @@ import { useTheme } from "@/lib/theme";
 import { Paintbrush, Sun, Moon, CreditCard, CalendarDays, Settings as SettingsIcon, HelpCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +42,21 @@ const defaultSettings: AppSettings = {
   calendarSize: 'small',
   calendarNumberLayout: 'centre'
 };
+
+const currencySymbols = [
+  { symbol: '£', name: 'British Pound (£)' },
+  { symbol: '$', name: 'US Dollar ($)' },
+  { symbol: '€', name: 'Euro (€)' },
+  { symbol: '¥', name: 'Japanese Yen (¥)' },
+  { symbol: '₹', name: 'Indian Rupee (₹)' },
+  { symbol: '₽', name: 'Russian Ruble (₽)' },
+  { symbol: '₿', name: 'Bitcoin (₿)' },
+  { symbol: '₴', name: 'Ukrainian Hryvnia (₴)' },
+  { symbol: '₩', name: 'South Korean Won (₩)' },
+  { symbol: 'A$', name: 'Australian Dollar (A$)' },
+  { symbol: 'C$', name: 'Canadian Dollar (C$)' },
+  { symbol: 'CHF', name: 'Swiss Franc (CHF)' },
+];
 
 const Settings = () => {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
@@ -204,15 +225,23 @@ const Settings = () => {
                 Payment Settings
               </h2>
               <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label htmlFor="currency-symbol" className="text-xs mb-1">Symbol</Label>
-                  <Input
-                    id="currency-symbol"
+                <div className="space-y-1">
+                  <Label htmlFor="currency-symbol" className="text-xs">Currency</Label>
+                  <Select
                     value={settings.currency.symbol}
-                    onChange={(e) => updateCurrency(e.target.value)}
-                    maxLength={3}
-                    className="h-7"
-                  />
+                    onValueChange={updateCurrency}
+                  >
+                    <SelectTrigger id="currency-symbol" className="h-7">
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {currencySymbols.map(({ symbol, name }) => (
+                        <SelectItem key={symbol} value={symbol}>
+                          {name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="payday-date" className="text-xs mb-1">Payday</Label>
