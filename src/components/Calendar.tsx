@@ -172,8 +172,7 @@ const Calendar = () => {
               const shiftType = {
                 name: sequence.shiftType.name,
                 color: sequence.shiftType.color,
-                gradient: sequence.shiftType.gradient,
-                symbol: sequence.shiftType.symbol
+                gradient: sequence.shiftType.gradient
               };
               
               for (let day = 0; day < sequence.days; day++) {
