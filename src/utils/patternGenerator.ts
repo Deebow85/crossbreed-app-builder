@@ -39,20 +39,27 @@ export const generatePattern = (
   let currentDate = startOfDay(new Date(startDate));
   const endDate = addDays(currentDate, years * 365);
 
-  // When repeatTimes is 0, just follow the sequence continuously
+  // When repeatTimes is 0, just follow the sequence continuously without any days off after
   if (repeatTimes === 0) {
     while (currentDate < endDate) {
       for (const sequence of sequences) {
-        for (let day = 0; day < sequence.days; day++) {
-          if (currentDate >= endDate) break;
-          
-          if (!sequence.isOff && sequence.shiftType) {
+        // Skip if we've passed the end date
+        if (currentDate >= endDate) break;
+
+        if (!sequence.isOff && sequence.shiftType) {
+          // Add shift for each non-off day in the sequence
+          for (let day = 0; day < sequence.days; day++) {
+            if (currentDate >= endDate) break;
+            
             shifts.push({
               date: currentDate.toISOString(),
               shiftType: sequence.shiftType
             });
+            currentDate = addDays(currentDate, 1);
           }
-          currentDate = addDays(currentDate, 1);
+        } else {
+          // For off days, just advance the date
+          currentDate = addDays(currentDate, sequence.days);
         }
       }
     }
@@ -63,21 +70,28 @@ export const generatePattern = (
   while (currentDate < endDate) {
     for (let repeat = 0; repeat < repeatTimes; repeat++) {
       for (const sequence of sequences) {
-        for (let day = 0; day < sequence.days; day++) {
-          if (currentDate >= endDate) break;
-          
-          if (!sequence.isOff && sequence.shiftType) {
+        // Skip if we've passed the end date
+        if (currentDate >= endDate) break;
+
+        if (!sequence.isOff && sequence.shiftType) {
+          // Add shift for each non-off day in the sequence
+          for (let day = 0; day < sequence.days; day++) {
+            if (currentDate >= endDate) break;
+            
             shifts.push({
               date: currentDate.toISOString(),
               shiftType: sequence.shiftType
             });
+            currentDate = addDays(currentDate, 1);
           }
-          currentDate = addDays(currentDate, 1);
+        } else {
+          // For off days, just advance the date
+          currentDate = addDays(currentDate, sequence.days);
         }
       }
     }
     
-    // Add days off after the pattern cycle
+    // Add days off after the pattern cycle (only for repeatTimes > 0)
     currentDate = addDays(currentDate, daysOffAfter);
   }
 
