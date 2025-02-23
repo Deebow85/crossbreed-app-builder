@@ -1,4 +1,4 @@
-
+<lov-code>
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -164,46 +164,53 @@ const Calendar = () => {
         
         const newShifts: ShiftAssignment[] = [];
         
-        // Calculate total days in one sequence including the days off after repeats
-        const sequenceDays = pattern.sequences.reduce((total, seq) => total + seq.days, 0);
-        const totalSequenceDays = sequenceDays * pattern.repeatTimes + pattern.daysOffAfter;
-        const daysInOneSequence = totalSequenceDays;
+        // Calculate total days in one sequence (e.g., 5 days on + 2 off = 7 days)
+        const daysInOneSequence = pattern.sequences.reduce((total, seq) => total + seq.days, 0);
+        // Calculate total days for all repeated sequences (e.g., 7 days × 3 repeats = 21 days)
+        const patternRepeatDays = daysInOneSequence * pattern.repeatTimes;
+        // Get the configured days off after the cycle (user input, not hardcoded)
+        const daysOffAfter = pattern.daysOffAfter;
+        // Full cycle = pattern days + configured days off
+        const totalDaysInCycle = patternRepeatDays + daysOffAfter;
         
-        // Calculate total days needed for the requested years
+        // Calculate cycles needed for the requested number of years
         const daysPerYear = 365.25;
-        const totalDaysNeeded = Math.ceil(daysPerYear * yearsToGenerate);
+        const totalDaysNeeded = daysPerYear * yearsToGenerate;
+        const cyclesNeeded = Math.ceil(totalDaysNeeded / totalDaysInCycle);
         
         console.log('Pattern metrics:', {
-          sequenceDays,
-          daysOffAfter: pattern.daysOffAfter,
-          totalSequenceDays,
-          repeatTimes: pattern.repeatTimes,
+          daysInOneSequence,
+          patternRepeatDays,
+          daysOffAfter,
+          totalDaysInCycle,
           yearsToGenerate,
-          totalDaysNeeded
+          cyclesNeeded
         });
         
-        // Generate shifts for each day up to totalDaysNeeded
-        for (let currentDay = 0; currentDay < totalDaysNeeded; currentDay++) {
-          const dayInPattern = currentDay % totalSequenceDays;
-          const currentRepetition = Math.floor(dayInPattern / sequenceDays);
+        const totalDaysToGenerate = totalDaysInCycle * cyclesNeeded;
+        
+        let currentDay = 0;
+        
+        while (currentDay < totalDaysToGenerate) {
+          const dayInCurrentCycle = currentDay % totalDaysInCycle;
           
-          // Skip days during the off period after repetitions
-          if (currentRepetition >= pattern.repeatTimes) {
+          if (dayInCurrentCycle >= patternRepeatDays) {
+            currentDay++;
             continue;
           }
           
-          const dayInSequence = dayInPattern % sequenceDays;
+          const dayInPattern = dayInCurrentCycle % daysInOneSequence;
           let daysAccumulated = 0;
           
           for (const sequence of pattern.sequences) {
-            if (dayInSequence >= daysAccumulated && 
-                dayInSequence < daysAccumulated + sequence.days) {
+            if (dayInPattern >= daysAccumulated && 
+                dayInPattern < daysAccumulated + sequence.days) {
               if (sequence.shiftType && !sequence.isOff) {
                 const shiftDate = addDays(startDate, currentDay);
                 console.log('Adding shift:', {
                   day: currentDay,
+                  dayInCycle: dayInCurrentCycle,
                   dayInPattern,
-                  currentRepetition,
                   date: shiftDate.toISOString(),
                   type: sequence.shiftType.name
                 });
@@ -221,18 +228,21 @@ const Calendar = () => {
             }
             daysAccumulated += sequence.days;
           }
+          
+          currentDay++;
         }
         
         console.log('Pattern summary:', {
           totalShifts: newShifts.length,
-          totalDays: totalDaysNeeded,
+          cyclesGenerated: cyclesNeeded,
+          totalDays: totalDaysToGenerate,
           yearsGenerated: yearsToGenerate,
           firstShift: newShifts[0]?.date,
           lastShift: newShifts[newShifts.length - 1]?.date
         });
         
         setShifts(prevShifts => {
-          const patternEndDate = addDays(startDate, totalDaysNeeded);
+          const patternEndDate = addDays(startDate, totalDaysToGenerate);
           const filteredPrevShifts = prevShifts.filter(shift => {
             const shiftDate = new Date(shift.date);
             const isOutsideRange = shiftDate < startDate || shiftDate >= patternEndDate;
@@ -247,7 +257,7 @@ const Calendar = () => {
     };
 
     handlePatternGeneration();
-  }, []);
+  }, []); // Run once when component mounts
 
   useEffect(() => {
     console.log('Current shifts:', shifts);
@@ -862,28 +872,4 @@ const Calendar = () => {
 
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t py-4">
         <div className="container max-w-md mx-auto flex items-center justify-between px-4">
-          <Button variant="ghost" size="icon" className="hover:bg-accent">
-            <CalendarDays className="h-8 w-8" />
-          </Button>
-          
-          <div className="relative">
-            <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg">
-              <span className="text-primary-foreground font-semibold text-xl">S</span>
-            </div>
-          </div>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="hover:bg-accent"
-            onClick={() => navigate("/settings")}
-          >
-            <Settings className="h-8 w-8" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default Calendar;
+          <Button

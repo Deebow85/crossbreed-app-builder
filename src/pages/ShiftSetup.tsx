@@ -18,7 +18,6 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { format } from "date-fns";
-import { generatePattern } from "@/utils/patternGenerator";
 
 interface ShiftTypeSettings {
   name: string;
@@ -39,7 +38,6 @@ interface PatternCycle {
   repeatTimes: number;
   daysOffAfter: number;
   patternName?: string;
-  isContinuous?: boolean;
 }
 
 interface EditingPattern {
@@ -78,7 +76,6 @@ const ShiftSetup = () => {
   }[]>([]);
   const [isOpen, setIsOpen] = useState(true);
   const [editingPattern, setEditingPattern] = useState<EditingPattern | null>(null);
-  const [isContinuousPattern, setIsContinuousPattern] = useState(false);
 
   useEffect(() => {
     const savedSettings = localStorage.getItem('appSettings');
@@ -241,7 +238,7 @@ const ShiftSetup = () => {
     setShowPatternDialog(true);
   };
 
-  const generateShifts = (continuous: boolean) => {
+  const generateShifts = () => {
     if (currentPattern.length === 0) {
       alert('Please add at least one step to your pattern');
       return;
@@ -261,12 +258,9 @@ const ShiftSetup = () => {
       })),
       repeatTimes,
       daysOffAfter,
-      patternName,
-      isContinuous: continuous
+      patternName
     };
 
-    const shifts = generatePattern(pattern, startDate, yearsToGenerate);
-    
     const patternData = {
       pattern,
       startDate: startDate.toISOString().split('T')[0],
@@ -335,38 +329,15 @@ const ShiftSetup = () => {
     <div className="h-dvh flex flex-col p-2 sm:p-4">
       <div className="flex justify-between items-center mb-2">
         <h1 className="text-xl font-bold">Shift Setup</h1>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => clearCalendar()}
-            className="h-8 px-3 text-xs"
-          >
-            <RefreshCcw className="h-3 w-3 mr-1" />
-            Clear Calendar
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={openNewPatternDialog}
-            className="h-8 px-3 text-xs"
-          >
-            <Plus className="h-3 w-3 mr-1" />
-            Regular Pattern
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => {
-              setIsContinuousPattern(true);
-              openNewPatternDialog();
-            }}
-            className="h-8 px-3 text-xs"
-          >
-            <CalendarDays className="h-3 w-3 mr-1" />
-            Continuous Pattern
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={clearCalendar}
+          className="h-8 px-3 text-xs"
+        >
+          <RefreshCcw className="h-3 w-3 mr-1" />
+          Clear Calendar
+        </Button>
       </div>
 
       <Card className="flex-1 overflow-auto mb-20">
@@ -546,7 +517,7 @@ const ShiftSetup = () => {
         <DialogContent className="flex h-[85vh] flex-col overflow-hidden">
           <DialogHeader className="flex-none p-4 pb-2">
             <DialogTitle>
-              {editingPattern ? 'Edit Shift Pattern' : (isContinuousPattern ? 'Generate Continuous Pattern' : 'Generate Regular Pattern')}
+              {editingPattern ? 'Edit Shift Pattern' : 'Generate Shift Pattern'}
             </DialogTitle>
           </DialogHeader>
           
@@ -627,81 +598,48 @@ const ShiftSetup = () => {
                 ))}
               </div>
 
-              <div className="space-y-2">
-                <Label>Pattern Mode</Label>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    id="repeat"
-                    name="patternMode"
-                    checked={!isContinuousPattern}
-                    onChange={() => setIsContinuousPattern(false)}
-                    className="h-4 w-4"
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Repeat Pattern</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={repeatTimes}
+                    onChange={(e) => setRepeatTimes(parseInt(e.target.value))}
                   />
-                  <label htmlFor="repeat">Repeat Pattern</label>
-                  
-                  <input
-                    type="radio"
-                    id="continuous"
-                    name="patternMode"
-                    checked={isContinuousPattern}
-                    onChange={() => setIsContinuousPattern(true)}
-                    className="h-4 w-4 ml-4"
+                  <span className="text-sm text-muted-foreground">times</span>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Days Off After Cycle</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={daysOffAfter}
+                    onChange={(e) => setDaysOffAfter(parseInt(e.target.value))}
                   />
-                  <label htmlFor="continuous">Continuous Pattern</label>
+                  <span className="text-sm text-muted-foreground">days</span>
                 </div>
               </div>
-
-              {!isContinuousPattern && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Repeat Pattern</Label>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={repeatTimes}
-                      onChange={(e) => setRepeatTimes(parseInt(e.target.value))}
-                    />
-                    <span className="text-sm text-muted-foreground">times</span>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Days Off After Cycle</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={daysOffAfter}
-                      onChange={(e) => setDaysOffAfter(parseInt(e.target.value))}
-                    />
-                    <span className="text-sm text-muted-foreground">days</span>
-                  </div>
-                </div>
-              )}
 
               <div className="space-y-2">
                 <Label>Generate Pattern For</Label>
                 <Input
                   type="number"
-                  min="1"
+                  min="0"
                   max="10"
                   value={yearsToGenerate}
-                  onChange={(e) => setYearsToGenerate(Math.min(Math.max(parseInt(e.target.value) || 1, 1), 10))}
+                  onChange={(e) => setYearsToGenerate(Math.min(Math.max(parseInt(e.target.value) || 0, 0), 10))}
                 />
-                <span className="text-sm text-muted-foreground">years (1-10)</span>
-              </div>
-
-              <div className="space-y-2 mt-4">
-                <Label>Pattern Generation</Label>
-                <div className="flex flex-col gap-2">
-                  <Button 
-                    onClick={() => generateShifts(false)}
-                    className="w-full"
-                  >
-                    {editingPattern ? 'Update Pattern' : 'Generate Pattern'}
-                  </Button>
-                </div>
+                <span className="text-sm text-muted-foreground">years (0-10)</span>
               </div>
             </div>
+          </div>
+
+          <div className="flex-none p-4 bg-background border-t mt-auto">
+            <Button onClick={generateShifts} className="w-full">
+              {editingPattern ? 'Update Pattern' : 'Generate Pattern'}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
