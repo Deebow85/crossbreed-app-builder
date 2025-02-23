@@ -40,6 +40,16 @@ interface PatternCycle {
   patternName?: string;
 }
 
+interface EditingPattern {
+  index: number;
+  data: {
+    pattern: PatternCycle;
+    startDate: string;
+    years: number;
+    patternName: string;
+  };
+}
+
 const ShiftSetup = () => {
   const navigate = useNavigate();
   const [shiftTypes, setShiftTypes] = useState<ShiftTypeSettings[]>([]);
@@ -65,6 +75,7 @@ const ShiftSetup = () => {
     patternName: string;
   }[]>([]);
   const [isOpen, setIsOpen] = useState(true);
+  const [editingPattern, setEditingPattern] = useState<EditingPattern | null>(null);
 
   useEffect(() => {
     const savedSettings = localStorage.getItem('appSettings');
@@ -215,6 +226,18 @@ const ShiftSetup = () => {
     setCurrentPattern(currentPattern.filter((_, i) => i !== index));
   };
 
+  const openEditPatternDialog = (index: number) => {
+    const patternToEdit = existingPatterns[index];
+    setPatternName(patternToEdit.patternName);
+    setCurrentPattern(patternToEdit.pattern.sequences);
+    setRepeatTimes(patternToEdit.pattern.repeatTimes);
+    setDaysOffAfter(patternToEdit.pattern.daysOffAfter);
+    setYearsToGenerate(patternToEdit.years);
+    setPatternStartDate(patternToEdit.startDate);
+    setEditingPattern({ index, data: patternToEdit });
+    setShowPatternDialog(true);
+  };
+
   const generateShifts = () => {
     if (currentPattern.length === 0) {
       alert('Please add at least one step to your pattern');
@@ -244,13 +267,22 @@ const ShiftSetup = () => {
       years: yearsToGenerate,
       patternName
     };
+
+    let updatedPatterns;
+    if (editingPattern) {
+      updatedPatterns = [...existingPatterns];
+      updatedPatterns[editingPattern.index] = patternData;
+    } else {
+      updatedPatterns = [...existingPatterns, patternData];
+    }
     
-    const updatedPatterns = [...existingPatterns, patternData];
     sessionStorage.setItem('savedPatterns', JSON.stringify(updatedPatterns));
+    setExistingPatterns(updatedPatterns);
     
     sessionStorage.setItem('patternData', JSON.stringify(patternData));
     
     setShowPatternDialog(false);
+    setEditingPattern(null);
     navigate('/');
   };
 
@@ -273,6 +305,17 @@ const ShiftSetup = () => {
     setYearsToGenerate(1);
     setPatternStartDate(format(new Date(), 'yyyy-MM-dd'));
     setShowPatternDialog(true);
+  };
+
+  const closePatternDialog = () => {
+    setShowPatternDialog(false);
+    setEditingPattern(null);
+    setCurrentPattern([]);
+    setRepeatTimes(1);
+    setDaysOffAfter(0);
+    setYearsToGenerate(1);
+    setPatternName(`Pattern ${existingPatterns.length + 1}`);
+    setPatternStartDate(format(new Date(), 'yyyy-MM-dd'));
   };
 
   return (
@@ -422,6 +465,13 @@ const ShiftSetup = () => {
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => openEditPatternDialog(index)}
+                      >
+                        <PencilIcon className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => switchToPattern(patternData)}
                       >
                         <Check className="h-4 w-4" />
@@ -442,96 +492,17 @@ const ShiftSetup = () => {
         </div>
       </Card>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Select Colour Type</DialogTitle>
-          </DialogHeader>
-          {!colorMode ? (
-            <div className="flex justify-center gap-4 pt-4">
-              <Button onClick={handleSolidColor}>Solid Colour</Button>
-              <Button onClick={handleGradient}>Gradient</Button>
-            </div>
-          ) : (
-            <div className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label>{colorMode === 'solid' ? 'Colour' : 'Start Colour'}</Label>
-                <Input
-                  type="color"
-                  value={startColor}
-                  onChange={(e) => setStartColor(e.target.value)}
-                  className="w-full h-10"
-                />
-              </div>
-              
-              {colorMode === 'gradient' && (
-                <div className="space-y-2">
-                  <Label>End Colour</Label>
-                  <Input
-                    type="color"
-                    value={endColor}
-                    onChange={(e) => setEndColor(e.target.value)}
-                    className="w-full h-10"
-                  />
-                </div>
-              )}
-              
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setColorMode(null)}>Back</Button>
-                <Button onClick={handleColorConfirm}>Confirm</Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isRemoveDialogOpen} onOpenChange={setIsRemoveDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Remove Shift Types</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-2 py-4">
-            {shiftTypes.map((type, index) => (
-              <div 
-                key={index} 
-                className={`flex items-center justify-between p-2 border rounded-lg cursor-pointer ${
-                  selectedToRemove.includes(index) ? 'border-destructive bg-destructive/10' : ''
-                }`}
-                onClick={() => toggleShiftToRemove(index)}
-              >
-                <div className="flex items-center gap-2">
-                  <div 
-                    className="w-8 h-8 rounded border flex items-center justify-center font-semibold"
-                    style={{ background: type.gradient }}
-                  >
-                    {type.symbol}
-                  </div>
-                  <span>{type.name}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {selectedToRemove.includes(index) && (
-                    <Check className="h-4 w-4 text-destructive" />
-                  )}
-                </div>
-              </div>
-            ))}
-            {selectedToRemove.length > 0 && (
-              <Button
-                variant="destructive"
-                onClick={removeSelectedShiftTypes}
-                className="mt-2"
-              >
-                Remove Selected ({selectedToRemove.length})
-              </Button>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showPatternDialog} onOpenChange={setShowPatternDialog}>
+      <Dialog 
+        open={showPatternDialog} 
+        onOpenChange={(open) => {
+          if (!open) closePatternDialog();
+        }}
+      >
         <DialogContent className="flex h-[85vh] flex-col overflow-hidden">
           <DialogHeader className="flex-none p-4 pb-2">
-            <DialogTitle>Generate Shift Pattern</DialogTitle>
+            <DialogTitle>
+              {editingPattern ? 'Edit Shift Pattern' : 'Generate Shift Pattern'}
+            </DialogTitle>
           </DialogHeader>
           
           <div className="flex-1 overflow-y-auto">
@@ -650,7 +621,95 @@ const ShiftSetup = () => {
           </div>
 
           <div className="flex-none p-4 bg-background border-t mt-auto">
-            <Button onClick={generateShifts} className="w-full">Generate Pattern</Button>
+            <Button onClick={generateShifts} className="w-full">
+              {editingPattern ? 'Update Pattern' : 'Generate Pattern'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select Colour Type</DialogTitle>
+          </DialogHeader>
+          {!colorMode ? (
+            <div className="flex justify-center gap-4 pt-4">
+              <Button onClick={handleSolidColor}>Solid Colour</Button>
+              <Button onClick={handleGradient}>Gradient</Button>
+            </div>
+          ) : (
+            <div className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label>{colorMode === 'solid' ? 'Colour' : 'Start Colour'}</Label>
+                <Input
+                  type="color"
+                  value={startColor}
+                  onChange={(e) => setStartColor(e.target.value)}
+                  className="w-full h-10"
+                />
+              </div>
+              
+              {colorMode === 'gradient' && (
+                <div className="space-y-2">
+                  <Label>End Colour</Label>
+                  <Input
+                    type="color"
+                    value={endColor}
+                    onChange={(e) => setEndColor(e.target.value)}
+                    className="w-full h-10"
+                  />
+                </div>
+              )}
+              
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setColorMode(null)}>Back</Button>
+                <Button onClick={handleColorConfirm}>Confirm</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isRemoveDialogOpen} onOpenChange={setIsRemoveDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remove Shift Types</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-2 py-4">
+            {shiftTypes.map((type, index) => (
+              <div 
+                key={index} 
+                className={`flex items-center justify-between p-2 border rounded-lg cursor-pointer ${
+                  selectedToRemove.includes(index) ? 'border-destructive bg-destructive/10' : ''
+                }`}
+                onClick={() => toggleShiftToRemove(index)}
+              >
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-8 h-8 rounded border flex items-center justify-center font-semibold"
+                    style={{ background: type.gradient }}
+                  >
+                    {type.symbol}
+                  </div>
+                  <span>{type.name}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {selectedToRemove.includes(index) && (
+                    <Check className="h-4 w-4 text-destructive" />
+                  )}
+                </div>
+              </div>
+            ))}
+            {selectedToRemove.length > 0 && (
+              <Button
+                variant="destructive"
+                onClick={removeSelectedShiftTypes}
+                className="mt-2"
+              >
+                Remove Selected ({selectedToRemove.length})
+              </Button>
+            )}
           </div>
         </DialogContent>
       </Dialog>
