@@ -31,13 +31,13 @@ const ShiftSetup = () => {
   const [endColor, setEndColor] = useState("#6B7280");
 
   useEffect(() => {
-    // Clear existing shift types from localStorage on first load
+    // Load existing shift types from localStorage on first load
     const savedSettings = localStorage.getItem('appSettings');
     if (savedSettings) {
       const settings = JSON.parse(savedSettings);
-      settings.shiftTypes = [];
-      localStorage.setItem('appSettings', JSON.stringify(settings));
-      setShiftTypes([]);
+      if (settings.shiftTypes) {
+        setShiftTypes(settings.shiftTypes);
+      }
     }
   }, []);
 
@@ -69,7 +69,8 @@ const ShiftSetup = () => {
     setColorMode('gradient');
     if (selectedIndex !== null) {
       setStartColor(shiftTypes[selectedIndex].color);
-      setEndColor(shiftTypes[selectedIndex].color + "99");
+      const endColorValue = shiftTypes[selectedIndex].gradient.match(/,(.*?)100%/)?.[1]?.trim() || shiftTypes[selectedIndex].color + "99";
+      setEndColor(endColorValue);
     }
   };
 
@@ -104,8 +105,13 @@ const ShiftSetup = () => {
 
   const handleDialogOpen = (index: number) => {
     setSelectedIndex(index);
-    setStartColor(shiftTypes[index].color);
-    setEndColor(shiftTypes[index].color + "99");
+    const currentType = shiftTypes[index];
+    setStartColor(currentType.color);
+    
+    // Extract end color from gradient or use a default
+    const endColorValue = currentType.gradient.match(/,(.*?)100%/)?.[1]?.trim() || currentType.color + "99";
+    setEndColor(endColorValue);
+    
     setIsDialogOpen(true);
     setColorMode(null);
   };
