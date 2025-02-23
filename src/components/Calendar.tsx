@@ -397,14 +397,14 @@ const Calendar = () => {
     
     const dateStr = selectedDateForShift.toISOString();
     if (selectedType) {
-      const existingShift = shifts.find(s => s.date === dateStr);
-      if (existingShift) {
-        setShifts(shifts.filter(s => s.date !== dateStr));
-      }
-      setShifts([...shifts.filter(s => s.date !== dateStr), { date: dateStr, shiftType: selectedType }]);
+      setShifts(prevShifts => {
+        const newShifts = prevShifts.filter(s => s.date !== dateStr);
+        return [...newShifts, { date: dateStr, shiftType: selectedType }];
+      });
     } else {
-      setShifts(shifts.filter(s => s.date !== dateStr));
+      setShifts(prevShifts => prevShifts.filter(s => s.date !== dateStr));
     }
+    
     setShowShiftDialog(false);
     setSelectedDateForShift(null);
   };
@@ -879,25 +879,3 @@ const Calendar = () => {
           <Button variant="ghost" size="icon" className="hover:bg-accent">
             <CalendarDays className="h-8 w-8" />
           </Button>
-          
-          <div className="relative">
-            <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg">
-              <span className="text-primary-foreground font-semibold text-xl">S</span>
-            </div>
-          </div>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="hover:bg-accent"
-            onClick={() => navigate("/settings")}
-          >
-            <Settings className="h-8 w-8" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default Calendar;
