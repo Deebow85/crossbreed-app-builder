@@ -145,8 +145,8 @@ const Calendar = () => {
 
   useEffect(() => {
     const handlePatternGeneration = () => {
-      const state = window.history.state?.usr;
-      console.log('Route state:', state); // Debug log
+      const state = JSON.parse(sessionStorage.getItem('patternData') || 'null');
+      console.log('Pattern state:', state); // Debug log
 
       if (state?.pattern && state?.startDate) {
         const pattern: PatternCycle = state.pattern;
@@ -160,12 +160,8 @@ const Calendar = () => {
         
         // Generate shifts for each repeat of the pattern
         for (let repeat = 0; repeat < pattern.repeatTimes; repeat++) {
-          console.log(`Processing repeat ${repeat + 1} of ${pattern.repeatTimes}`); // Debug log
-          
           // Generate shifts for each sequence in the pattern
           for (const sequence of pattern.sequences) {
-            console.log('Processing sequence:', sequence); // Debug log
-            
             // Only add to shifts if it's not a days off period
             if (sequence.shiftType && !sequence.isOff) {
               for (let day = 0; day < sequence.days; day++) {
@@ -199,6 +195,9 @@ const Calendar = () => {
         
         // Set calendar to show the month of the start date
         setCurrentDate(startDate);
+        
+        // Clear the pattern data after processing
+        sessionStorage.removeItem('patternData');
       }
     };
 

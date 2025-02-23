@@ -201,9 +201,6 @@ const ShiftSetup = () => {
       return;
     }
     
-    const savedSettings = localStorage.getItem('appSettings');
-    const settings = savedSettings ? JSON.parse(savedSettings) : {};
-    
     const pattern: PatternCycle = {
       sequences: currentPattern.map(p => ({
         shiftType: p.shiftType,
@@ -217,17 +214,14 @@ const ShiftSetup = () => {
     console.log('Generating pattern:', pattern); // Debug log
     console.log('Start date:', patternStartDate); // Debug log
     
-    settings.lastPattern = pattern;
-    localStorage.setItem('appSettings', JSON.stringify(settings));
+    // Store pattern data in sessionStorage
+    sessionStorage.setItem('patternData', JSON.stringify({
+      pattern,
+      startDate: patternStartDate
+    }));
     
     setShowPatternDialog(false);
-    
-    navigate('/', { 
-      state: { 
-        pattern,
-        startDate: patternStartDate
-      }
-    });
+    navigate('/');
   };
 
   return (
