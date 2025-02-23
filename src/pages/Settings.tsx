@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,6 +28,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Switch } from "@/components/ui/switch";
 
 interface AppSettings {
   currency: {
@@ -39,6 +39,7 @@ interface AppSettings {
   paydayType: 'weekly' | 'fortnightly' | 'set-day' | 'first-day' | 'last-day';
   calendarSize: 'small' | 'large';
   calendarNumberLayout: 'centre' | 'top-left' | 'top-right';
+  longPressEnabled: boolean;
 }
 
 const defaultSettings: AppSettings = {
@@ -49,7 +50,8 @@ const defaultSettings: AppSettings = {
   paydayDate: 25,
   paydayType: 'set-day',
   calendarSize: 'small',
-  calendarNumberLayout: 'centre'
+  calendarNumberLayout: 'centre',
+  longPressEnabled: true
 };
 
 const currencySymbols = [
@@ -224,6 +226,22 @@ const Settings = () => {
                   >
                     Top Right
                   </Button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs">Long Press to Multi-select</Label>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={settings.longPressEnabled}
+                    onCheckedChange={(checked) => {
+                      saveSettings({
+                        ...settings,
+                        longPressEnabled: checked
+                      });
+                    }}
+                  />
+                  <Label className="text-sm">Enable long press to activate multi-select</Label>
                 </div>
               </div>
             </CollapsibleContent>
