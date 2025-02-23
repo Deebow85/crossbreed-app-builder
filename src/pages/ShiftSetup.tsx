@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -604,7 +603,7 @@ const ShiftSetup = () => {
                   <Label>Repeat Pattern</Label>
                   <Input
                     type="number"
-                    min="1"
+                    min="0"
                     value={repeatTimes}
                     onChange={(e) => setRepeatTimes(parseInt(e.target.value))}
                   />
