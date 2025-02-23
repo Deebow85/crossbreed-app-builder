@@ -304,7 +304,7 @@ const Calendar = () => {
                   </Tooltip>
                 </TooltipProvider>
 
-                <div className="-mt-2">
+                <div className="-mt-4">
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
