@@ -320,6 +320,7 @@ const ShiftSetup = () => {
               )}
             </div>
           </div>
+
           <div className="grid gap-1.5">
             {shiftTypes.map((type, index) => (
               <div key={index} className="flex items-center gap-2 p-1.5 border rounded-lg">
@@ -378,6 +379,46 @@ const ShiftSetup = () => {
               </div>
             ))}
           </div>
+
+          {existingPatterns.length > 0 && (
+            <div className="mt-8 space-y-3">
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-semibold">Generated Patterns</h2>
+              </div>
+              <div className="grid gap-2">
+                {existingPatterns.map((patternData, index) => (
+                  <div 
+                    key={index}
+                    className="flex items-center justify-between p-3 border rounded-lg bg-background/50"
+                  >
+                    <div className="space-y-1">
+                      <div className="font-medium">{patternData.patternName}</div>
+                      <div className="text-sm text-muted-foreground">
+                        Starts {format(new Date(patternData.startDate), 'dd MMM yyyy')} • 
+                        Generates for {patternData.years} year{patternData.years !== 1 ? 's' : ''}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => switchToPattern(patternData)}
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => deletePattern(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </Card>
 
