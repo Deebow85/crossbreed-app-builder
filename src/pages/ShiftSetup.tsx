@@ -20,12 +20,13 @@ const ShiftSetup = () => {
   const [shiftTypes, setShiftTypes] = useState<ShiftTypeSettings[]>([]);
 
   useEffect(() => {
+    // Clear existing shift types from localStorage on first load
     const savedSettings = localStorage.getItem('appSettings');
     if (savedSettings) {
       const settings = JSON.parse(savedSettings);
-      if (settings.shiftTypes) {
-        setShiftTypes(settings.shiftTypes);
-      }
+      settings.shiftTypes = [];
+      localStorage.setItem('appSettings', JSON.stringify(settings));
+      setShiftTypes([]);
     }
   }, []);
 
