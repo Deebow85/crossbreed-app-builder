@@ -567,7 +567,7 @@ const Calendar = () => {
                   variant="ghost"
                   className={cn(
                     "p-0 w-full relative hover:bg-accent transition-colors flex items-center justify-center",
-                    calendarSize === 'large' ? "h-16 sm:h-20" : "h-10 sm:h-12",
+                    calendarSize === 'large' ? "h-20 sm:h-24" : "h-10 sm:h-12",
                     !isSameMonth(date, currentDate) && "opacity-30",
                     isToday(date) && !shift && "bg-accent"
                   )}
