@@ -14,28 +14,10 @@ interface ShiftTypeSettings {
   gradient: string;
 }
 
-const defaultShiftTypes: ShiftTypeSettings[] = [
-  {
-    name: "Day",
-    color: "#8B5CF6",
-    gradient: "linear-gradient(135deg, #8B5CF6 0%, #9F75FF 100%)"
-  },
-  {
-    name: "Night",
-    color: "#0EA5E9",
-    gradient: "linear-gradient(135deg, #0EA5E9 0%, #38BDF8 100%)"
-  },
-  {
-    name: "OT",
-    color: "#F97316",
-    gradient: "linear-gradient(135deg, #F97316 0%, #FB923C 100%)"
-  }
-];
-
 const ShiftSetup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [shiftTypes, setShiftTypes] = useState<ShiftTypeSettings[]>(defaultShiftTypes);
+  const [shiftTypes, setShiftTypes] = useState<ShiftTypeSettings[]>([]);
 
   useEffect(() => {
     const savedSettings = localStorage.getItem('appSettings');
