@@ -18,6 +18,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { format } from "date-fns";
+import { generatePattern } from "@/utils/patternGenerator";
 
 interface ShiftTypeSettings {
   name: string;
@@ -256,11 +257,13 @@ const ShiftSetup = () => {
         days: p.days,
         isOff: p.isOff
       })),
-      repeatTimes: Math.max(0, repeatTimes), // Ensure repeatTimes can be 0 or greater
+      repeatTimes,
       daysOffAfter,
       patternName
     };
 
+    const shifts = generatePattern(pattern, startDate, yearsToGenerate);
+    
     const patternData = {
       pattern,
       startDate: startDate.toISOString().split('T')[0],
