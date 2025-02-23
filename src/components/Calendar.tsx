@@ -160,10 +160,13 @@ const Calendar = () => {
           return;
         }
         
-        let currentDate = startDate;
         const newShifts: ShiftAssignment[] = [];
         
+        const totalDaysInCycle = pattern.sequences.reduce((total, seq) => total + seq.days, 0);
+        
         for (let repeat = 0; repeat < pattern.repeatTimes; repeat++) {
+          let cycleStartDate = addDays(startDate, repeat * totalDaysInCycle);
+          
           for (const sequence of pattern.sequences) {
             if (sequence.shiftType && !sequence.isOff) {
               const shiftType = {
@@ -173,15 +176,15 @@ const Calendar = () => {
               };
               
               for (let day = 0; day < sequence.days; day++) {
-                const shiftDate = new Date(currentDate);
+                const shiftDate = new Date(cycleStartDate);
                 newShifts.push({
                   date: shiftDate.toISOString(),
                   shiftType: shiftType
                 });
-                currentDate = addDays(currentDate, 1);
+                cycleStartDate = addDays(cycleStartDate, 1);
               }
             } else {
-              currentDate = addDays(currentDate, sequence.days);
+              cycleStartDate = addDays(cycleStartDate, sequence.days);
             }
           }
         }
@@ -191,14 +194,14 @@ const Calendar = () => {
         setShifts(prevShifts => {
           const filteredPrevShifts = prevShifts.filter(shift => {
             const shiftDate = new Date(shift.date);
-            const isOutsideRange = shiftDate < startDate || shiftDate > currentDate;
+            const patternEndDate = addDays(startDate, totalDaysInCycle * pattern.repeatTimes);
+            const isOutsideRange = shiftDate < startDate || shiftDate >= patternEndDate;
             return isOutsideRange;
           });
           return [...filteredPrevShifts, ...newShifts];
         });
         
         setCurrentDate(startDate);
-        
         sessionStorage.removeItem('patternData');
       }
     };
