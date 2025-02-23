@@ -174,10 +174,6 @@ const Calendar = () => {
               
               for (let day = 0; day < sequence.days; day++) {
                 const shiftDate = new Date(currentDate);
-                if (isNaN(shiftDate.getTime())) {
-                  console.error('Invalid date generated:', currentDate);
-                  continue;
-                }
                 newShifts.push({
                   date: shiftDate.toISOString(),
                   shiftType: shiftType
@@ -188,8 +184,6 @@ const Calendar = () => {
               currentDate = addDays(currentDate, sequence.days);
             }
           }
-          
-          currentDate = addDays(currentDate, pattern.daysOffAfter);
         }
         
         console.log('Generated shifts:', newShifts);
