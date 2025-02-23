@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { CalendarDays, Settings, Plus, Trash2, PencilIcon, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +22,6 @@ interface ShiftTypeSettings {
 
 const ShiftSetup = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [shiftTypes, setShiftTypes] = useState<ShiftTypeSettings[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
@@ -118,10 +116,6 @@ const ShiftSetup = () => {
     const newShiftTypes = shiftTypes.filter((_, i) => i !== index);
     saveShiftTypes(newShiftTypes);
     setIsRemoveDialogOpen(false);
-    toast({
-      title: "Shift type removed",
-      description: `${shiftTypes[index].name} has been removed.`,
-    });
   };
 
   const toggleShiftToRemove = (index: number) => {
@@ -137,10 +131,6 @@ const ShiftSetup = () => {
     saveShiftTypes(newShiftTypes);
     setIsRemoveDialogOpen(false);
     setSelectedToRemove([]);
-    toast({
-      title: "Shift types removed",
-      description: `${selectedToRemove.length} shift type(s) have been removed.`,
-    });
   };
 
   const handleRemoveDialogOpen = () => {
