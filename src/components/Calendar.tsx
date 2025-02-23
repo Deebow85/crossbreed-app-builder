@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -311,32 +310,6 @@ const Calendar = () => {
               <TooltipContent>Next month</TooltipContent>
             </Tooltip>
           </TooltipProvider>
-        </div>
-
-        <div className="flex items-center justify-between mb-4">
-          <Button
-            variant={isSelectingMultiple ? "secondary" : "outline"}
-            size="sm"
-            onClick={() => {
-              setIsSelectingMultiple(!isSelectingMultiple);
-              if (!isSelectingMultiple) {
-                setSelectedDatesForShift([]);
-              }
-            }}
-            className="flex items-center gap-2"
-          >
-            <CheckSquare className="h-4 w-4" />
-            {isSelectingMultiple ? "Done Selecting" : "Select Multiple"}
-          </Button>
-          {isSelectingMultiple && selectedDatesForShift.length > 0 && (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => setShowShiftDialog(true)}
-            >
-              Set {selectedDatesForShift.length} Shifts
-            </Button>
-          )}
         </div>
 
         <div className="grid grid-cols-7 gap-1 mb-2">
