@@ -341,8 +341,9 @@ const ShiftSetup = () => {
     ];
 
     setCurrentPattern(weekdayPattern);
-    setRepeatTimes(52); // Set for a year
+    setRepeatTimes(52); // Default to 1 year
     setDaysOffAfter(0);
+    setYearsToGenerate(1); // Set default to 1 year
     setShowPatternDialog(true);
   };
 
@@ -638,20 +639,23 @@ const ShiftSetup = () => {
                     min="1"
                     value={repeatTimes}
                     onChange={(e) => setRepeatTimes(parseInt(e.target.value))}
+                    readOnly={currentPattern.length === 2 && currentPattern[0].days === 5 && currentPattern[1].days === 2}
                   />
                   <span className="text-sm text-muted-foreground">times</span>
                 </div>
                 
-                <div className="space-y-2">
-                  <Label>Days Off After Cycle</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    value={daysOffAfter}
-                    onChange={(e) => setDaysOffAfter(parseInt(e.target.value))}
-                  />
-                  <span className="text-sm text-muted-foreground">days</span>
-                </div>
+                {currentPattern.length !== 2 || currentPattern[0]?.days !== 5 || currentPattern[1]?.days !== 2 ? (
+                  <div className="space-y-2">
+                    <Label>Days Off After Cycle</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={daysOffAfter}
+                      onChange={(e) => setDaysOffAfter(parseInt(e.target.value))}
+                    />
+                    <span className="text-sm text-muted-foreground">days</span>
+                  </div>
+                ) : null}
               </div>
 
               <div className="space-y-2">
@@ -661,7 +665,14 @@ const ShiftSetup = () => {
                   min="0"
                   max="10"
                   value={yearsToGenerate}
-                  onChange={(e) => setYearsToGenerate(Math.min(Math.max(parseInt(e.target.value) || 0, 0), 10))}
+                  onChange={(e) => {
+                    const years = Math.min(Math.max(parseInt(e.target.value) || 0, 0), 10);
+                    setYearsToGenerate(years);
+                    // If this is a set days pattern (5-2), update repeat times automatically
+                    if (currentPattern.length === 2 && currentPattern[0]?.days === 5 && currentPattern[1]?.days === 2) {
+                      setRepeatTimes(years * 52);
+                    }
+                  }}
                 />
                 <span className="text-sm text-muted-foreground">years (0-10)</span>
               </div>
