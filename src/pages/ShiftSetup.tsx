@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ interface ShiftTypeSettings {
   name: string;
   color: string;
   gradient: string;
+  isNew?: boolean;
 }
 
 const ShiftSetup = () => {
@@ -41,10 +43,12 @@ const ShiftSetup = () => {
   }, []);
 
   const saveShiftTypes = (newShiftTypes: ShiftTypeSettings[]) => {
+    // Remove isNew flag before saving to localStorage
+    const typesToSave = newShiftTypes.map(({ isNew, ...rest }) => rest);
     setShiftTypes(newShiftTypes);
     const savedSettings = localStorage.getItem('appSettings');
     const settings = savedSettings ? JSON.parse(savedSettings) : {};
-    settings.shiftTypes = newShiftTypes;
+    settings.shiftTypes = typesToSave;
     localStorage.setItem('appSettings', JSON.stringify(settings));
   };
 
@@ -76,14 +80,24 @@ const ShiftSetup = () => {
   const handleColorConfirm = () => {
     if (selectedIndex === null) return;
     
+    const newShiftTypes = [...shiftTypes];
     if (colorMode === 'solid') {
-      updateShiftType(selectedIndex, 'color', startColor);
-      updateShiftType(selectedIndex, 'gradient', `linear-gradient(135deg, ${startColor} 0%, ${startColor} 100%)`);
+      newShiftTypes[selectedIndex] = {
+        ...newShiftTypes[selectedIndex],
+        color: startColor,
+        gradient: `linear-gradient(135deg, ${startColor} 0%, ${startColor} 100%)`,
+        isNew: false
+      };
     } else if (colorMode === 'gradient') {
-      updateShiftType(selectedIndex, 'color', startColor);
-      updateShiftType(selectedIndex, 'gradient', `linear-gradient(135deg, ${startColor} 0%, ${endColor} 100%)`);
+      newShiftTypes[selectedIndex] = {
+        ...newShiftTypes[selectedIndex],
+        color: startColor,
+        gradient: `linear-gradient(135deg, ${startColor} 0%, ${endColor} 100%)`,
+        isNew: false
+      };
     }
     
+    saveShiftTypes(newShiftTypes);
     setIsDialogOpen(false);
     setColorMode(null);
   };
@@ -92,7 +106,8 @@ const ShiftSetup = () => {
     const newShiftType: ShiftTypeSettings = {
       name: "New Shift",
       color: "#4B5563",
-      gradient: "linear-gradient(135deg, #4B5563 0%, #6B7280 100%)"
+      gradient: "linear-gradient(135deg, #4B5563 0%, #6B7280 100%)",
+      isNew: true
     };
     saveShiftTypes([...shiftTypes, newShiftType]);
   };
@@ -173,7 +188,7 @@ const ShiftSetup = () => {
                   role="button"
                   aria-label="Select color"
                 />
-                {isEditing && (
+                {(type.isNew || isEditing) && (
                   <Button
                     size="sm"
                     onClick={() => handleDialogOpen(index)}
