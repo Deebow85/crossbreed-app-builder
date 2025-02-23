@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/lib/theme";
 import { Paintbrush, Sun, Moon, CreditCard, CalendarDays, Settings as SettingsIcon, HelpCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
