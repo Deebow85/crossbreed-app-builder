@@ -65,6 +65,15 @@ type Alarm = {
   enabled: boolean;
 };
 
+type PatternCycle = {
+  sequences: {
+    shiftType: ShiftType | null;
+    days: number;
+  }[];
+  repeatTimes: number;
+  daysOffAfter: number;
+};
+
 const shiftTypes: ShiftType[] = [];
 
 const Calendar = () => {
@@ -131,6 +140,40 @@ const Calendar = () => {
       }
     };
     loadShiftTypes();
+  }, []);
+
+  useEffect(() => {
+    const handlePatternGeneration = () => {
+      const state = window.history.state?.usr;
+      if (state?.pattern && state?.startDate) {
+        const pattern: PatternCycle = state.pattern;
+        const startDate = new Date(state.startDate);
+        
+        let currentDate = startDate;
+        const newShifts: ShiftAssignment[] = [];
+        
+        for (let repeat = 0; repeat < pattern.repeatTimes; repeat++) {
+          for (const sequence of pattern.sequences) {
+            for (let day = 0; day < sequence.days; day++) {
+              if (sequence.shiftType) {
+                newShifts.push({
+                  date: new Date(currentDate).toISOString(),
+                  shiftType: sequence.shiftType
+                });
+              }
+              currentDate = addDays(currentDate, 1);
+            }
+          }
+          
+          currentDate = addDays(currentDate, pattern.daysOffAfter);
+        }
+        
+        setShifts(newShifts);
+        setCurrentDate(startDate);
+      }
+    };
+
+    handlePatternGeneration();
   }, []);
 
   const monthStart = startOfMonth(currentDate);
