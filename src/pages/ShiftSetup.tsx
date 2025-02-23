@@ -468,13 +468,13 @@ const ShiftSetup = () => {
       </Dialog>
 
       <Dialog open={showPatternDialog} onOpenChange={setShowPatternDialog}>
-        <DialogContent className="fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] w-full max-w-[500px] max-h-[85vh] flex flex-col gap-0 p-0">
-          <DialogHeader className="flex-none p-6 pb-2">
+        <DialogContent className="flex h-[85vh] flex-col overflow-hidden">
+          <DialogHeader className="flex-none p-4 pb-2">
             <DialogTitle>Generate Shift Pattern</DialogTitle>
           </DialogHeader>
           
-          <div className="flex-1 min-h-0 overflow-y-auto px-6">
-            <div className="space-y-4 py-4">
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4 space-y-4">
               <div className="space-y-2">
                 <Label>Pattern Name</Label>
                 <Input
@@ -588,7 +588,7 @@ const ShiftSetup = () => {
             </div>
           </div>
 
-          <div className="flex-none p-6 pt-2 mt-auto bg-background border-t">
+          <div className="flex-none p-4 bg-background border-t mt-auto">
             <Button onClick={generateShifts} className="w-full">Generate Pattern</Button>
           </div>
         </DialogContent>
