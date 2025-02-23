@@ -188,24 +188,26 @@ const ShiftSetup = () => {
           </div>
           <div className="grid gap-1.5">
             {shiftTypes.map((type, index) => (
-              <div key={index} className="flex items-center justify-between p-1.5 border rounded-lg">
+              <div key={index} className="flex items-center gap-2 p-1.5 border rounded-lg">
                 {!type.isNew && !isEditing ? (
-                  <div className="flex items-center gap-2 w-full">
+                  <>
                     <span className="text-sm min-w-20">
                       {type.name} ({type.symbol})
                     </span>
-                    <span className="text-sm flex-1">
-                      Label text goes here
-                    </span>
+                    <Input
+                      value="Label text goes here"
+                      readOnly
+                      className="h-7 flex-1"
+                    />
                     <div 
-                      className="w-14 h-7 rounded border ml-auto"
+                      className="w-14 h-7 rounded border"
                       style={{ background: type.gradient }}
                       role="button"
                       aria-label="Shift color"
                     />
-                  </div>
+                  </>
                 ) : (
-                  <div className="flex items-center gap-2 w-full">
+                  <>
                     <Input
                       value={type.name}
                       onChange={(e) => updateShiftType(index, 'name', e.target.value)}
@@ -220,7 +222,11 @@ const ShiftSetup = () => {
                       className="w-16 h-7 text-center font-semibold uppercase"
                       placeholder=""
                     />
-                    <div className="flex-1" />
+                    <Input
+                      value=""
+                      placeholder="Label text"
+                      className="h-7 flex-1"
+                    />
                     <div 
                       className="w-14 h-7 rounded border"
                       style={{ background: type.gradient }}
@@ -236,7 +242,7 @@ const ShiftSetup = () => {
                     >
                       Select Colour
                     </Button>
-                  </div>
+                  </>
                 )}
               </div>
             ))}
