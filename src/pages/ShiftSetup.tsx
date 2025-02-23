@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -576,7 +575,7 @@ const ShiftSetup = () => {
           <DialogHeader className="flex-none p-4 pb-2">
             <DialogTitle>Set Working Days Pattern</DialogTitle>
             <DialogDescription>
-              Configure a Monday to Friday working pattern
+              Configure a 5 days on, 2 days off pattern
             </DialogDescription>
           </DialogHeader>
           
@@ -621,10 +620,10 @@ const ShiftSetup = () => {
                         </option>
                       ))}
                     </select>
-                    <span className="text-sm">Mon-Fri (5 days)</span>
+                    <span className="text-sm">5 working days</span>
                   </div>
                   <div className="mt-2 text-sm text-muted-foreground">
-                    Followed by 2 days off (weekend)
+                    Followed by 2 days off
                   </div>
                 </div>
               </div>
