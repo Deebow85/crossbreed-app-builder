@@ -165,7 +165,7 @@ const Calendar = () => {
         const totalDaysInCycle = pattern.sequences.reduce((total, seq) => total + seq.days, 0);
         
         for (let repeat = 0; repeat < pattern.repeatTimes; repeat++) {
-          let cycleStartDate = addDays(startDate, repeat * totalDaysInCycle);
+          let currentDays = repeat * totalDaysInCycle;
           
           for (const sequence of pattern.sequences) {
             if (sequence.shiftType && !sequence.isOff) {
@@ -176,15 +176,14 @@ const Calendar = () => {
               };
               
               for (let day = 0; day < sequence.days; day++) {
-                const shiftDate = new Date(cycleStartDate);
                 newShifts.push({
-                  date: shiftDate.toISOString(),
+                  date: addDays(startDate, currentDays + day).toISOString(),
                   shiftType: shiftType
                 });
-                cycleStartDate = addDays(cycleStartDate, 1);
               }
+              currentDays += sequence.days;
             } else {
-              cycleStartDate = addDays(cycleStartDate, sequence.days);
+              currentDays += sequence.days;
             }
           }
         }
@@ -192,9 +191,9 @@ const Calendar = () => {
         console.log('Generated shifts:', newShifts);
         
         setShifts(prevShifts => {
+          const patternEndDate = addDays(startDate, totalDaysInCycle * pattern.repeatTimes);
           const filteredPrevShifts = prevShifts.filter(shift => {
             const shiftDate = new Date(shift.date);
-            const patternEndDate = addDays(startDate, totalDaysInCycle * pattern.repeatTimes);
             const isOutsideRange = shiftDate < startDate || shiftDate >= patternEndDate;
             return isOutsideRange;
           });
