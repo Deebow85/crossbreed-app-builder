@@ -356,7 +356,7 @@ const Calendar = () => {
           </Button>
           {isSelectingMultiple && selectedDatesForShift.length > 0 && (
             <Button
-              variant="primary"
+              variant="default"
               size="sm"
               onClick={() => setShowShiftDialog(true)}
             >
