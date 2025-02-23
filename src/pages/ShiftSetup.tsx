@@ -241,7 +241,7 @@ const ShiftSetup = () => {
     setShowPatternDialog(true);
   };
 
-  const generateShifts = () => {
+  const generateShifts = (continuous: boolean) => {
     if (currentPattern.length === 0) {
       alert('Please add at least one step to your pattern');
       return;
@@ -262,7 +262,7 @@ const ShiftSetup = () => {
       repeatTimes,
       daysOffAfter,
       patternName,
-      isContinuous: isContinuousPattern
+      isContinuous: continuous
     };
 
     const shifts = generatePattern(pattern, startDate, yearsToGenerate);
@@ -666,13 +666,28 @@ const ShiftSetup = () => {
                 />
                 <span className="text-sm text-muted-foreground">years (1-10)</span>
               </div>
-            </div>
-          </div>
 
-          <div className="flex-none p-4 bg-background border-t mt-auto">
-            <Button onClick={generateShifts} className="w-full">
-              {editingPattern ? 'Update Pattern' : 'Generate Pattern'}
-            </Button>
+              <div className="space-y-2 mt-4">
+                <Label>Pattern Generation</Label>
+                <div className="flex flex-col gap-2">
+                  <Button 
+                    onClick={() => generateShifts(false)}
+                    className="w-full"
+                    variant="outline"
+                  >
+                    <RefreshCcw className="h-4 w-4 mr-2" />
+                    Generate Regular Pattern
+                  </Button>
+                  <Button 
+                    onClick={() => generateShifts(true)}
+                    className="w-full"
+                  >
+                    <CalendarDays className="h-4 w-4 mr-2" />
+                    Generate Continuous Pattern
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
