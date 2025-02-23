@@ -397,7 +397,7 @@ const Calendar = () => {
       />
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t py-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t py-4 z-50">
         <div className="container max-w-md mx-auto flex items-center justify-between px-4">
           <Button variant="ghost" size="icon" className="hover:bg-accent">
             <CalendarDays className="h-8 w-8" />
@@ -430,7 +430,7 @@ const Calendar = () => {
 
       {/* Selection Mode Popup */}
       {isSelectingMultiple && (
-        <div className="fixed bottom-24 left-0 right-0 bg-background border-t py-2 px-4 flex items-center justify-between animate-in slide-in-from-bottom">
+        <div className="fixed bottom-24 left-0 right-0 bg-background border-t py-2 px-4 flex items-center justify-between animate-in slide-in-from-bottom z-40">
           <div className="text-sm">
             {selectedDatesForShift.length} dates selected
           </div>
