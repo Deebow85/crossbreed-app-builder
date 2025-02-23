@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Banknote, Clock, CalendarDays, StickyNote, S
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, differenceInDays, startOfWeek, endOfWeek, addDays, setHours, setMinutes } from "date-fns";
 import { cn } from "@/lib/utils";
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "react-tooltip";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 type ShiftType = {
   name: string;
