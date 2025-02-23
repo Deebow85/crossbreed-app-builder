@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -256,7 +257,7 @@ const ShiftSetup = () => {
         days: p.days,
         isOff: p.isOff
       })),
-      repeatTimes,
+      repeatTimes: Math.max(0, repeatTimes), // Ensure repeatTimes can be 0 or greater
       daysOffAfter,
       patternName
     };
