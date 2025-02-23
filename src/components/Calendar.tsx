@@ -414,6 +414,58 @@ const Calendar = () => {
     return null;
   };
 
+  const removeAlarm = async (date: Date) => {
+    const updatedAlarms = alarms.filter(a => a.date !== date.toISOString());
+    setAlarms(updatedAlarms);
+    try {
+      await LocalNotifications.cancel({
+        notifications: [{ id: parseInt(date.getTime().toString()) }]
+      });
+    } catch (error) {
+      console.error('Error removing alarm:', error);
+    }
+  };
+
+  const setAlarmForShift = async (date: Date, shift: ShiftAssignment) => {
+    const time = await window.prompt('Enter alarm time (HH:MM):', '08:00');
+    if (!time) return;
+
+    const [hours, minutes] = time.split(':').map(Number);
+    if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      alert('Please enter a valid time in 24-hour format (HH:MM)');
+      return;
+    }
+
+    const alarmDate = new Date(date);
+    alarmDate.setHours(hours, minutes, 0, 0);
+
+    const newAlarm: Alarm = {
+      date: date.toISOString(),
+      shiftId: shift.shiftType.name,
+      time: time,
+      enabled: true
+    };
+
+    setAlarms([...alarms, newAlarm]);
+
+    try {
+      await LocalNotifications.schedule({
+        notifications: [{
+          id: parseInt(date.getTime().toString()),
+          title: `Shift Reminder: ${shift.shiftType.name}`,
+          body: `Your ${shift.shiftType.name} shift starts at ${time}`,
+          schedule: { at: alarmDate }
+        }]
+      });
+    } catch (error) {
+      console.error('Error setting alarm:', error);
+    }
+  };
+
+  const isPayday = (date: Date): boolean => {
+    return date.getDate() === paydaySettings.date;
+  };
+
   return (
     <Card className="w-full mx-auto px-2 sm:px-4 py-4">
       <div className="flex items-center justify-between mb-6">
