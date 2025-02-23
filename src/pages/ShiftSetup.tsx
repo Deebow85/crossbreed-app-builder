@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { CalendarDays, Settings, Plus, Trash2, PencilIcon } from "lucide-react";
+import { CalendarDays, Settings, Plus, Trash2, PencilIcon, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -33,6 +32,7 @@ const ShiftSetup = () => {
   const [startColor, setStartColor] = useState("#4B5563");
   const [endColor, setEndColor] = useState("#6B7280");
   const [isEditing, setIsEditing] = useState(false);
+  const [selectedToRemove, setSelectedToRemove] = useState<number[]>([]);
 
   useEffect(() => {
     const savedSettings = localStorage.getItem('appSettings');
@@ -124,7 +124,27 @@ const ShiftSetup = () => {
     });
   };
 
+  const toggleShiftToRemove = (index: number) => {
+    setSelectedToRemove(prev => 
+      prev.includes(index) 
+        ? prev.filter(i => i !== index)
+        : [...prev, index]
+    );
+  };
+
+  const removeSelectedShiftTypes = () => {
+    const newShiftTypes = shiftTypes.filter((_, index) => !selectedToRemove.includes(index));
+    saveShiftTypes(newShiftTypes);
+    setIsRemoveDialogOpen(false);
+    setSelectedToRemove([]);
+    toast({
+      title: "Shift types removed",
+      description: `${selectedToRemove.length} shift type(s) have been removed.`,
+    });
+  };
+
   const handleRemoveDialogOpen = () => {
+    setSelectedToRemove([]);
     setIsRemoveDialogOpen(true);
   };
 
@@ -222,11 +242,6 @@ const ShiftSetup = () => {
                       className="w-16 h-7 text-center font-semibold uppercase"
                       placeholder=""
                     />
-                    <Input
-                      value={type.symbol}
-                      readOnly
-                      className="h-7 flex-1 text-center font-semibold"
-                    />
                     <div 
                       className="w-14 h-7 rounded border"
                       style={{ background: type.gradient }}
@@ -296,11 +311,17 @@ const ShiftSetup = () => {
       <Dialog open={isRemoveDialogOpen} onOpenChange={setIsRemoveDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Remove Shift Type</DialogTitle>
+            <DialogTitle>Remove Shift Types</DialogTitle>
           </DialogHeader>
           <div className="grid gap-2 py-4">
             {shiftTypes.map((type, index) => (
-              <div key={index} className="flex items-center justify-between p-2 border rounded-lg">
+              <div 
+                key={index} 
+                className={`flex items-center justify-between p-2 border rounded-lg cursor-pointer ${
+                  selectedToRemove.includes(index) ? 'border-destructive bg-destructive/10' : ''
+                }`}
+                onClick={() => toggleShiftToRemove(index)}
+              >
                 <div className="flex items-center gap-2">
                   <div 
                     className="w-8 h-8 rounded border flex items-center justify-center font-semibold"
@@ -310,15 +331,22 @@ const ShiftSetup = () => {
                   </div>
                   <span>{type.name}</span>
                 </div>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => removeShiftType(index)}
-                >
-                  Remove
-                </Button>
+                <div className="flex items-center gap-2">
+                  {selectedToRemove.includes(index) && (
+                    <Check className="h-4 w-4 text-destructive" />
+                  )}
+                </div>
               </div>
             ))}
+            {selectedToRemove.length > 0 && (
+              <Button
+                variant="destructive"
+                onClick={removeSelectedShiftTypes}
+                className="mt-2"
+              >
+                Remove Selected ({selectedToRemove.length})
+              </Button>
+            )}
           </div>
         </DialogContent>
       </Dialog>
