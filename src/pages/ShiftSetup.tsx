@@ -318,16 +318,26 @@ const ShiftSetup = () => {
     setPatternStartDate(format(new Date(), 'yyyy-MM-dd'));
   };
 
-  const clearAllPatterns = () => {
-    setExistingPatterns([]);
+  const clearCalendar = () => {
+    localStorage.removeItem('calendarShifts');
     sessionStorage.removeItem('savedPatterns');
     sessionStorage.removeItem('patternData');
+    setExistingPatterns([]);
   };
 
   return (
     <div className="h-dvh flex flex-col p-2 sm:p-4">
-      <div className="flex justify-center items-center mb-2">
+      <div className="flex justify-between items-center mb-2">
         <h1 className="text-xl font-bold">Shift Setup</h1>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={clearCalendar}
+          className="h-8 px-3 text-xs"
+        >
+          <RefreshCcw className="h-3 w-3 mr-1" />
+          Clear Calendar
+        </Button>
       </div>
 
       <Card className="flex-1 overflow-auto mb-20">
@@ -452,15 +462,6 @@ const ShiftSetup = () => {
                     />
                   </div>
                 </CollapsibleTrigger>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={clearAllPatterns}
-                  className="h-7 px-2 text-xs"
-                >
-                  <RefreshCcw className="h-3 w-3 mr-1" />
-                  Clear Calendar
-                </Button>
               </div>
               
               <CollapsibleContent className="space-y-2">
