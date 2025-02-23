@@ -914,9 +914,13 @@ const Calendar = () => {
               <Input
                 id="daysOn"
                 type="number"
+                min="1"
                 className="col-span-3"
                 value={newPattern.daysOn || ''}
-                onChange={(e) => setNewPattern({ ...newPattern, daysOn: e.target.value })}
+                onChange={(e) => setNewPattern({ 
+                  ...newPattern, 
+                  daysOn: parseInt(e.target.value) || 0 
+                })}
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -926,9 +930,13 @@ const Calendar = () => {
               <Input
                 id="daysOff"
                 type="number"
+                min="1"
                 className="col-span-3"
                 value={newPattern.daysOff || ''}
-                onChange={(e) => setNewPattern({ ...newPattern, daysOff: e.target.value })}
+                onChange={(e) => setNewPattern({ 
+                  ...newPattern, 
+                  daysOff: parseInt(e.target.value) || 0 
+                })}
               />
             </div>
           </div>
