@@ -151,33 +151,36 @@ const ShiftSetup = () => {
 
       <Card className="flex-1 overflow-auto mb-20">
         <div className="p-2 sm:p-4 space-y-3">
-          <div className="flex justify-between items-center gap-2">
+          <div className="flex justify-between items-center gap-1">
             <h2 className="text-lg font-semibold">Shift Types</h2>
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               <Button 
                 variant="outline" 
-                size="sm"
+                size="xs"
+                className="h-7 px-2 text-xs"
                 onClick={toggleEditing}
               >
-                <PencilIcon className="h-4 w-4 mr-1" />
-                {isEditing ? "Done" : "Edit Types"}
+                <PencilIcon className="h-3 w-3" />
+                {isEditing ? "Done" : "Edit"}
               </Button>
               <Button 
-                variant="outline" 
-                size="sm"
+                variant="outline"
+                size="xs"
+                className="h-7 px-2 text-xs"
                 onClick={addShiftType}
               >
-                <Plus className="h-4 w-4 mr-1" />
-                Add Type
+                <Plus className="h-3 w-3" />
+                Add
               </Button>
               {shiftTypes.length > 0 && (
                 <Button 
-                  variant="destructive" 
-                  size="sm"
+                  variant="destructive"
+                  size="xs"
+                  className="h-7 px-2 text-xs"
                   onClick={handleRemoveDialogOpen}
                 >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Remove Type
+                  <Trash2 className="h-3 w-3" />
+                  Remove
                 </Button>
               )}
             </div>
