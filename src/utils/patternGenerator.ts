@@ -1,4 +1,3 @@
-
 import { addDays, startOfDay } from "date-fns";
 
 export interface ShiftType {
@@ -39,40 +38,16 @@ export const generatePattern = (
   });
   
   const shifts: ShiftAssignment[] = [];
-  const sequences = pattern.sequences;
-  const isContinuous = pattern.isContinuous;
-
   let currentDate = startOfDay(new Date(startDate));
   const endDate = addDays(currentDate, years * 365);
 
-  let cycleCount = 0;
-  
-  // Single unified approach for both continuous and non-continuous patterns
+  // Simple continuous pattern generation - just keep adding shifts according to pattern
   while (currentDate < endDate) {
-    // If non-continuous and we've completed all repeats, add break and continue
-    if (!isContinuous && cycleCount >= pattern.repeatTimes) {
-      console.log(`Completed ${pattern.repeatTimes} cycles, adding ${pattern.daysOffAfter} days break`);
-      currentDate = addDays(currentDate, pattern.daysOffAfter);
-      cycleCount = 0;
-      continue;
-    }
-
-    // Process one complete cycle of the pattern
-    for (const sequence of sequences) {
-      if (currentDate >= endDate) break;
-      
-      console.log(`Processing sequence:`, {
-        isOff: sequence.isOff,
-        days: sequence.days,
-        shiftType: sequence.shiftType?.name,
-        currentDate: currentDate.toISOString()
-      });
-
-      // Whether work or off days, we process them the same way
+    for (const sequence of pattern.sequences) {
       for (let i = 0; i < sequence.days; i++) {
         if (currentDate >= endDate) break;
         
-        // Only add to shifts if it's a work day
+        // Only add shifts for work days
         if (!sequence.isOff && sequence.shiftType) {
           shifts.push({
             date: currentDate.toISOString(),
@@ -82,10 +57,9 @@ export const generatePattern = (
         
         currentDate = addDays(currentDate, 1);
       }
+      
+      if (currentDate >= endDate) break;
     }
-    
-    cycleCount++;
-    console.log(`Completed cycle ${cycleCount}`);
   }
 
   console.log(`Generated ${shifts.length} shifts`);
