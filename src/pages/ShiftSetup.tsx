@@ -468,123 +468,125 @@ const ShiftSetup = () => {
       </Dialog>
 
       <Dialog open={showPatternDialog} onOpenChange={setShowPatternDialog}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] grid grid-rows-[auto_1fr_auto] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Generate Shift Pattern</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label>Pattern Name</Label>
-              <Input
-                type="text"
-                value={patternName}
-                onChange={(e) => setPatternName(e.target.value)}
-                placeholder="Enter pattern name"
-              />
-            </div>
+          <div className="overflow-y-auto px-6 py-4">
+            <div className="grid gap-4">
+              <div className="space-y-2">
+                <Label>Pattern Name</Label>
+                <Input
+                  type="text"
+                  value={patternName}
+                  onChange={(e) => setPatternName(e.target.value)}
+                  placeholder="Enter pattern name"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label>Start Date</Label>
-              <Input
-                type="date"
-                value={patternStartDate}
-                onChange={(e) => setPatternStartDate(e.target.value)}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label>Pattern Sequence</Label>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={addToPattern}
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Step
-                </Button>
+              <div className="space-y-2">
+                <Label>Start Date</Label>
+                <Input
+                  type="date"
+                  value={patternStartDate}
+                  onChange={(e) => setPatternStartDate(e.target.value)}
+                />
               </div>
               
-              {currentPattern.map((step, index) => (
-                <div key={index} className="flex items-center gap-2 p-2 border rounded">
-                  <select
-                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    value={step.isOff ? "off" : (step.shiftType?.name || "")}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value === "off") {
-                        updatePattern(index, 'shiftType', null);
-                      } else {
-                        const selectedType = shiftTypes.find(t => t.name === value);
-                        updatePattern(index, 'shiftType', selectedType || null);
-                      }
-                    }}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label>Pattern Sequence</Label>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={addToPattern}
                   >
-                    <option value="off">Days Off</option>
-                    {shiftTypes.map((type) => (
-                      <option key={type.name} value={type.name}>
-                        {type.name}
-                      </option>
-                    ))}
-                  </select>
-                  
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Step
+                  </Button>
+                </div>
+                
+                {currentPattern.map((step, index) => (
+                  <div key={index} className="flex items-center gap-2 p-2 border rounded">
+                    <select
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      value={step.isOff ? "off" : (step.shiftType?.name || "")}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === "off") {
+                          updatePattern(index, 'shiftType', null);
+                        } else {
+                          const selectedType = shiftTypes.find(t => t.name === value);
+                          updatePattern(index, 'shiftType', selectedType || null);
+                        }
+                      }}
+                    >
+                      <option value="off">Days Off</option>
+                      {shiftTypes.map((type) => (
+                        <option key={type.name} value={type.name}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </select>
+                    
+                    <Input
+                      type="number"
+                      min="1"
+                      value={step.days}
+                      onChange={(e) => updatePattern(index, 'days', parseInt(e.target.value))}
+                      className="w-20"
+                    />
+                    <span className="text-sm text-muted-foreground">days</span>
+                    
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeFromPattern(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Repeat Pattern</Label>
                   <Input
                     type="number"
                     min="1"
-                    value={step.days}
-                    onChange={(e) => updatePattern(index, 'days', parseInt(e.target.value))}
-                    className="w-20"
+                    value={repeatTimes}
+                    onChange={(e) => setRepeatTimes(parseInt(e.target.value))}
+                  />
+                  <span className="text-sm text-muted-foreground">times</span>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Days Off After Cycle</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={daysOffAfter}
+                    onChange={(e) => setDaysOffAfter(parseInt(e.target.value))}
                   />
                   <span className="text-sm text-muted-foreground">days</span>
-                  
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeFromPattern(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
                 </div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Repeat Pattern</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  value={repeatTimes}
-                  onChange={(e) => setRepeatTimes(parseInt(e.target.value))}
-                />
-                <span className="text-sm text-muted-foreground">times</span>
               </div>
-              
+
               <div className="space-y-2">
-                <Label>Days Off After Cycle</Label>
+                <Label>Generate Pattern For</Label>
                 <Input
                   type="number"
                   min="0"
-                  value={daysOffAfter}
-                  onChange={(e) => setDaysOffAfter(parseInt(e.target.value))}
+                  max="10"
+                  value={yearsToGenerate}
+                  onChange={(e) => setYearsToGenerate(Math.min(Math.max(parseInt(e.target.value) || 0, 0), 10))}
                 />
-                <span className="text-sm text-muted-foreground">days</span>
+                <span className="text-sm text-muted-foreground">years (0-10)</span>
               </div>
             </div>
-
-            <div className="space-y-2">
-              <Label>Generate Pattern For</Label>
-              <Input
-                type="number"
-                min="0"
-                max="10"
-                value={yearsToGenerate}
-                onChange={(e) => setYearsToGenerate(Math.min(Math.max(parseInt(e.target.value) || 0, 0), 10))}
-              />
-              <span className="text-sm text-muted-foreground">years (0-10)</span>
-            </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="px-6 py-4">
             <Button onClick={generateShifts}>Generate Pattern</Button>
           </DialogFooter>
         </DialogContent>
