@@ -200,6 +200,12 @@ const ShiftSetup = () => {
       alert('Please add at least one step to your pattern');
       return;
     }
+
+    const startDate = new Date(patternStartDate + 'T00:00:00');
+    if (isNaN(startDate.getTime())) {
+      alert('Please select a valid start date');
+      return;
+    }
     
     const pattern: PatternCycle = {
       sequences: currentPattern.map(p => ({
@@ -212,12 +218,11 @@ const ShiftSetup = () => {
     };
     
     console.log('Generating pattern:', pattern); // Debug log
-    console.log('Start date:', patternStartDate); // Debug log
+    console.log('Start date:', startDate.toISOString()); // Debug log
     
-    // Store pattern data in sessionStorage
     sessionStorage.setItem('patternData', JSON.stringify({
       pattern,
-      startDate: patternStartDate
+      startDate: startDate.toISOString().split('T')[0] // Store as YYYY-MM-DD
     }));
     
     setShowPatternDialog(false);

@@ -150,7 +150,12 @@ const Calendar = () => {
 
       if (state?.pattern && state?.startDate) {
         const pattern: PatternCycle = state.pattern;
-        const startDate = new Date(state.startDate);
+        const startDate = new Date(state.startDate + 'T00:00:00');
+        
+        if (isNaN(startDate.getTime())) {
+          console.error('Invalid start date:', state.startDate);
+          return;
+        }
         
         console.log('Processing pattern:', pattern); // Debug log
         console.log('Start date:', startDate); // Debug log
@@ -165,8 +170,13 @@ const Calendar = () => {
             // Only add to shifts if it's not a days off period
             if (sequence.shiftType && !sequence.isOff) {
               for (let day = 0; day < sequence.days; day++) {
+                const shiftDate = new Date(currentDate);
+                if (isNaN(shiftDate.getTime())) {
+                  console.error('Invalid date generated:', currentDate);
+                  continue;
+                }
                 newShifts.push({
-                  date: new Date(currentDate).toISOString(),
+                  date: shiftDate.toISOString(),
                   shiftType: sequence.shiftType
                 });
                 currentDate = addDays(currentDate, 1);
@@ -188,7 +198,8 @@ const Calendar = () => {
           // Keep shifts outside the pattern date range
           const otherShifts = prevShifts.filter(shift => {
             const shiftDate = new Date(shift.date);
-            return shiftDate < startDate || shiftDate > currentDate;
+            return !isNaN(shiftDate.getTime()) && 
+              (shiftDate < startDate || shiftDate > currentDate);
           });
           return [...otherShifts, ...newShifts];
         });
