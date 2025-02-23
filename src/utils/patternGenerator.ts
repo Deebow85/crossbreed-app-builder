@@ -1,4 +1,3 @@
-
 import { addDays, startOfDay } from "date-fns";
 
 export interface ShiftType {
@@ -48,11 +47,10 @@ export const generatePattern = (
         // Skip if we've passed the end date
         if (currentDate >= endDate) break;
 
+        // Whether it's a work shift or off days, we need to advance the date by the specified days
         if (!sequence.isOff && sequence.shiftType) {
-          // Add shift for each non-off day in the sequence
           for (let day = 0; day < sequence.days; day++) {
             if (currentDate >= endDate) break;
-            
             shifts.push({
               date: currentDate.toISOString(),
               shiftType: sequence.shiftType
@@ -60,10 +58,11 @@ export const generatePattern = (
             currentDate = addDays(currentDate, 1);
           }
         } else {
-          // For off days, just advance the date
+          // For off days, just advance the date without adding shifts
           currentDate = addDays(currentDate, sequence.days);
         }
       }
+      // No additional days off are added in continuous mode - it just keeps repeating
     }
     return shifts;
   }
@@ -93,7 +92,7 @@ export const generatePattern = (
       }
     }
     
-    // Add days off after the pattern cycle
+    // Add days off after the pattern cycle (only for non-continuous mode)
     currentDate = addDays(currentDate, daysOffAfter);
   }
 
