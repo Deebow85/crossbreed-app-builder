@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { CalendarDays, Settings, Plus, Trash2, PencilIcon, Check, Wand2, ChevronDown } from "lucide-react";
+import { CalendarDays, Settings, Plus, Trash2, PencilIcon, Check, Wand2, ChevronDown, RefreshCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Dialog,
@@ -318,6 +318,12 @@ const ShiftSetup = () => {
     setPatternStartDate(format(new Date(), 'yyyy-MM-dd'));
   };
 
+  const clearAllPatterns = () => {
+    setExistingPatterns([]);
+    sessionStorage.removeItem('savedPatterns');
+    sessionStorage.removeItem('patternData');
+  };
+
   return (
     <div className="h-dvh flex flex-col p-2 sm:p-4">
       <div className="flex justify-center items-center mb-2">
@@ -446,6 +452,15 @@ const ShiftSetup = () => {
                     />
                   </div>
                 </CollapsibleTrigger>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearAllPatterns}
+                  className="h-7 px-2 text-xs"
+                >
+                  <RefreshCcw className="h-3 w-3 mr-1" />
+                  Clear Calendar
+                </Button>
               </div>
               
               <CollapsibleContent className="space-y-2">
