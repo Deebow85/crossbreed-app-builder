@@ -161,12 +161,17 @@ const Calendar = () => {
         }
         
         const newShifts: ShiftAssignment[] = [];
-        let totalDayOffset = 0;
         
-        const totalDaysInCycle = pattern.sequences.reduce((total, seq) => total + seq.days, 0);
+        const daysInOneSequence = pattern.sequences.reduce((total, seq) => total + seq.days, 0);
+        const totalDaysInCycle = daysInOneSequence;
         
-        for (let repeat = 0; repeat < pattern.repeatTimes; repeat++) {
+        const totalDays = totalDaysInCycle * pattern.repeatTimes;
+        let currentDay = 0;
+        
+        while (currentDay < totalDays) {
           for (const sequence of pattern.sequences) {
+            if (currentDay >= totalDays) break;
+            
             if (sequence.shiftType && !sequence.isOff) {
               const shiftType = {
                 name: sequence.shiftType.name,
@@ -174,21 +179,23 @@ const Calendar = () => {
                 gradient: sequence.shiftType.gradient
               };
               
-              for (let day = 0; day < sequence.days; day++) {
+              for (let day = 0; day < sequence.days && currentDay < totalDays; day++) {
                 newShifts.push({
-                  date: addDays(startDate, totalDayOffset + day).toISOString(),
+                  date: addDays(startDate, currentDay).toISOString(),
                   shiftType: shiftType
                 });
+                currentDay++;
               }
+            } else {
+              currentDay += sequence.days;
             }
-            totalDayOffset += sequence.days;
           }
         }
         
         console.log('Generated shifts:', newShifts);
         
         setShifts(prevShifts => {
-          const patternEndDate = addDays(startDate, totalDayOffset);
+          const patternEndDate = addDays(startDate, totalDays);
           const filteredPrevShifts = prevShifts.filter(shift => {
             const shiftDate = new Date(shift.date);
             const isOutsideRange = shiftDate < startDate || shiftDate >= patternEndDate;
