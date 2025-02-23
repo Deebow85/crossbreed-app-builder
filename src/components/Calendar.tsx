@@ -371,41 +371,49 @@ const Calendar = () => {
 
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t py-4 z-50">
         <div className="container max-w-md mx-auto grid grid-cols-4 items-center px-4">
-          <Button variant="ghost" size="icon" className="justify-self-start hover:bg-accent">
-            <CalendarDays className="h-8 w-8" />
-          </Button>
+          <div className="flex justify-start">
+            <Button variant="ghost" size="icon" className="hover:bg-accent">
+              <CalendarDays className="h-8 w-8" />
+            </Button>
+          </div>
 
-          <Button
-            variant={isSelectingMultiple ? "secondary" : "ghost"}
-            size="icon"
-            onClick={() => {
-              setIsSelectingMultiple(!isSelectingMultiple);
-              if (isSelectingMultiple) {
-                setSelectedDatesForShift([]);
-              }
-            }}
-            className="justify-self-end hover:bg-accent"
-          >
-            <CheckSquare className="h-8 w-8" />
-          </Button>
+          <div className="flex justify-start">
+            <Button
+              variant={isSelectingMultiple ? "secondary" : "ghost"}
+              size="icon"
+              onClick={() => {
+                setIsSelectingMultiple(!isSelectingMultiple);
+                if (isSelectingMultiple) {
+                  setSelectedDatesForShift([]);
+                }
+              }}
+              className="hover:bg-accent"
+            >
+              <CheckSquare className="h-8 w-8" />
+            </Button>
+          </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="justify-self-center h-12 w-12 rounded-full bg-primary hover:bg-primary/90"
-            onClick={() => navigate("/shift-setup")}
-          >
-            <span className="text-primary-foreground font-semibold text-xl">S</span>
-          </Button>
+          <div className="flex justify-center col-span-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-12 w-12 rounded-full bg-primary hover:bg-primary/90"
+              onClick={() => navigate("/shift-setup")}
+            >
+              <span className="text-primary-foreground font-semibold text-xl">S</span>
+            </Button>
+          </div>
 
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="justify-self-end hover:bg-accent"
-            onClick={() => navigate("/settings")}
-          >
-            <Settings className="h-8 w-8" />
-          </Button>
+          <div className="flex justify-end">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="hover:bg-accent"
+              onClick={() => navigate("/settings")}
+            >
+              <Settings className="h-8 w-8" />
+            </Button>
+          </div>
         </div>
       </div>
 
