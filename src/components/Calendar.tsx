@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -583,7 +584,7 @@ const Calendar = () => {
   };
 
   return (
-    <Card className="p-4 w-full max-w-3xl mx-auto">
+    <Card className="w-full mx-auto px-2 sm:px-4 py-4">
       <div className="flex items-center justify-between mb-6">
         <TooltipProvider>
           <Tooltip>
@@ -601,20 +602,20 @@ const Calendar = () => {
         </TooltipProvider>
 
         <div className="text-center">
-          <h2 className="text-xl font-bold">
+          <h2 className="text-lg sm:text-xl font-bold">
             {format(currentDate, 'MMMM yyyy')}
           </h2>
           <div className="flex flex-col items-center gap-1 mt-1">
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <TooltipTrigger className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
                   <Banknote className="h-4 w-4" />
                   <span>{getDaysUntilPayday()} days until payday</span>
                 </TooltipTrigger>
                 <TooltipContent>Next payday: {format(getNextPayday(), 'MMM do')}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <div className="flex items-center justify-center gap-4 text-sm">
+            <div className="flex items-center justify-center gap-4 text-xs sm:text-sm">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger className="flex items-center gap-1">
@@ -661,7 +662,7 @@ const Calendar = () => {
               placeholder="Search notes..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border rounded-md"
+              className="w-full pl-10 pr-4 py-2 border rounded-md text-sm"
             />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           </div>
@@ -670,8 +671,8 @@ const Calendar = () => {
           <div className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
             {searchNotes().map(({ date, text }) => (
               <div key={date} className="p-2 hover:bg-gray-100 cursor-pointer">
-                <div className="font-medium text-sm">{date}</div>
-                <div className="text-sm text-gray-600">{text}</div>
+                <div className="font-medium text-xs sm:text-sm">{date}</div>
+                <div className="text-xs sm:text-sm text-gray-600">{text}</div>
               </div>
             ))}
           </div>
@@ -679,57 +680,61 @@ const Calendar = () => {
       </div>
 
       <div className="flex flex-wrap gap-2 mb-4">
-        {patterns.map((pattern) => (
-          <TooltipProvider key={pattern.id}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "relative",
-                    highlightedPattern === pattern.id && "ring-2 ring-primary"
-                  )}
-                  style={{
-                    backgroundColor: pattern.color,
-                    color: "white"
-                  }}
-                  onClick={() => setHighlightedPattern(
-                    highlightedPattern === pattern.id ? null : pattern.id
-                  )}
-                >
-                  {pattern.name}
-                  {highlightedPattern === pattern.id && (
-                    <div className="absolute -top-2 -right-2">
-                      <Check className="h-4 w-4" />
-                    </div>
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{pattern.name}: {pattern.daysOn} on, {pattern.daysOff} off</p>
-                {highlightedPattern === pattern.id && (
-                  <p>
-                    Next free day:{' '}
-                    {getNextFreeDayForPattern(pattern)
-                      ? format(getNextFreeDayForPattern(pattern)!, 'MMM d')
-                      : 'N/A'}
-                  </p>
-                )}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ))}
-        <Button
-          variant="outline"
-          onClick={() => setShowPatternDialog(true)}
-          className="flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Add Pattern
-        </Button>
+        <div className="w-full overflow-x-auto pb-2">
+          <div className="flex gap-2">
+            {patterns.map((pattern) => (
+              <TooltipProvider key={pattern.id}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "relative whitespace-nowrap",
+                        highlightedPattern === pattern.id && "ring-2 ring-primary"
+                      )}
+                      style={{
+                        backgroundColor: pattern.color,
+                        color: "white"
+                      }}
+                      onClick={() => setHighlightedPattern(
+                        highlightedPattern === pattern.id ? null : pattern.id
+                      )}
+                    >
+                      {pattern.name}
+                      {highlightedPattern === pattern.id && (
+                        <div className="absolute -top-2 -right-2">
+                          <Check className="h-4 w-4" />
+                        </div>
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">{pattern.name}: {pattern.daysOn} on, {pattern.daysOff} off</p>
+                    {highlightedPattern === pattern.id && (
+                      <p className="text-xs">
+                        Next free day:{' '}
+                        {getNextFreeDayForPattern(pattern)
+                          ? format(getNextFreeDayForPattern(pattern)!, 'MMM d')
+                          : 'N/A'}
+                      </p>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ))}
+            <Button
+              variant="outline"
+              onClick={() => setShowPatternDialog(true)}
+              className="flex items-center gap-2 whitespace-nowrap"
+            >
+              <Plus className="h-4 w-4" />
+              Add Pattern
+            </Button>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-2 mb-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
         {shiftTypes.map((type) => (
           <TooltipProvider key={type.name}>
             <Tooltip>
@@ -753,28 +758,29 @@ const Calendar = () => {
             </Tooltip>
           </TooltipProvider>
         ))}
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                className="col-span-4 mt-2 bg-primary text-primary-foreground hover:bg-primary/90"
-                onClick={handlePatternInput}
-              >
-                <CalendarDays className="mr-2 h-4 w-4" />
-                Set Pattern ({pattern.daysOn} on, {pattern.daysOff} off)
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Configure recurring shift pattern</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
       </div>
+
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full mb-4 bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={handlePatternInput}
+            >
+              <CalendarDays className="mr-2 h-4 w-4" />
+              Set Pattern ({pattern.daysOn} on, {pattern.daysOff} off)
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Configure recurring shift pattern</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
       <div className="grid grid-cols-7 gap-1 mb-2">
         {weekDays.map((day) => (
           <div 
             key={day} 
-            className="text-center text-sm font-medium text-muted-foreground"
+            className="text-center text-xs sm:text-sm font-medium text-muted-foreground"
           >
             {day}
           </div>
@@ -795,7 +801,7 @@ const Calendar = () => {
               key={date.toISOString()}
               variant="ghost"
               className={cn(
-                "h-12 p-0 w-full relative hover:bg-accent transition-colors",
+                "h-10 sm:h-12 p-0 w-full relative hover:bg-accent transition-colors",
                 !isSameMonth(date, currentDate) && "opacity-30",
                 isToday(date) && !shift && "bg-accent"
               )}
@@ -812,12 +818,12 @@ const Calendar = () => {
                 addOrEditNote(date);
               }}
             >
-              <span className="absolute top-1 right-1 text-xs">
+              <span className="absolute top-0.5 right-0.5 text-[10px] sm:text-xs">
                 {format(date, 'd')}
               </span>
               {isPay && (
                 <span 
-                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-lg font-bold"
+                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-base sm:text-lg font-bold"
                   style={{ color: shift ? 'white' : '#F97316' }}
                 >
                   {paydaySettings.symbol}
@@ -825,23 +831,23 @@ const Calendar = () => {
               )}
               {note && (
                 <StickyNote 
-                  className="absolute top-1 left-1 h-3 w-3"
+                  className="absolute top-0.5 left-0.5 h-2.5 w-2.5 sm:h-3 sm:w-3"
                   style={{ color: shift ? 'white' : '#F97316' }}
                 />
               )}
               {alarm && (
                 <Bell 
-                  className="absolute bottom-1 right-1 h-3 w-3"
+                  className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 sm:h-3 sm:w-3"
                   style={{ color: shift ? 'white' : '#F97316' }}
                 />
               )}
               {shift && (
                 <>
-                  <span className="absolute bottom-1 left-1 text-xs font-medium">
+                  <span className="absolute bottom-0.5 left-0.5 text-[8px] sm:text-xs font-medium">
                     {shift.shiftType.name}
                   </span>
                   {shift.otHours && (
-                    <span className="absolute bottom-1 right-4 text-xs font-medium">
+                    <span className="absolute bottom-0.5 right-3 text-[8px] sm:text-xs font-medium">
                       {shift.otHours}h
                     </span>
                   )}
@@ -852,10 +858,10 @@ const Calendar = () => {
         })}
       </div>
 
-      <div className="mb-4 p-4 border rounded-md bg-gray-50">
-        <h3 className="text-sm font-medium mb-2">Outstanding Swaps</h3>
+      <div className="mt-4 p-3 sm:p-4 border rounded-md bg-gray-50">
+        <h3 className="text-xs sm:text-sm font-medium mb-2">Outstanding Swaps</h3>
         {getSwapSummary().map(([worker, data]) => (
-          <div key={worker} className="text-sm flex justify-between items-center py-1">
+          <div key={worker} className="text-xs sm:text-sm flex justify-between items-center py-1">
             <span>{worker}</span>
             <div className="flex gap-4">
               <span className={cn(
