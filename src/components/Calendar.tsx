@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Banknote, Clock, CalendarDays, StickyNote, Search, Bell, Plus, Check, Settings } from "lucide-react";
+import { ChevronLeft, ChevronRight, Banknote, Clock, CalendarDays, StickyNote, Search, Bell, Plus, Check } from "lucide-react";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, differenceInDays, startOfWeek, endOfWeek, addDays, setHours, setMinutes, getDay, addWeeks, lastDayOfMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 import { LocalNotifications } from '@capacitor/local-notifications';
@@ -11,25 +9,10 @@ import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogD
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/lib/theme";
-
-type ShiftType = {
-  name: string;
-  color: string;
-  gradient: string;
-};
-
-type ShiftAssignment = {
-  date: string;
-  shiftType: ShiftType;
-  otHours?: number;
-};
-
-type PaydaySettings = {
-  date: number;
-  symbol: string;
-  paydayType: "weekly" | "fortnightly" | "monthly" | "set-day" | "first-day" | "last-day" | "custom";
-  paydayDate: number;
-};
+import { CalendarNavigation } from "./calendar/CalendarNavigation";
+import { ShiftType, ShiftAssignment, PatternCycle } from "@/types/calendar";
+import { generatePattern } from "@/utils/patternGenerator";
+import { Button } from "@/components/ui/button";
 
 type ShiftPattern = {
   id: string;
@@ -65,20 +48,9 @@ type Alarm = {
   enabled: boolean;
 };
 
-type PatternCycle = {
-  sequences: {
-    shiftType: ShiftType | null;
-    days: number;
-    isOff?: boolean;
-  }[];
-  repeatTimes: number;
-  daysOffAfter: number;
-};
-
 const shiftTypes: ShiftType[] = [];
 
 const Calendar = () => {
-  const navigate = useNavigate();
   const { theme } = useTheme();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedShiftType, setSelectedShiftType] = useState<ShiftType | null>(null);
@@ -88,7 +60,7 @@ const Calendar = () => {
   });
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState<string | null>(null);
-  const [paydaySettings, setPaydaySettings] = useState<PaydaySettings>({
+  const [paydaySettings, setPaydaySettings] = useState<any>({
     date: 25,
     symbol: "£",
     paydayType: "monthly",
@@ -149,84 +121,35 @@ const Calendar = () => {
   useEffect(() => {
     const handlePatternGeneration = () => {
       const state = JSON.parse(sessionStorage.getItem('patternData') || 'null');
-      console.log('Pattern state:', state);
 
       if (state?.pattern && state?.startDate) {
         const pattern: PatternCycle = state.pattern;
         const startDate = new Date(state.startDate + 'T00:00:00');
         const yearsToGenerate = Math.min(Math.max(state.years || 1, 0), 10);
         
-        if (isNaN(startDate.getTime())) {
-          console.error('Invalid start date:', state.startDate);
-          return;
-        }
-        
-        const newShifts: ShiftAssignment[] = [];
-        
-        // Calculate total days in one sequence including the days off after repeats
-        const sequenceDays = pattern.sequences.reduce((total, seq) => total + seq.days, 0);
-        const totalSequenceDays = sequenceDays * pattern.repeatTimes + pattern.daysOffAfter;
-        const daysInOneSequence = totalSequenceDays;
-        
-        // Calculate total days needed for the requested years
-        const daysPerYear = 365.25;
-        const totalDaysNeeded = Math.ceil(daysPerYear * yearsToGenerate);
-        
-        // Generate shifts for each day up to totalDaysNeeded
-        for (let currentDay = 0; currentDay < totalDaysNeeded; currentDay++) {
-          const dayInPattern = currentDay % totalSequenceDays;
-          const currentRepetition = Math.floor(dayInPattern / sequenceDays);
+        try {
+          const newShifts = generatePattern(pattern, startDate, yearsToGenerate);
           
-          // Skip days during the off period after repetitions
-          if (currentRepetition >= pattern.repeatTimes) {
-            continue;
-          }
-          
-          const dayInSequence = dayInPattern % sequenceDays;
-          let daysAccumulated = 0;
-          
-          for (const sequence of pattern.sequences) {
-            if (dayInSequence >= daysAccumulated && 
-                dayInSequence < daysAccumulated + sequence.days) {
-              if (sequence.shiftType && !sequence.isOff) {
-                const shiftDate = addDays(startDate, currentDay);
-                
-                newShifts.push({
-                  date: shiftDate.toISOString(),
-                  shiftType: {
-                    name: sequence.shiftType.name,
-                    color: sequence.shiftType.color,
-                    gradient: sequence.shiftType.gradient
-                  }
-                });
-              }
-              break;
-            }
-            daysAccumulated += sequence.days;
-          }
-        }
-        
-        setShifts(prevShifts => {
-          const patternEndDate = addDays(startDate, totalDaysNeeded);
-          const filteredPrevShifts = prevShifts.filter(shift => {
-            const shiftDate = new Date(shift.date);
-            const isOutsideRange = shiftDate < startDate || shiftDate >= patternEndDate;
-            return isOutsideRange;
+          setShifts(prevShifts => {
+            const patternEndDate = addDays(startDate, yearsToGenerate * 365);
+            const filteredPrevShifts = prevShifts.filter(shift => {
+              const shiftDate = new Date(shift.date);
+              const isOutsideRange = shiftDate < startDate || shiftDate >= patternEndDate;
+              return isOutsideRange;
+            });
+            return [...filteredPrevShifts, ...newShifts];
           });
-          return [...filteredPrevShifts, ...newShifts];
-        });
-        
-        setCurrentDate(startDate);
-        sessionStorage.removeItem('patternData');
+          
+          setCurrentDate(startDate);
+          sessionStorage.removeItem('patternData');
+        } catch (error) {
+          console.error('Error generating pattern:', error);
+        }
       }
     };
 
     handlePatternGeneration();
   }, []);
-
-  useEffect(() => {
-    console.log('Current shifts:', shifts);
-  }, [shifts]);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -834,29 +757,7 @@ const Calendar = () => {
           })()}
         </div>
       </Card>
-
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t py-4">
-        <div className="container max-w-md mx-auto flex items-center justify-between px-4">
-          <Button variant="ghost" size="icon" className="hover:bg-accent">
-            <CalendarDays className="h-8 w-8" />
-          </Button>
-          
-          <div className="relative">
-            <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg">
-              <span className="text-primary-foreground font-semibold text-xl">S</span>
-            </div>
-          </div>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="hover:bg-accent"
-            onClick={() => navigate("/settings")}
-          >
-            <Settings className="h-8 w-8" />
-          </Button>
-        </div>
-      </div>
+      <CalendarNavigation />
     </div>
   );
 };
