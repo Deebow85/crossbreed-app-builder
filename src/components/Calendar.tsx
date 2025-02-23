@@ -154,7 +154,7 @@ const Calendar = () => {
       if (state?.pattern && state?.startDate) {
         const pattern: PatternCycle = state.pattern;
         const startDate = new Date(state.startDate + 'T00:00:00');
-        const yearsToGenerate = Math.min(Math.max(state.years || 1, 0), 10); // Default 1 year, max 10 years
+        const yearsToGenerate = Math.min(Math.max(state.years || 1, 0), 10);
         
         if (isNaN(startDate.getTime())) {
           console.error('Invalid start date:', state.startDate);
@@ -163,69 +163,59 @@ const Calendar = () => {
         
         const newShifts: ShiftAssignment[] = [];
         
-        // Basic pattern: 2 days + 2 nights + 4 off = 8 days
+        // Calculate total days in one sequence (e.g., 5 days on + 2 off = 7 days)
         const daysInOneSequence = pattern.sequences.reduce((total, seq) => total + seq.days, 0);
-        // Repeated 7 times = 56 days of pattern
-        const patternRepeatDays = daysInOneSequence * pattern.repeatTimes;
-        // Adjust daysOffAfter to 14 (which plus the pattern's 4 off days = 18 total)
-        const adjustedDaysOff = 14;
-        // Full cycle = 56 days pattern + 14 days additional off = 70 days
-        const totalDaysInCycle = patternRepeatDays + adjustedDaysOff;
+        
+        // Calculate total days for all repeated sequences (e.g., 7 days × 3 repeats = 21 days)
+        const totalDaysInPattern = daysInOneSequence * pattern.repeatTimes;
         
         // Calculate cycles needed for the requested number of years
-        const daysPerYear = 365.25; // Account for leap years
+        const daysPerYear = 365.25;
         const totalDaysNeeded = daysPerYear * yearsToGenerate;
-        const cyclesNeeded = Math.ceil(totalDaysNeeded / totalDaysInCycle);
+        const cyclesNeeded = Math.ceil(totalDaysNeeded / totalDaysInPattern);
         
         console.log('Pattern metrics:', {
           daysInOneSequence,
-          patternRepeatDays,
-          daysOffAfter: adjustedDaysOff,
-          totalDaysInCycle,
+          totalDaysInPattern,
           yearsToGenerate,
           cyclesNeeded
         });
         
-        const totalDaysToGenerate = totalDaysInCycle * cyclesNeeded;
-        
         let currentDay = 0;
         
-        while (currentDay < totalDaysToGenerate) {
-          const dayInCurrentCycle = currentDay % totalDaysInCycle;
-          
-          if (dayInCurrentCycle >= patternRepeatDays) {
-            currentDay++;
-            continue;
-          }
-          
-          const dayInPattern = dayInCurrentCycle % daysInOneSequence;
+        while (currentDay < totalDaysNeeded) {
+          const dayInPattern = currentDay % daysInOneSequence;
+          const cycleProgress = Math.floor(currentDay / totalDaysInPattern);
           let daysAccumulated = 0;
           
-          for (const sequence of pattern.sequences) {
-            if (dayInPattern >= daysAccumulated && 
-                dayInPattern < daysAccumulated + sequence.days) {
-              if (sequence.shiftType && !sequence.isOff) {
-                const shiftDate = addDays(startDate, currentDay);
-                console.log('Adding shift:', {
-                  day: currentDay,
-                  dayInCycle: dayInCurrentCycle,
-                  dayInPattern,
-                  date: shiftDate.toISOString(),
-                  type: sequence.shiftType.name
-                });
-                
-                newShifts.push({
-                  date: shiftDate.toISOString(),
-                  shiftType: {
-                    name: sequence.shiftType.name,
-                    color: sequence.shiftType.color,
-                    gradient: sequence.shiftType.gradient
-                  }
-                });
+          // Only process days within the pattern repeat count
+          if (cycleProgress < pattern.repeatTimes) {
+            for (const sequence of pattern.sequences) {
+              if (dayInPattern >= daysAccumulated && 
+                  dayInPattern < daysAccumulated + sequence.days) {
+                if (sequence.shiftType && !sequence.isOff) {
+                  const shiftDate = addDays(startDate, currentDay);
+                  console.log('Adding shift:', {
+                    day: currentDay,
+                    dayInPattern,
+                    cycleProgress,
+                    date: shiftDate.toISOString(),
+                    type: sequence.shiftType.name
+                  });
+                  
+                  newShifts.push({
+                    date: shiftDate.toISOString(),
+                    shiftType: {
+                      name: sequence.shiftType.name,
+                      color: sequence.shiftType.color,
+                      gradient: sequence.shiftType.gradient
+                    }
+                  });
+                }
+                break;
               }
-              break;
+              daysAccumulated += sequence.days;
             }
-            daysAccumulated += sequence.days;
           }
           
           currentDay++;
@@ -234,14 +224,14 @@ const Calendar = () => {
         console.log('Pattern summary:', {
           totalShifts: newShifts.length,
           cyclesGenerated: cyclesNeeded,
-          totalDays: totalDaysToGenerate,
+          totalDays: totalDaysNeeded,
           yearsGenerated: yearsToGenerate,
           firstShift: newShifts[0]?.date,
           lastShift: newShifts[newShifts.length - 1]?.date
         });
         
         setShifts(prevShifts => {
-          const patternEndDate = addDays(startDate, totalDaysToGenerate);
+          const patternEndDate = addDays(startDate, totalDaysNeeded);
           const filteredPrevShifts = prevShifts.filter(shift => {
             const shiftDate = new Date(shift.date);
             const isOutsideRange = shiftDate < startDate || shiftDate >= patternEndDate;
@@ -256,7 +246,7 @@ const Calendar = () => {
     };
 
     handlePatternGeneration();
-  }, []); // Run once when component mounts
+  }, []);
 
   useEffect(() => {
     console.log('Current shifts:', shifts);
