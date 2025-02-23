@@ -32,69 +32,62 @@ export const generatePattern = (
   startDate: Date,
   years: number
 ): ShiftAssignment[] => {
-  console.log('Pattern generation started:', { pattern, startDate, years });
+  console.log('Starting pattern generation with:', {
+    pattern,
+    startDate: startDate.toISOString(),
+    years
+  });
   
   const shifts: ShiftAssignment[] = [];
   const sequences = pattern.sequences;
-  const repeatTimes = pattern.repeatTimes;
-  const daysOffAfter = pattern.daysOffAfter;
   const isContinuous = pattern.isContinuous;
 
   let currentDate = startOfDay(new Date(startDate));
   const endDate = addDays(currentDate, years * 365);
 
-  if (isContinuous) {
-    while (currentDate < endDate) {
-      // Process each sequence in the pattern
-      for (const sequence of sequences) {
-        if (currentDate >= endDate) break;
-        
-        const daysInSequence = sequence.days;
-        
-        if (!sequence.isOff && sequence.shiftType) {
-          // Add work shifts
-          for (let i = 0; i < daysInSequence; i++) {
-            if (currentDate >= endDate) break;
-            
-            shifts.push({
-              date: currentDate.toISOString(),
-              shiftType: sequence.shiftType
-            });
-            currentDate = addDays(currentDate, 1);
-          }
-        } else {
-          // Add off days by just advancing the date
-          currentDate = addDays(currentDate, daysInSequence);
-        }
-      }
-    }
-    return shifts;
-  }
-
-  // Non-continuous pattern (repeating with breaks)
+  let cycleCount = 0;
+  
+  // Single unified approach for both continuous and non-continuous patterns
   while (currentDate < endDate) {
-    for (let repeat = 0; repeat < repeatTimes; repeat++) {
-      for (const sequence of sequences) {
-        if (currentDate >= endDate) break;
+    // If non-continuous and we've completed all repeats, add break and continue
+    if (!isContinuous && cycleCount >= pattern.repeatTimes) {
+      console.log(`Completed ${pattern.repeatTimes} cycles, adding ${pattern.daysOffAfter} days break`);
+      currentDate = addDays(currentDate, pattern.daysOffAfter);
+      cycleCount = 0;
+      continue;
+    }
 
+    // Process one complete cycle of the pattern
+    for (const sequence of sequences) {
+      if (currentDate >= endDate) break;
+      
+      console.log(`Processing sequence:`, {
+        isOff: sequence.isOff,
+        days: sequence.days,
+        shiftType: sequence.shiftType?.name,
+        currentDate: currentDate.toISOString()
+      });
+
+      // Whether work or off days, we process them the same way
+      for (let i = 0; i < sequence.days; i++) {
+        if (currentDate >= endDate) break;
+        
+        // Only add to shifts if it's a work day
         if (!sequence.isOff && sequence.shiftType) {
-          for (let day = 0; day < sequence.days; day++) {
-            if (currentDate >= endDate) break;
-            
-            shifts.push({
-              date: currentDate.toISOString(),
-              shiftType: sequence.shiftType
-            });
-            currentDate = addDays(currentDate, 1);
-          }
-        } else {
-          currentDate = addDays(currentDate, sequence.days);
+          shifts.push({
+            date: currentDate.toISOString(),
+            shiftType: sequence.shiftType
+          });
         }
+        
+        currentDate = addDays(currentDate, 1);
       }
     }
-    currentDate = addDays(currentDate, daysOffAfter);
+    
+    cycleCount++;
+    console.log(`Completed cycle ${cycleCount}`);
   }
 
-  console.log('Generated shifts:', shifts);
+  console.log(`Generated ${shifts.length} shifts`);
   return shifts;
 };
