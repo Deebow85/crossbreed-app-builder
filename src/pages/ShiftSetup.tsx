@@ -325,19 +325,42 @@ const ShiftSetup = () => {
     setExistingPatterns([]);
   };
 
+  const handleSetDays = () => {
+    // Create a pattern for Monday to Friday
+    const weekdayPattern = [
+      {
+        shiftType: shiftTypes.length > 0 ? shiftTypes[0] : null,
+        days: 5,
+        isOff: false
+      },
+      {
+        shiftType: null,
+        days: 2,
+        isOff: true
+      }
+    ];
+
+    setCurrentPattern(weekdayPattern);
+    setRepeatTimes(52); // Set for a year
+    setDaysOffAfter(0);
+    setShowPatternDialog(true);
+  };
+
   return (
     <div className="h-dvh flex flex-col p-2 sm:p-4">
       <div className="flex justify-between items-center mb-2">
         <h1 className="text-xl font-bold">Shift Setup</h1>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={clearCalendar}
-          className="h-8 px-3 text-xs"
-        >
-          <RefreshCcw className="h-3 w-3 mr-1" />
-          Clear Calendar
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={clearCalendar}
+            className="h-8 px-3 text-xs"
+          >
+            <RefreshCcw className="h-3 w-3 mr-1" />
+            Clear Calendar
+          </Button>
+        </div>
       </div>
 
       <Card className="flex-1 overflow-auto mb-20">
@@ -345,6 +368,15 @@ const ShiftSetup = () => {
           <div className="flex justify-between items-center gap-1">
             <h2 className="text-lg font-semibold">Shift Types</h2>
             <div className="flex gap-1">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={handleSetDays}
+              >
+                <CalendarDays className="h-3 w-3 mr-1" />
+                Set Days
+              </Button>
               <Button 
                 variant="outline" 
                 size="sm"
