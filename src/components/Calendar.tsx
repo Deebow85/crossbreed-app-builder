@@ -287,12 +287,10 @@ const Calendar = () => {
           </TooltipProvider>
 
           <div className="text-center flex-1 mx-4">
-            <div className="flex items-center justify-center gap-4">
-              <h2 className="text-lg sm:text-xl font-bold">
-                {format(currentDate, 'MMMM yyyy')}
-              </h2>
-            </div>
-            <div className="flex flex-col items-center gap-1 mt-1">
+            <h2 className="text-lg sm:text-xl font-bold">
+              {format(currentDate, 'MMMM yyyy')}
+            </h2>
+            <div className="flex flex-col items-center gap-1">
               <div className="flex flex-col items-center">
                 <TooltipProvider>
                   <Tooltip>
