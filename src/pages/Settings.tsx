@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { useTheme } from "next-themes";
 import { Paintbrush, Sun, Moon, CreditCard, CalendarDays, Settings as SettingsIcon, HelpCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
@@ -18,18 +17,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-interface ShiftTypeSettings {
-  name: string;
-  color: string;
-  gradient: string;
-}
-
 interface AppSettings {
   currency: {
     symbol: string;
     position: 'before' | 'after';
   };
-  shiftTypes: ShiftTypeSettings[];
   paydayDate: number;
   calendarSize: 'default' | 'large';
 }
@@ -39,23 +31,6 @@ const defaultSettings: AppSettings = {
     symbol: '£',
     position: 'before'
   },
-  shiftTypes: [
-    {
-      name: "Day",
-      color: "#8B5CF6",
-      gradient: "linear-gradient(135deg, #8B5CF6 0%, #9F75FF 100%)"
-    },
-    {
-      name: "Night",
-      color: "#0EA5E9",
-      gradient: "linear-gradient(135deg, #0EA5E9 0%, #38BDF8 100%)"
-    },
-    {
-      name: "OT",
-      color: "#F97316",
-      gradient: "linear-gradient(135deg, #F97316 0%, #FB923C 100%)"
-    }
-  ],
   paydayDate: 25,
   calendarSize: 'default'
 };
@@ -97,18 +72,6 @@ const Settings = () => {
         ...settings.currency,
         symbol
       }
-    });
-  };
-
-  const updateShiftType = (index: number, field: keyof ShiftTypeSettings, value: string) => {
-    const newShiftTypes = [...settings.shiftTypes];
-    newShiftTypes[index] = {
-      ...newShiftTypes[index],
-      [field]: value
-    };
-    saveSettings({
-      ...settings,
-      shiftTypes: newShiftTypes
     });
   };
 
@@ -220,40 +183,6 @@ const Settings = () => {
                   />
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <h2 className="text-sm font-semibold">Shift Types</h2>
-            <div className="grid gap-1.5">
-              {settings.shiftTypes.map((type, index) => (
-                <div key={index} className="flex gap-2 items-center p-1.5 border rounded-lg">
-                  <Input
-                    value={type.name}
-                    onChange={(e) => updateShiftType(index, 'name', e.target.value)}
-                    className="w-20 h-7"
-                    placeholder="Name"
-                  />
-                  <Input
-                    type="color"
-                    value={type.color}
-                    onChange={(e) => updateShiftType(index, 'color', e.target.value)}
-                    className="w-14 h-7"
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      const color = type.color;
-                      const gradient = `linear-gradient(135deg, ${color} 0%, ${color}99 100%)`;
-                      updateShiftType(index, 'gradient', gradient);
-                    }}
-                    variant="outline"
-                    className="flex-1 h-7 text-xs"
-                  >
-                    Generate Gradient
-                  </Button>
-                </div>
-              ))}
             </div>
           </div>
         </div>
