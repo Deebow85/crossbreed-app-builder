@@ -29,7 +29,7 @@ interface AppSettings {
     position: 'before' | 'after';
   };
   paydayDate: number;
-  paydayType: 'custom' | 'weekly' | 'fortnightly' | 'monthly' | 'set-day' | 'first-day' | 'last-day';
+  paydayType: 'custom' | 'weekly' | 'fortnightly' | 'set-day' | 'first-day' | 'last-day';
   calendarSize: 'small' | 'large';
   calendarNumberLayout: 'centre' | 'top-left' | 'top-right';
 }
@@ -257,7 +257,7 @@ const Settings = () => {
 
                 <div className="space-y-2">
                   <Label className="text-xs">Payday Schedule</Label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     <Button
                       size="sm"
                       className="h-8"
@@ -281,14 +281,6 @@ const Settings = () => {
                       onClick={() => updatePaydaySettings('fortnightly')}
                     >
                       Fortnightly
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="h-8"
-                      variant={settings.paydayType === 'monthly' ? 'default' : 'outline'}
-                      onClick={() => updatePaydaySettings('monthly')}
-                    >
-                      Monthly
                     </Button>
                   </div>
                 </div>
