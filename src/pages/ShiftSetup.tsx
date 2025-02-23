@@ -76,6 +76,7 @@ const ShiftSetup = () => {
   }[]>([]);
   const [isOpen, setIsOpen] = useState(true);
   const [editingPattern, setEditingPattern] = useState<EditingPattern | null>(null);
+  const [showSetDaysDialog, setShowSetDaysDialog] = useState(false);
 
   useEffect(() => {
     const savedSettings = localStorage.getItem('appSettings');
@@ -326,7 +327,6 @@ const ShiftSetup = () => {
   };
 
   const handleSetDays = () => {
-    // Create a pattern for Monday to Friday
     const weekdayPattern = [
       {
         shiftType: shiftTypes.length > 0 ? shiftTypes[0] : null,
@@ -341,10 +341,33 @@ const ShiftSetup = () => {
     ];
 
     setCurrentPattern(weekdayPattern);
-    setRepeatTimes(52); // Default to 1 year
+    setRepeatTimes(52);
     setDaysOffAfter(0);
-    setYearsToGenerate(1); // Set default to 1 year
-    setShowPatternDialog(true);
+    setYearsToGenerate(1);
+    setShowSetDaysDialog(true);
+  };
+
+  const generateSetDays = () => {
+    const pattern: PatternCycle = {
+      sequences: currentPattern,
+      repeatTimes: yearsToGenerate * 52,
+      daysOffAfter: 0,
+      patternName
+    };
+
+    const patternData = {
+      pattern,
+      startDate: patternStartDate,
+      years: yearsToGenerate,
+      patternName
+    };
+
+    let updatedPatterns = [...existingPatterns, patternData];
+    sessionStorage.setItem('savedPatterns', JSON.stringify(updatedPatterns));
+    setExistingPatterns(updatedPatterns);
+    sessionStorage.setItem('patternData', JSON.stringify(patternData));
+    setShowSetDaysDialog(false);
+    navigate('/');
   };
 
   return (
@@ -542,6 +565,95 @@ const ShiftSetup = () => {
       </Card>
 
       <Dialog 
+        open={showSetDaysDialog} 
+        onOpenChange={(open) => {
+          if (!open) setShowSetDaysDialog(false);
+        }}
+      >
+        <DialogContent className="flex h-[85vh] flex-col overflow-hidden">
+          <DialogHeader className="flex-none p-4 pb-2">
+            <DialogTitle>Set Working Days Pattern</DialogTitle>
+            <DialogDescription>
+              Configure a Monday to Friday working pattern
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4 space-y-4">
+              <div className="space-y-2">
+                <Label>Pattern Name</Label>
+                <Input
+                  type="text"
+                  value={patternName}
+                  onChange={(e) => setPatternName(e.target.value)}
+                  placeholder="Enter pattern name"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Start Date</Label>
+                <Input
+                  type="date"
+                  value={patternStartDate}
+                  onChange={(e) => setPatternStartDate(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Working Days</Label>
+                <div className="p-2 border rounded bg-muted/50">
+                  <div className="flex items-center gap-2">
+                    <select
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      value={currentPattern[0]?.shiftType?.name || ""}
+                      onChange={(e) => {
+                        const selectedType = shiftTypes.find(t => t.name === e.target.value);
+                        const newPattern = [...currentPattern];
+                        newPattern[0] = { ...newPattern[0], shiftType: selectedType || null };
+                        setCurrentPattern(newPattern);
+                      }}
+                    >
+                      {shiftTypes.map((type) => (
+                        <option key={type.name} value={type.name}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="text-sm">Mon-Fri (5 days)</span>
+                  </div>
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    Followed by 2 days off (weekend)
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Generate Pattern For</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="10"
+                  value={yearsToGenerate}
+                  onChange={(e) => {
+                    const years = Math.min(Math.max(parseInt(e.target.value) || 0, 0), 10);
+                    setYearsToGenerate(years);
+                    setRepeatTimes(years * 52);
+                  }}
+                />
+                <span className="text-sm text-muted-foreground">years (0-10)</span>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex-none p-4 bg-background border-t mt-auto">
+            <Button onClick={generateSetDays} className="w-full">
+              Generate Set Days Pattern
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog 
         open={showPatternDialog} 
         onOpenChange={(open) => {
           if (!open) closePatternDialog();
@@ -550,7 +662,7 @@ const ShiftSetup = () => {
         <DialogContent className="flex h-[85vh] flex-col overflow-hidden">
           <DialogHeader className="flex-none p-4 pb-2">
             <DialogTitle>
-              {editingPattern ? 'Edit Shift Pattern' : 'Generate Shift Pattern'}
+              {editingPattern ? 'Edit Shift Pattern' : 'Generate Custom Pattern'}
             </DialogTitle>
           </DialogHeader>
           
@@ -679,11 +791,11 @@ const ShiftSetup = () => {
             </div>
           </div>
 
-          <div className="flex-none p-4 bg-background border-t mt-auto">
+          <DialogFooter className="flex-none p-4 bg-background border-t mt-auto">
             <Button onClick={generateShifts} className="w-full">
               {editingPattern ? 'Update Pattern' : 'Generate Pattern'}
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
