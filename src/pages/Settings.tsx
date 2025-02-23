@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useTheme } from "next-themes";
-import { Paintbrush, Sun, Moon, CreditCard, CalendarDays } from "lucide-react";
+import { Paintbrush, Sun, Moon, CreditCard, CalendarDays, Settings as SettingsIcon } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -115,12 +116,9 @@ const Settings = () => {
     <div className="h-dvh flex flex-col p-2 sm:p-4">
       <div className="flex justify-between items-center mb-2">
         <h1 className="text-xl font-bold">Settings</h1>
-        <Button variant="outline" size="sm" onClick={() => navigate("/")}>
-          Back
-        </Button>
       </div>
 
-      <Card className="flex-1 overflow-auto">
+      <Card className="flex-1 overflow-auto mb-20">
         <div className="p-2 sm:p-4 space-y-3">
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-1.5">
@@ -242,6 +240,33 @@ const Settings = () => {
           </div>
         </div>
       </Card>
+
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t py-4">
+        <div className="container max-w-md mx-auto flex items-center justify-between px-4">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="hover:bg-accent"
+            onClick={() => navigate("/")}
+          >
+            <CalendarDays className="h-8 w-8" />
+          </Button>
+          
+          <div className="relative">
+            <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg">
+              <span className="text-primary-foreground font-semibold text-xl">S</span>
+            </div>
+          </div>
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="hover:bg-accent"
+          >
+            <SettingsIcon className="h-8 w-8" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };
