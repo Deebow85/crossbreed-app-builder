@@ -61,25 +61,31 @@ export const generateContinuousPattern = (
   console.log('Generating continuous pattern from', format(currentDate, 'yyyy-MM-dd'), 
               'to', format(endDate, 'yyyy-MM-dd'));
 
+  // Calculate total cycle length
   const cycleLength = sequences.reduce((total, seq) => total + seq.days, 0);
   console.log('Cycle length:', cycleLength, 'days');
 
+  // Generate sequences map for quick lookup
+  const sequenceMap = new Map<number, ShiftPattern>();
+  let dayCounter = 0;
+  for (const sequence of sequences) {
+    for (let i = 0; i < sequence.days; i++) {
+      sequenceMap.set(dayCounter, sequence);
+      dayCounter++;
+    }
+  }
+
+  // Generate shifts without gaps
   while (currentDate < endDate) {
     const daysSinceStart = Math.floor((currentDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
     const dayInCycle = daysSinceStart % cycleLength;
-    let daysAccumulated = 0;
     
-    for (const sequence of sequences) {
-      if (dayInCycle >= daysAccumulated && dayInCycle < daysAccumulated + sequence.days) {
-        if (!sequence.isOff && sequence.shiftType) {
-          shifts.push({
-            date: currentDate.toISOString(),
-            shiftType: sequence.shiftType
-          });
-        }
-        break;
-      }
-      daysAccumulated += sequence.days;
+    const sequence = sequenceMap.get(dayInCycle);
+    if (sequence && !sequence.isOff && sequence.shiftType) {
+      shifts.push({
+        date: currentDate.toISOString(),
+        shiftType: sequence.shiftType
+      });
     }
     
     currentDate = addDays(currentDate, 1);
