@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -27,7 +26,28 @@ import {
   Note, ShiftSwap, Alarm, PatternCycle
 } from "@/types/calendar";
 
-const shiftTypes: ShiftType[] = [];
+const shiftTypes: ShiftType[] = [
+  {
+    name: "Day",
+    color: "#4CAF50",
+    gradient: "linear-gradient(135deg, #4CAF50 0%, #81C784 100%)"
+  },
+  {
+    name: "Night",
+    color: "#2196F3",
+    gradient: "linear-gradient(135deg, #2196F3 0%, #64B5F6 100%)"
+  },
+  {
+    name: "Late",
+    color: "#9C27B0",
+    gradient: "linear-gradient(135deg, #9C27B0 0%, #BA68C8 100%)"
+  },
+  {
+    name: "Early",
+    color: "#FF9800",
+    gradient: "linear-gradient(135deg, #FF9800 0%, #FFB74D 100%)"
+  }
+];
 
 const Calendar = () => {
   const navigate = useNavigate();
