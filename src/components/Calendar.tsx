@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, Banknote } from "lucide-react";
@@ -92,7 +93,7 @@ const Calendar = () => {
     switch (settings.paydayType) {
       case 'weekly':
         nextPayday = new Date(today);
-        const targetDay = settings.paydayDate; // 1-7 for Monday-Sunday
+        const targetDay = settings.paydayDate;
         const currentDay = getDay(today);
         const daysToAdd = (targetDay + (currentDay === 0 ? 7 : -currentDay)) % 7;
         nextPayday = addDays(nextPayday, daysToAdd);
@@ -190,34 +191,12 @@ const Calendar = () => {
 
   const handleDayClick = (date: Date) => {
     const dateStr = date.toISOString();
-    const shift = getShiftForDate(date);
+    const shift = shifts.find(s => s.date === dateStr);
     
-    if (window.event && (window.event as MouseEvent).button === 2) {
-      addOrEditNote(date);
-      return;
-    }
-
-    if (window.event && (window.event as MouseEvent).button === 1) {
-      if (shift) {
-        const hasAlarm = alarms.some(a => a.date === dateStr);
-        if (hasAlarm) {
-          if (window.confirm('Remove alarm for this shift?')) {
-            removeAlarm(date);
-          }
-        } else {
-          setAlarmForShift(date, shift);
-        }
-      }
-      return;
-    }
-
-    if (!isSelecting && selectedShiftType) {
-      const existingShift = shifts.find(s => s.date === dateStr);
-      if (existingShift) {
-        setShifts(shifts.filter(s => s.date !== dateStr));
-      } else {
-        setShifts([...shifts, { date: dateStr, shiftType: selectedShiftType }]);
-      }
+    if (shift && selectedShiftType) {
+      setShifts(shifts.filter(s => s.date !== dateStr));
+    } else if (selectedShiftType) {
+      setShifts([...shifts, { date: dateStr, shiftType: selectedShiftType }]);
     }
   };
 
@@ -251,267 +230,6 @@ const Calendar = () => {
     
     setIsSelecting(false);
     setSelectionStart(null);
-  };
-
-  const getShiftForDate = (date: Date) => {
-    return shifts.find(shift => shift.date === date.toISOString());
-  };
-
-  const applyPattern = (pattern: ShiftPattern) => {
-    const totalDays = pattern.daysOn + pattern.daysOff;
-    const cycleLength = 90;
-    const startDate = pattern.startDate || new Date();
-    const dateRange = eachDayOfInterval({
-      start: startDate,
-      end: addDays(startDate, cycleLength)
-    });
-
-    const newShifts = dateRange.map((date, index) => {
-      const dayInCycle = index % totalDays;
-      if (dayInCycle < pattern.daysOn) {
-        return {
-          date: date.toISOString(),
-          shiftType: pattern.shiftType
-        };
-      }
-      return null;
-    }).filter((shift): shift is ShiftAssignment => shift !== null);
-
-    const existingShifts = shifts.filter(shift => {
-      const shiftDate = new Date(shift.date);
-      return shiftDate < startDate || shiftDate > addDays(startDate, cycleLength);
-    });
-
-    setShifts([...existingShifts, ...newShifts]);
-  };
-
-  const handlePatternInput = () => {
-    const daysOn = window.prompt("Enter number of days ON:", pattern.daysOn.toString());
-    if (!daysOn) return;
-    
-    const daysOnNum = parseInt(daysOn);
-    if (isNaN(daysOnNum) || daysOnNum < 1) {
-      alert("Please enter a valid number of days (minimum 1)");
-      return;
-    }
-
-    const daysOff = window.prompt("Enter number of days OFF:", pattern.daysOff.toString());
-    if (!daysOff) return;
-    
-    const daysOffNum = parseInt(daysOff);
-    if (isNaN(daysOffNum) || daysOffNum < 1) {
-      alert("Please enter a valid number of days (minimum 1)");
-      return;
-    }
-
-    setPattern({
-      id: 'default',
-      name: 'Default',
-      color: '#CCCCCC',
-      shiftType: selectedShiftType,
-      daysOn: daysOnNum,
-      daysOff: daysOffNum
-    });
-
-    const shouldApply = window.confirm(`Apply pattern: ${daysOnNum} days on, ${daysOffNum} days off with ${selectedShiftType.name} shifts?`);
-    if (shouldApply) {
-      applyPattern(pattern);
-    }
-  };
-
-  const addOrEditNote = (date: Date) => {
-    const dateStr = date.toISOString();
-    const existingNote = notes.find(note => note.date === dateStr);
-    
-    const isSwap = window.confirm("Is this a shift swap note?");
-    
-    if (isSwap) {
-      const workerName = window.prompt("Enter worker's name:");
-      if (!workerName) return;
-
-      const type = window.confirm("Is this a shift you owe? (Cancel for payback)") ? "owed" : "payback";
-      
-      const hoursStr = window.prompt("Enter hours:");
-      if (!hoursStr) return;
-      const hours = parseFloat(hoursStr);
-      if (isNaN(hours) || hours <= 0) {
-        alert("Please enter a valid number of hours");
-        return;
-      }
-
-      const monetaryValueStr = window.prompt("Enter monetary value (optional):");
-      const monetaryValue = monetaryValueStr ? parseFloat(monetaryValueStr) : undefined;
-      if (monetaryValueStr && (isNaN(monetaryValue) || monetaryValue < 0)) {
-        alert("Please enter a valid monetary value");
-        return;
-      }
-
-      const noteText = window.prompt("Additional notes (optional):");
-      
-      const swap: ShiftSwap = {
-        date: dateStr,
-        workerName,
-        type,
-        hours,
-        monetaryValue,
-        note: noteText || undefined
-      };
-
-      const formattedNote = `${type === "owed" ? "Owe" : "Owed by"} ${workerName}: ${hours}h` + 
-        (monetaryValue ? ` (${paydaySettings.symbol}${monetaryValue})` : "") +
-        (noteText ? `\n${noteText}` : "");
-
-      setNotes(prevNotes => {
-        const filtered = prevNotes.filter(note => note.date !== dateStr);
-        return [...filtered, { date: dateStr, text: formattedNote, swap }];
-      });
-    } else {
-      const noteText = window.prompt(
-        "Enter note for " + format(date, 'MMM d, yyyy'),
-        existingNote?.text || ""
-      );
-
-      if (noteText === null) return;
-
-      if (noteText.trim() === "") {
-        setNotes(notes.filter(note => note.date !== dateStr));
-      } else {
-        setNotes(prevNotes => {
-          const filtered = prevNotes.filter(note => note.date !== dateStr);
-          return [...filtered, { date: dateStr, text: noteText.trim() }];
-        });
-      }
-    }
-  };
-
-  const getSwapSummary = () => {
-    const swaps = notes
-      .filter(note => note.swap)
-      .map(note => note.swap as ShiftSwap);
-
-    const summary = new Map<string, { owed: number; payback: number; monetary: number }>();
-
-    swaps.forEach(swap => {
-      const current = summary.get(swap.workerName) || { owed: 0, payback: 0, monetary: 0 };
-      if (swap.type === "owed") {
-        current.owed += swap.hours;
-      } else {
-        current.payback += swap.hours;
-      }
-      if (swap.monetaryValue) {
-        current.monetary += (swap.type === "owed" ? -1 : 1) * swap.monetaryValue;
-      }
-      summary.set(swap.workerName, current);
-    });
-
-    return Array.from(summary.entries())
-      .filter(([_, data]) => data.owed !== data.payback || data.monetary !== 0);
-  };
-
-  const getNote = (date: Date): Note | undefined => {
-    return notes.find(note => note.date === date.toISOString());
-  };
-
-  const searchNotes = () => {
-    if (!searchTerm.trim()) return [];
-    const term = searchTerm.toLowerCase();
-    return notes
-      .filter(note => {
-        const noteText = note.text.toLowerCase();
-        const workerName = note.swap?.workerName.toLowerCase();
-        return noteText.includes(term) || (workerName && workerName.includes(term));
-      })
-      .map(note => ({
-        ...note,
-        date: format(new Date(note.date), 'MMM d, yyyy')
-      }));
-  };
-
-  const handleAddPattern = () => {
-    if (!newPattern.name || !newPattern.color || !newPattern.daysOn || !newPattern.daysOff) {
-      alert('Please fill in all fields');
-      return;
-    }
-
-    const pattern: ShiftPattern = {
-      id: Date.now().toString(),
-      name: newPattern.name,
-      color: newPattern.color,
-      shiftType: selectedShiftType,
-      daysOn: Number(newPattern.daysOn),
-      daysOff: Number(newPattern.daysOff),
-      startDate: new Date()
-    };
-
-    setPatterns([...patterns, pattern]);
-    setShowPatternDialog(false);
-    setNewPattern({});
-  };
-
-  const getNextFreeDayForPattern = (pattern: ShiftPattern) => {
-    if (!pattern.startDate) return null;
-    const today = new Date();
-    let currentDate = today;
-    const totalDays = pattern.daysOn + pattern.daysOff;
-    
-    for (let i = 0; i < 90; i++) {
-      const daysSinceStart = differenceInDays(currentDate, pattern.startDate);
-      const dayInCycle = daysSinceStart % totalDays;
-      
-      if (dayInCycle >= pattern.daysOn && currentDate >= today) {
-        return currentDate;
-      }
-      currentDate = addDays(currentDate, 1);
-    }
-    return null;
-  };
-
-  const removeAlarm = async (date: Date) => {
-    const updatedAlarms = alarms.filter(a => a.date !== date.toISOString());
-    setAlarms(updatedAlarms);
-    try {
-      await LocalNotifications.cancel({
-        notifications: [{ id: parseInt(date.getTime().toString()) }]
-      });
-    } catch (error) {
-      console.error('Error removing alarm:', error);
-    }
-  };
-
-  const setAlarmForShift = async (date: Date, shift: ShiftAssignment) => {
-    const time = await window.prompt('Enter alarm time (HH:MM):', '08:00');
-    if (!time) return;
-
-    const [hours, minutes] = time.split(':').map(Number);
-    if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-      alert('Please enter a valid time in 24-hour format (HH:MM)');
-      return;
-    }
-
-    const alarmDate = new Date(date);
-    alarmDate.setHours(hours, minutes, 0, 0);
-
-    const newAlarm: Alarm = {
-      date: date.toISOString(),
-      shiftId: shift.shiftType.name,
-      time: time,
-      enabled: true
-    };
-
-    setAlarms([...alarms, newAlarm]);
-
-    try {
-      await LocalNotifications.schedule({
-        notifications: [{
-          id: parseInt(date.getTime().toString()),
-          title: `Shift Reminder: ${shift.shiftType.name}`,
-          body: `Your ${shift.shiftType.name} shift starts at ${time}`,
-          schedule: { at: alarmDate }
-        }]
-      });
-    } catch (error) {
-      console.error('Error setting alarm:', error);
-    }
   };
 
   return (
