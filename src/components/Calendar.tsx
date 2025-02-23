@@ -49,6 +49,18 @@ type ShiftPattern = {
 type Note = {
   date: string;
   text: string;
+  swap?: ShiftSwap;
+};
+
+type SwapType = "owed" | "payback";
+
+type ShiftSwap = {
+  date: string;
+  workerName: string;
+  type: SwapType;
+  hours: number;
+  monetaryValue?: number;
+  note?: string;
 };
 
 const Calendar = () => {
@@ -288,21 +300,90 @@ const Calendar = () => {
   const addOrEditNote = (date: Date) => {
     const dateStr = date.toISOString();
     const existingNote = notes.find(note => note.date === dateStr);
-    const noteText = window.prompt(
-      "Enter note for " + format(date, 'MMM d, yyyy'),
-      existingNote?.text || ""
-    );
+    
+    const isSwap = window.confirm("Is this a shift swap note?");
+    
+    if (isSwap) {
+      const workerName = window.prompt("Enter worker's name:");
+      if (!workerName) return;
 
-    if (noteText === null) return; // User cancelled
+      const type = window.confirm("Is this a shift you owe? (Cancel for payback)") ? "owed" : "payback";
+      
+      const hoursStr = window.prompt("Enter hours:");
+      if (!hoursStr) return;
+      const hours = parseFloat(hoursStr);
+      if (isNaN(hours) || hours <= 0) {
+        alert("Please enter a valid number of hours");
+        return;
+      }
 
-    if (noteText.trim() === "") {
-      setNotes(notes.filter(note => note.date !== dateStr));
-    } else {
+      const monetaryValueStr = window.prompt("Enter monetary value (optional):");
+      const monetaryValue = monetaryValueStr ? parseFloat(monetaryValueStr) : undefined;
+      if (monetaryValueStr && (isNaN(monetaryValue) || monetaryValue < 0)) {
+        alert("Please enter a valid monetary value");
+        return;
+      }
+
+      const noteText = window.prompt("Additional notes (optional):");
+      
+      const swap: ShiftSwap = {
+        date: dateStr,
+        workerName,
+        type,
+        hours,
+        monetaryValue,
+        note: noteText || undefined
+      };
+
+      const formattedNote = `${type === "owed" ? "Owe" : "Owed by"} ${workerName}: ${hours}h` + 
+        (monetaryValue ? ` (${paydaySettings.symbol}${monetaryValue})` : "") +
+        (noteText ? `\n${noteText}` : "");
+
       setNotes(prevNotes => {
         const filtered = prevNotes.filter(note => note.date !== dateStr);
-        return [...filtered, { date: dateStr, text: noteText.trim() }];
+        return [...filtered, { date: dateStr, text: formattedNote, swap }];
       });
+    } else {
+      const noteText = window.prompt(
+        "Enter note for " + format(date, 'MMM d, yyyy'),
+        existingNote?.text || ""
+      );
+
+      if (noteText === null) return;
+
+      if (noteText.trim() === "") {
+        setNotes(notes.filter(note => note.date !== dateStr));
+      } else {
+        setNotes(prevNotes => {
+          const filtered = prevNotes.filter(note => note.date !== dateStr);
+          return [...filtered, { date: dateStr, text: noteText.trim() }];
+        });
+      }
     }
+  };
+
+  const getSwapSummary = () => {
+    const swaps = notes
+      .filter(note => note.swap)
+      .map(note => note.swap as ShiftSwap);
+
+    const summary = new Map<string, { owed: number; payback: number; monetary: number }>();
+
+    swaps.forEach(swap => {
+      const current = summary.get(swap.workerName) || { owed: 0, payback: 0, monetary: 0 };
+      if (swap.type === "owed") {
+        current.owed += swap.hours;
+      } else {
+        current.payback += swap.hours;
+      }
+      if (swap.monetaryValue) {
+        current.monetary += (swap.type === "owed" ? -1 : 1) * swap.monetaryValue;
+      }
+      summary.set(swap.workerName, current);
+    });
+
+    return Array.from(summary.entries())
+      .filter(([_, data]) => data.owed !== data.payback || data.monetary !== 0);
   };
 
   const getNote = (date: Date): Note | undefined => {
@@ -313,7 +394,11 @@ const Calendar = () => {
     if (!searchTerm.trim()) return [];
     const term = searchTerm.toLowerCase();
     return notes
-      .filter(note => note.text.toLowerCase().includes(term))
+      .filter(note => {
+        const noteText = note.text.toLowerCase();
+        const workerName = note.swap?.workerName.toLowerCase();
+        return noteText.includes(term) || (workerName && workerName.includes(term));
+      })
       .map(note => ({
         ...note,
         date: format(new Date(note.date), 'MMM d, yyyy')
@@ -486,6 +571,29 @@ const Calendar = () => {
             </Button>
           );
         })}
+      </div>
+
+      <div className="mb-4 p-4 border rounded-md bg-gray-50">
+        <h3 className="text-sm font-medium mb-2">Outstanding Swaps</h3>
+        {getSwapSummary().map(([worker, data]) => (
+          <div key={worker} className="text-sm flex justify-between items-center py-1">
+            <span>{worker}</span>
+            <div className="flex gap-4">
+              <span className={cn(
+                data.owed > data.payback ? "text-red-500" : "text-green-500"
+              )}>
+                {Math.abs(data.owed - data.payback)}h remaining
+              </span>
+              {data.monetary !== 0 && (
+                <span className={cn(
+                  data.monetary < 0 ? "text-red-500" : "text-green-500"
+                )}>
+                  {paydaySettings.symbol}{Math.abs(data.monetary)}
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
     </Card>
   );
