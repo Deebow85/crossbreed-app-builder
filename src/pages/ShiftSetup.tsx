@@ -7,6 +7,12 @@ import { Input } from "@/components/ui/input";
 import { CalendarDays, Settings, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface ShiftTypeSettings {
   name: string;
@@ -18,6 +24,8 @@ const ShiftSetup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [shiftTypes, setShiftTypes] = useState<ShiftTypeSettings[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   useEffect(() => {
     // Clear existing shift types from localStorage on first load
@@ -45,6 +53,22 @@ const ShiftSetup = () => {
       [field]: value
     };
     saveShiftTypes(newShiftTypes);
+  };
+
+  const handleSolidColor = () => {
+    if (selectedIndex !== null) {
+      const color = shiftTypes[selectedIndex].color;
+      updateShiftType(selectedIndex, 'gradient', `linear-gradient(135deg, ${color} 0%, ${color} 100%)`);
+    }
+    setIsDialogOpen(false);
+  };
+
+  const handleGradient = () => {
+    if (selectedIndex !== null) {
+      const color = shiftTypes[selectedIndex].color;
+      updateShiftType(selectedIndex, 'gradient', `linear-gradient(135deg, ${color} 0%, ${color}99 100%)`);
+    }
+    setIsDialogOpen(false);
   };
 
   const addShiftType = () => {
@@ -98,9 +122,8 @@ const ShiftSetup = () => {
                 <Button
                   size="sm"
                   onClick={() => {
-                    const color = type.color;
-                    const gradient = `linear-gradient(135deg, ${color} 0%, ${color}99 100%)`;
-                    updateShiftType(index, 'gradient', gradient);
+                    setSelectedIndex(index);
+                    setIsDialogOpen(true);
                   }}
                   variant="outline"
                   className="flex-1 h-7 text-xs"
@@ -120,6 +143,18 @@ const ShiftSetup = () => {
           </div>
         </div>
       </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select Colour Type</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center gap-4 pt-4">
+            <Button onClick={handleSolidColor}>Solid Colour</Button>
+            <Button onClick={handleGradient}>Gradient</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t py-4">
         <div className="container max-w-md mx-auto flex items-center justify-between px-4">
