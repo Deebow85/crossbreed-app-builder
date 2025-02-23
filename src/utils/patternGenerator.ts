@@ -1,3 +1,4 @@
+
 import { addDays, startOfDay } from "date-fns";
 
 export interface ShiftType {
@@ -31,35 +32,36 @@ export const generatePattern = (
   startDate: Date,
   years: number
 ): ShiftAssignment[] => {
-  console.log('Starting pattern generation with:', {
-    pattern,
-    startDate: startDate.toISOString(),
-    years
-  });
-  
   const shifts: ShiftAssignment[] = [];
   let currentDate = startOfDay(new Date(startDate));
   const endDate = addDays(currentDate, years * 365);
 
-  // Simple continuous pattern generation - just keep adding shifts according to pattern
+  // Calculate total days in one cycle
+  const totalDaysInCycle = pattern.sequences.reduce((acc, seq) => acc + seq.days, 0);
+  console.log('Total days in one cycle:', totalDaysInCycle);
+
+  let dayInCycle = 0;
   while (currentDate < endDate) {
+    // Find which sequence we're in
+    let daysAccumulated = 0;
     for (const sequence of pattern.sequences) {
-      for (let i = 0; i < sequence.days; i++) {
-        if (currentDate >= endDate) break;
-        
-        // Only add shifts for work days
+      if (dayInCycle >= daysAccumulated && dayInCycle < daysAccumulated + sequence.days) {
+        // We're in this sequence
         if (!sequence.isOff && sequence.shiftType) {
           shifts.push({
             date: currentDate.toISOString(),
             shiftType: sequence.shiftType
           });
+          console.log(`Added shift for ${currentDate.toISOString()}`);
         }
-        
-        currentDate = addDays(currentDate, 1);
+        break;
       }
-      
-      if (currentDate >= endDate) break;
+      daysAccumulated += sequence.days;
     }
+
+    // Move to next day
+    currentDate = addDays(currentDate, 1);
+    dayInCycle = (dayInCycle + 1) % totalDaysInCycle;
   }
 
   console.log(`Generated ${shifts.length} shifts`);
