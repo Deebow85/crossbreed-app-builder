@@ -277,7 +277,7 @@ const Calendar = () => {
                 <Button 
                   variant="outline" 
                   onClick={() => setCurrentDate(prev => subMonths(prev, 1))}
-                  className="px-3"
+                  className="px-3 h-8"
                 >
                   {format(subMonths(currentDate, 1), 'MMM')}
                 </Button>
@@ -287,10 +287,12 @@ const Calendar = () => {
           </TooltipProvider>
 
           <div className="text-center flex-1 mx-4">
-            <h2 className="text-lg sm:text-xl font-bold">
-              {format(currentDate, 'MMMM yyyy')}
-            </h2>
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex items-center justify-center">
+              <h2 className="text-lg sm:text-xl font-bold">
+                {format(currentDate, 'MMMM yyyy')}
+              </h2>
+            </div>
+            <div className="flex flex-col items-center">
               <div className="flex flex-col items-center">
                 <TooltipProvider>
                   <Tooltip>
@@ -323,7 +325,7 @@ const Calendar = () => {
                 <Button 
                   variant="outline"
                   onClick={() => setCurrentDate(prev => addMonths(prev, 1))}
-                  className="px-3"
+                  className="px-3 h-8"
                 >
                   {format(addMonths(currentDate, 1), 'MMM')}
                 </Button>
