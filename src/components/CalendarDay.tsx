@@ -18,6 +18,7 @@ type CalendarDayProps = {
   numberLayout: string;
   onDayClick: (date: Date) => void;
   onContextMenu: (e: React.MouseEvent, date: Date) => void;
+  isSelected?: boolean;
 };
 
 const CalendarDay = ({
@@ -32,6 +33,7 @@ const CalendarDay = ({
   numberLayout,
   onDayClick,
   onContextMenu,
+  isSelected,
 }: CalendarDayProps) => {
   const { theme } = useTheme();
 
@@ -50,6 +52,7 @@ const CalendarDay = ({
         calendarSize === 'large' ? "h-20 sm:h-24" : "h-10 sm:h-12",
         !isSameMonth(date, currentDate) && "opacity-30",
         isToday(date) && !shift && "bg-accent",
+        isSelected && "ring-2 ring-primary",
         theme === 'dark' && !shift && "hover:bg-accent/50 data-[state=open]:bg-accent/50"
       )}
       style={shift ? {

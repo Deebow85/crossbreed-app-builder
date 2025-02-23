@@ -7,7 +7,7 @@ import { ShiftType } from "@/types/calendar";
 type ShiftSelectionDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  selectedDate: Date | null;
+  selectedDates: Date[];
   shiftTypes: ShiftType[];
   onShiftSelect: (type: ShiftType | null) => void;
 };
@@ -15,7 +15,7 @@ type ShiftSelectionDialogProps = {
 const ShiftSelectionDialog = ({
   open,
   onOpenChange,
-  selectedDate,
+  selectedDates,
   shiftTypes,
   onShiftSelect,
 }: ShiftSelectionDialogProps) => {
@@ -25,7 +25,10 @@ const ShiftSelectionDialog = ({
         <DialogHeader>
           <DialogTitle>Select Shift</DialogTitle>
           <DialogDescription>
-            {selectedDate && `Select shift type for ${format(selectedDate, 'MMMM d, yyyy')}`}
+            {selectedDates.length === 1 
+              ? `Select shift type for ${format(selectedDates[0], 'MMMM d, yyyy')}`
+              : `Select shift type for ${selectedDates.length} dates`
+            }
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">

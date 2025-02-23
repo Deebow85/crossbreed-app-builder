@@ -68,7 +68,8 @@ const Calendar = () => {
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [calendarSize, setCalendarSize] = useState<'default' | 'large' | 'small'>('default');
   const [showShiftDialog, setShowShiftDialog] = useState(false);
-  const [selectedDateForShift, setSelectedDateForShift] = useState<Date | null>(null);
+  const [selectedDatesForShift, setSelectedDatesForShift] = useState<Date[]>([]);
+  const [isSelectingMultiple, setIsSelectingMultiple] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('calendarShifts', JSON.stringify(shifts));
@@ -114,25 +115,53 @@ const Calendar = () => {
       return;
     }
 
-    setSelectedDateForShift(date);
-    setShowShiftDialog(true);
+    if (window.event && (window.event as MouseEvent).ctrlKey) {
+      setIsSelectingMultiple(true);
+      setSelectedDatesForShift(prev => {
+        const exists = prev.some(d => d.getTime() === date.getTime());
+        if (exists) {
+          return prev.filter(d => d.getTime() !== date.getTime());
+        }
+        return [...prev, date];
+      });
+    } else {
+      setIsSelectingMultiple(false);
+      setSelectedDatesForShift([date]);
+      setShowShiftDialog(true);
+    }
+
+    if (isSelectingMultiple && selectedDatesForShift.length > 0) {
+      setShowShiftDialog(true);
+    }
   };
 
   const handleShiftSelection = (selectedType: ShiftType | null) => {
-    if (!selectedDateForShift) return;
+    if (selectedDatesForShift.length === 0) return;
     
-    const dateStr = selectedDateForShift.toISOString();
-    if (selectedType) {
-      setShifts(prevShifts => {
-        const newShifts = prevShifts.filter(s => s.date !== dateStr);
-        return [...newShifts, { date: dateStr, shiftType: selectedType }];
+    setShifts(prevShifts => {
+      const newShifts = [...prevShifts];
+      selectedDatesForShift.forEach(date => {
+        const dateStr = date.toISOString();
+        const existingIndex = newShifts.findIndex(s => s.date === dateStr);
+        
+        if (selectedType) {
+          if (existingIndex >= 0) {
+            newShifts[existingIndex] = { date: dateStr, shiftType: selectedType };
+          } else {
+            newShifts.push({ date: dateStr, shiftType: selectedType });
+          }
+        } else {
+          if (existingIndex >= 0) {
+            newShifts.splice(existingIndex, 1);
+          }
+        }
       });
-    } else {
-      setShifts(prevShifts => prevShifts.filter(s => s.date !== dateStr));
-    }
+      return newShifts;
+    });
     
     setShowShiftDialog(false);
-    setSelectedDateForShift(null);
+    setSelectedDatesForShift([]);
+    setIsSelectingMultiple(false);
   };
 
   const getShiftForDate = (date: Date) => {
@@ -348,6 +377,7 @@ const Calendar = () => {
                   e.preventDefault();
                   addOrEditNote(date);
                 }}
+                isSelected={selectedDatesForShift.some(d => d.getTime() === date.getTime())}
               />
             ));
           })()}
@@ -359,10 +389,11 @@ const Calendar = () => {
         onOpenChange={(open) => {
           if (!open) {
             setShowShiftDialog(false);
-            setSelectedDateForShift(null);
+            setSelectedDatesForShift([]);
+            setIsSelectingMultiple(false);
           }
         }}
-        selectedDate={selectedDateForShift}
+        selectedDates={selectedDatesForShift}
         shiftTypes={shiftTypes}
         onShiftSelect={handleShiftSelection}
       />
