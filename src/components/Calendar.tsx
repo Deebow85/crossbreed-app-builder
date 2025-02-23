@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -62,27 +61,11 @@ type Alarm = {
   enabled: boolean;
 };
 
-const shiftTypes: ShiftType[] = [
-  {
-    name: "Day",
-    color: "#8B5CF6",
-    gradient: "linear-gradient(135deg, #8B5CF6 0%, #9F75FF 100%)"
-  },
-  {
-    name: "Night",
-    color: "#0EA5E9",
-    gradient: "linear-gradient(135deg, #0EA5E9 0%, #38BDF8 100%)"
-  },
-  {
-    name: "OT",
-    color: "#F97316",
-    gradient: "linear-gradient(135deg, #F97316 0%, #FB923C 100%)"
-  }
-];
+const shiftTypes: ShiftType[] = [];
 
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedShiftType, setSelectedShiftType] = useState<ShiftType>(shiftTypes[0]);
+  const [selectedShiftType, setSelectedShiftType] = useState<ShiftType | null>(null);
   const [shifts, setShifts] = useState<ShiftAssignment[]>([]);
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState<string | null>(null);
@@ -115,6 +98,19 @@ const Calendar = () => {
     localStorage.setItem('shiftPatterns', JSON.stringify(patterns));
   }, [patterns]);
 
+  useEffect(() => {
+    const loadShiftTypes = async () => {
+      const savedSettings = localStorage.getItem('appSettings');
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        if (settings.shiftTypes && settings.shiftTypes.length > 0) {
+          setSelectedShiftType(settings.shiftTypes[0]);
+        }
+      }
+    };
+    loadShiftTypes();
+  }, []);
+
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
@@ -123,22 +119,10 @@ const Calendar = () => {
 
   const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-  const getWeeklyOTHours = () => {
-    return shifts
-      .filter(shift => {
-        const shiftDate = new Date(shift.date);
-        return shiftDate >= weekStart && shiftDate <= weekEnd && shift.otHours;
-      })
-      .reduce((total, shift) => total + (shift.otHours || 0), 0);
-  };
-
-  const getMonthlyOTHours = () => {
-    return shifts
-      .filter(shift => {
-        const shiftDate = new Date(shift.date);
-        return isSameMonth(shiftDate, currentDate) && shift.otHours;
-      })
-      .reduce((total, shift) => total + (shift.otHours || 0), 0);
+  const getDaysUntilPayday = () => {
+    const today = new Date();
+    const nextPayday = getNextPayday();
+    return differenceInDays(nextPayday, today);
   };
 
   const getNextPayday = () => {
@@ -150,98 +134,6 @@ const Calendar = () => {
     }
     
     return nextPayday;
-  };
-
-  const getDaysUntilPayday = () => {
-    const today = new Date();
-    const nextPayday = getNextPayday();
-    return differenceInDays(nextPayday, today);
-  };
-
-  const isPayday = (date: Date) => {
-    return date.getDate() === paydaySettings.date;
-  };
-
-  useEffect(() => {
-    const requestPermissions = async () => {
-      try {
-        await LocalNotifications.requestPermissions();
-      } catch (error) {
-        console.error('Error requesting notification permissions:', error);
-      }
-    };
-    requestPermissions();
-  }, []);
-
-  const setAlarmForShift = async (date: Date, shift: ShiftAssignment) => {
-    const dateStr = date.toISOString();
-    const existingAlarm = alarms.find(a => a.date === dateStr);
-    
-    const timeStr = window.prompt(
-      "Enter alarm time (HH:mm):",
-      existingAlarm?.time || "07:00"
-    );
-    
-    if (!timeStr) return;
-    
-    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    if (!timeRegex.test(timeStr)) {
-      alert("Please enter a valid time in HH:mm format");
-      return;
-    }
-
-    const [hours, minutes] = timeStr.split(":").map(Number);
-    const alarmDate = new Date(date);
-    alarmDate.setHours(hours, minutes, 0);
-
-    if (alarmDate < new Date()) {
-      alert("Cannot set alarm for past dates");
-      return;
-    }
-
-    const alarmId = `${dateStr}-${shift.shiftType.name}`;
-
-    try {
-      await LocalNotifications.schedule({
-        notifications: [{
-          id: Math.abs(alarmId.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)),
-          title: `Shift Alert: ${shift.shiftType.name}`,
-          body: `Your ${shift.shiftType.name} shift starts at ${timeStr}`,
-          schedule: { at: alarmDate },
-          sound: 'notification.wav',
-          actionTypeId: 'OPEN_SHIFT',
-        }]
-      });
-
-      setAlarms(prevAlarms => {
-        const filtered = prevAlarms.filter(a => a.date !== dateStr);
-        return [...filtered, {
-          date: dateStr,
-          shiftId: alarmId,
-          time: timeStr,
-          enabled: true
-        }];
-      });
-    } catch (error) {
-      console.error('Error scheduling notification:', error);
-      alert('Failed to set alarm. Please check notification permissions.');
-    }
-  };
-
-  const removeAlarm = async (date: Date) => {
-    const dateStr = date.toISOString();
-    const alarm = alarms.find(a => a.date === dateStr);
-    
-    if (!alarm) return;
-
-    try {
-      const alarmId = Math.abs(alarm.shiftId.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0));
-      await LocalNotifications.cancel({ notifications: [{ id: alarmId }] });
-      setAlarms(alarms.filter(a => a.date !== dateStr));
-    } catch (error) {
-      console.error('Error removing notification:', error);
-      alert('Failed to remove alarm');
-    }
   };
 
   const handleDayClick = (date: Date) => {
@@ -267,48 +159,12 @@ const Calendar = () => {
       return;
     }
 
-    if (!isSelecting) {
+    if (!isSelecting && selectedShiftType) {
       const existingShift = shifts.find(s => s.date === dateStr);
       if (existingShift) {
-        if (existingShift.shiftType.name === "OT") {
-          const hours = window.prompt("Enter OT hours:", existingShift.otHours?.toString() || "0");
-          if (hours === null) return;
-          
-          const otHours = parseFloat(hours);
-          if (isNaN(otHours) || otHours < 0) {
-            alert("Please enter a valid number of hours");
-            return;
-          }
-
-          if (otHours === 0) {
-            setShifts(shifts.filter(s => s.date !== dateStr));
-          } else {
-            setShifts(shifts.map(s => 
-              s.date === dateStr 
-                ? { ...s, otHours } 
-                : s
-            ));
-          }
-        } else {
-          setShifts(shifts.filter(s => s.date !== dateStr));
-        }
+        setShifts(shifts.filter(s => s.date !== dateStr));
       } else {
-        if (selectedShiftType.name === "OT") {
-          const hours = window.prompt("Enter OT hours:", "0");
-          if (hours === null) return;
-          
-          const otHours = parseFloat(hours);
-          if (isNaN(otHours) || otHours < 0) {
-            alert("Please enter a valid number of hours");
-            return;
-          }
-
-          if (otHours > 0) {
-            setShifts([...shifts, { date: dateStr, shiftType: selectedShiftType, otHours }]);
-          }
-        } else {
-          setShifts([...shifts, { date: dateStr, shiftType: selectedShiftType }]);
-        }
+        setShifts([...shifts, { date: dateStr, shiftType: selectedShiftType }]);
       }
     }
   };
@@ -319,7 +175,7 @@ const Calendar = () => {
   };
 
   const handleDayMouseUp = (date: Date) => {
-    if (selectionStart && isSelecting) {
+    if (selectionStart && isSelecting && selectedShiftType) {
       const startDate = new Date(selectionStart);
       const endDate = date;
       
@@ -329,34 +185,9 @@ const Calendar = () => {
 
       const dateRange = eachDayOfInterval({ start: finalStart, end: finalEnd });
       
-      let otHours = 0;
-      if (selectedShiftType.name === "OT") {
-        const hours = window.prompt("Enter OT hours for each selected day:", "0");
-        if (hours === null) {
-          setIsSelecting(false);
-          setSelectionStart(null);
-          return;
-        }
-        
-        otHours = parseFloat(hours);
-        if (isNaN(otHours) || otHours < 0) {
-          alert("Please enter a valid number of hours");
-          setIsSelecting(false);
-          setSelectionStart(null);
-          return;
-        }
-
-        if (otHours === 0) {
-          setIsSelecting(false);
-          setSelectionStart(null);
-          return;
-        }
-      }
-
       const newShifts = dateRange.map(date => ({
         date: date.toISOString(),
-        shiftType: selectedShiftType,
-        ...(selectedShiftType.name === "OT" ? { otHours } : {})
+        shiftType: selectedShiftType
       }));
 
       const filteredShifts = shifts.filter(shift => 
@@ -615,26 +446,6 @@ const Calendar = () => {
                 <TooltipContent>Next payday: {format(getNextPayday(), 'MMM do')}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <div className="flex items-center justify-center gap-4 text-xs sm:text-sm">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger className="flex items-center gap-1">
-                    <Clock className="h-4 w-4 text-orange-500" />
-                    <span>Week: {getWeeklyOTHours()}h</span>
-                  </TooltipTrigger>
-                  <TooltipContent>Overtime hours this week</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger className="flex items-center gap-1">
-                    <Clock className="h-4 w-4 text-orange-500" />
-                    <span>Month: {getMonthlyOTHours()}h</span>
-                  </TooltipTrigger>
-                  <TooltipContent>Overtime hours this month</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
           </div>
         </div>
 
@@ -743,7 +554,7 @@ const Calendar = () => {
                   variant="outline"
                   className={cn(
                     "h-10",
-                    selectedShiftType.name === type.name && "border-2 border-primary"
+                    selectedShiftType?.name === type.name && "border-2 border-primary"
                   )}
                   style={{
                     background: type.gradient,
