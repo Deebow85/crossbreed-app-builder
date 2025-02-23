@@ -16,6 +16,7 @@ import {
 
 interface ShiftTypeSettings {
   name: string;
+  symbol: string;
   color: string;
   gradient: string;
   isNew?: boolean;
@@ -105,6 +106,7 @@ const ShiftSetup = () => {
   const addShiftType = () => {
     const newShiftType: ShiftTypeSettings = {
       name: "New Shift",
+      symbol: "",
       color: "#4B5563",
       gradient: "linear-gradient(135deg, #4B5563 0%, #6B7280 100%)",
       isNew: true
@@ -191,6 +193,19 @@ const ShiftSetup = () => {
                   placeholder="Name"
                   disabled={!isEditing && !type.isNew}
                 />
+                <Input
+                  value={type.symbol}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value.length <= 1) {
+                      updateShiftType(index, 'symbol', value.toUpperCase());
+                    }
+                  }}
+                  className="w-12 h-7 text-center font-semibold uppercase"
+                  placeholder="D"
+                  disabled={!isEditing && !type.isNew}
+                  maxLength={1}
+                />
                 <div 
                   className="w-14 h-7 rounded border"
                   style={{ background: type.gradient }}
@@ -267,9 +282,11 @@ const ShiftSetup = () => {
               <div key={index} className="flex items-center justify-between p-2 border rounded-lg">
                 <div className="flex items-center gap-2">
                   <div 
-                    className="w-8 h-8 rounded border"
+                    className="w-8 h-8 rounded border flex items-center justify-center font-semibold"
                     style={{ background: type.gradient }}
-                  />
+                  >
+                    {type.symbol}
+                  </div>
                   <span>{type.name}</span>
                 </div>
                 <Button
