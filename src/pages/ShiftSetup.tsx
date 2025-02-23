@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { CalendarDays, Settings, Plus, Trash2 } from "lucide-react";
+import { CalendarDays, Settings, Plus, Trash2, PencilIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -29,9 +28,9 @@ const ShiftSetup = () => {
   const [colorMode, setColorMode] = useState<'solid' | 'gradient' | null>(null);
   const [startColor, setStartColor] = useState("#4B5563");
   const [endColor, setEndColor] = useState("#6B7280");
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    // Load existing shift types from localStorage on first load
     const savedSettings = localStorage.getItem('appSettings');
     if (savedSettings) {
       const settings = JSON.parse(savedSettings);
@@ -108,12 +107,15 @@ const ShiftSetup = () => {
     const currentType = shiftTypes[index];
     setStartColor(currentType.color);
     
-    // Extract end color from gradient or use a default
     const endColorValue = currentType.gradient.match(/,(.*?)100%/)?.[1]?.trim() || currentType.color + "99";
     setEndColor(endColorValue);
     
     setIsDialogOpen(true);
     setColorMode(null);
+  };
+
+  const toggleEditing = () => {
+    setIsEditing(!isEditing);
   };
 
   return (
@@ -127,6 +129,14 @@ const ShiftSetup = () => {
           <div className="flex justify-between items-center gap-2">
             <h2 className="text-lg font-semibold">Shift Types</h2>
             <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={toggleEditing}
+              >
+                <PencilIcon className="h-4 w-4 mr-1" />
+                {isEditing ? "Done" : "Edit Types"}
+              </Button>
               <Button 
                 variant="outline" 
                 size="sm"
@@ -159,15 +169,20 @@ const ShiftSetup = () => {
                 <div 
                   className="w-14 h-7 rounded border"
                   style={{ background: type.gradient }}
+                  onClick={() => isEditing && handleDialogOpen(index)}
+                  role="button"
+                  aria-label="Select color"
                 />
-                <Button
-                  size="sm"
-                  onClick={() => handleDialogOpen(index)}
-                  variant="outline"
-                  className="flex-1 h-7 text-xs"
-                >
-                  Select Colour
-                </Button>
+                {isEditing && (
+                  <Button
+                    size="sm"
+                    onClick={() => handleDialogOpen(index)}
+                    variant="outline"
+                    className="flex-1 h-7 text-xs"
+                  >
+                    Select Colour
+                  </Button>
+                )}
               </div>
             ))}
           </div>
