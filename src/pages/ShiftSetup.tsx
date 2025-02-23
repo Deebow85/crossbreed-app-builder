@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { CalendarDays, Settings, Plus, Trash2, PencilIcon, Check, Wand2 } from "lucide-react";
+import { CalendarDays, Settings, Plus, Trash2, PencilIcon, Check, Wand2, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Dialog,
@@ -12,6 +12,11 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { format } from "date-fns";
 
 interface ShiftTypeSettings {
@@ -59,6 +64,7 @@ const ShiftSetup = () => {
     years: number;
     patternName: string;
   }[]>([]);
+  const [isOpen, setIsOpen] = useState(true);
 
   useEffect(() => {
     const savedSettings = localStorage.getItem('appSettings');
@@ -381,11 +387,25 @@ const ShiftSetup = () => {
           </div>
 
           {existingPatterns.length > 0 && (
-            <div className="mt-8 space-y-3">
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold">Generated Patterns</h2>
+            <Collapsible
+              open={isOpen}
+              onOpenChange={setIsOpen}
+              className="mt-8 space-y-2"
+            >
+              <div className="flex items-center justify-between">
+                <CollapsibleTrigger asChild>
+                  <div className="flex items-center gap-2 cursor-pointer">
+                    <h2 className="text-lg font-semibold">Generated Patterns</h2>
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform ${
+                        isOpen ? "transform rotate-180" : ""
+                      }`}
+                    />
+                  </div>
+                </CollapsibleTrigger>
               </div>
-              <div className="grid gap-2">
+              
+              <CollapsibleContent className="space-y-2">
                 {existingPatterns.map((patternData, index) => (
                   <div 
                     key={index}
@@ -416,8 +436,8 @@ const ShiftSetup = () => {
                     </div>
                   </div>
                 ))}
-              </div>
-            </div>
+              </CollapsibleContent>
+            </Collapsible>
           )}
         </div>
       </Card>
