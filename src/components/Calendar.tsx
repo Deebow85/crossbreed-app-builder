@@ -163,11 +163,10 @@ const Calendar = () => {
         const newShifts: ShiftAssignment[] = [];
         
         const daysInOneSequence = pattern.sequences.reduce((total, seq) => total + seq.days, 0);
-        
         const patternRepeatDays = daysInOneSequence * pattern.repeatTimes;
         const totalDaysInCycle = patternRepeatDays + pattern.daysOffAfter;
         
-        const numberOfCyclesToGenerate = 3;
+        const numberOfCyclesToGenerate = 6;
         const totalDaysToGenerate = totalDaysInCycle * numberOfCyclesToGenerate;
         
         let currentDay = 0;
@@ -176,13 +175,6 @@ const Calendar = () => {
           const dayInCurrentCycle = currentDay % totalDaysInCycle;
           
           if (dayInCurrentCycle >= patternRepeatDays) {
-            currentDay++;
-            continue;
-          }
-          
-          const patternPosition = Math.floor(dayInCurrentCycle / daysInOneSequence);
-          
-          if (patternPosition >= pattern.repeatTimes) {
             currentDay++;
             continue;
           }
