@@ -1,4 +1,3 @@
-
 import { addDays, startOfDay, format } from "date-fns";
 
 export interface ShiftType {
@@ -36,24 +35,36 @@ export const generatePattern = (
   let currentDate = startOfDay(new Date(startDate));
   const endDate = addDays(currentDate, years * 365);
   const sequences = pattern.sequences;
-  const cycleLength = sequences.reduce((total, seq) => total + seq.days, 0);
 
-  while (currentDate < endDate) {
-    for (const sequence of sequences) {
-      for (let i = 0; i < sequence.days; i++) {
-        if (!sequence.isOff && sequence.shiftType) {
-          shifts.push({
-            date: currentDate.toISOString(),
-            shiftType: sequence.shiftType
-          });
+  if (pattern.isContinuous) {
+    // For continuous patterns, just keep cycling through the sequences
+    while (currentDate < endDate) {
+      for (const sequence of sequences) {
+        for (let i = 0; i < sequence.days && currentDate < endDate; i++) {
+          if (!sequence.isOff && sequence.shiftType) {
+            shifts.push({
+              date: currentDate.toISOString(),
+              shiftType: sequence.shiftType
+            });
+          }
+          currentDate = addDays(currentDate, 1);
         }
-        currentDate = addDays(currentDate, 1);
-        if (currentDate >= endDate) break;
       }
-      if (currentDate >= endDate) break;
     }
-    
-    if (!pattern.isContinuous) {
+  } else {
+    // For non-continuous patterns, include the repeat times and days off
+    for (let cycle = 0; cycle < pattern.repeatTimes && currentDate < endDate; cycle++) {
+      for (const sequence of sequences) {
+        for (let i = 0; i < sequence.days && currentDate < endDate; i++) {
+          if (!sequence.isOff && sequence.shiftType) {
+            shifts.push({
+              date: currentDate.toISOString(),
+              shiftType: sequence.shiftType
+            });
+          }
+          currentDate = addDays(currentDate, 1);
+        }
+      }
       currentDate = addDays(currentDate, pattern.daysOffAfter);
     }
   }
