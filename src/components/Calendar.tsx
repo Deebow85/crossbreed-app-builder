@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Banknote, Clock, CalendarDays } from "lucide-react";
+import { ChevronLeft, ChevronRight, Banknote, Clock, CalendarDays, StickyNote, Search } from "lucide-react";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, differenceInDays, startOfWeek, endOfWeek, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -46,6 +46,11 @@ type ShiftPattern = {
   daysOff: number;
 };
 
+type Note = {
+  date: string;
+  text: string;
+};
+
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedShiftType, setSelectedShiftType] = useState<ShiftType>(shiftTypes[0]);
@@ -61,6 +66,9 @@ const Calendar = () => {
     daysOn: 3,
     daysOff: 3
   });
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -277,6 +285,41 @@ const Calendar = () => {
     }
   };
 
+  const addOrEditNote = (date: Date) => {
+    const dateStr = date.toISOString();
+    const existingNote = notes.find(note => note.date === dateStr);
+    const noteText = window.prompt(
+      "Enter note for " + format(date, 'MMM d, yyyy'),
+      existingNote?.text || ""
+    );
+
+    if (noteText === null) return; // User cancelled
+
+    if (noteText.trim() === "") {
+      setNotes(notes.filter(note => note.date !== dateStr));
+    } else {
+      setNotes(prevNotes => {
+        const filtered = prevNotes.filter(note => note.date !== dateStr);
+        return [...filtered, { date: dateStr, text: noteText.trim() }];
+      });
+    }
+  };
+
+  const getNote = (date: Date): Note | undefined => {
+    return notes.find(note => note.date === date.toISOString());
+  };
+
+  const searchNotes = () => {
+    if (!searchTerm.trim()) return [];
+    const term = searchTerm.toLowerCase();
+    return notes
+      .filter(note => note.text.toLowerCase().includes(term))
+      .map(note => ({
+        ...note,
+        date: format(new Date(note.date), 'MMM d, yyyy')
+      }));
+  };
+
   return (
     <Card className="p-4 w-full max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -315,6 +358,31 @@ const Calendar = () => {
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
+      </div>
+
+      <div className="relative mb-4">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              placeholder="Search notes..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border rounded-md"
+            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          </div>
+        </div>
+        {searchTerm && (
+          <div className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+            {searchNotes().map(({ date, text }) => (
+              <div key={date} className="p-2 hover:bg-gray-100 cursor-pointer">
+                <div className="font-medium text-sm">{date}</div>
+                <div className="text-sm text-gray-600">{text}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-4 gap-2 mb-4">
@@ -362,6 +430,7 @@ const Calendar = () => {
           date.setDate(date.getDate() - (date.getDay() || 7) + 1 + index);
           const shift = getShiftForDate(date);
           const isPay = isPayday(date);
+          const note = getNote(date);
           
           return (
             <Button
@@ -380,6 +449,10 @@ const Calendar = () => {
               onMouseDown={() => handleDayMouseDown(date)}
               onMouseUp={() => handleDayMouseUp(date)}
               onMouseEnter={() => isSelecting && handleDayMouseUp(date)}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                addOrEditNote(date);
+              }}
             >
               <span className="absolute top-1 right-1 text-xs">
                 {format(date, 'd')}
@@ -391,6 +464,12 @@ const Calendar = () => {
                 >
                   {paydaySettings.symbol}
                 </span>
+              )}
+              {note && (
+                <StickyNote 
+                  className="absolute top-1 left-1 h-3 w-3"
+                  style={{ color: shift ? 'white' : '#F97316' }}
+                />
               )}
               {shift && (
                 <>
