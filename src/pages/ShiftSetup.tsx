@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -104,7 +105,7 @@ const ShiftSetup = () => {
                   variant="outline"
                   className="flex-1 h-7 text-xs"
                 >
-                  Generate Gradient
+                  Colour
                 </Button>
                 <Button
                   size="sm"
