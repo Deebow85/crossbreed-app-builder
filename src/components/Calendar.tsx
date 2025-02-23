@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, Banknote, Clock, CalendarDays, StickyNote, Search, Bell, Plus, Check, Settings } from "lucide-react";
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, differenceInDays, startOfWeek, endOfWeek, addDays, setHours, setMinutes } from "date-fns";
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, differenceInDays, startOfWeek, endOfWeek, addDays, setHours, setMinutes, getDay, addWeeks, lastDayOfMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -27,6 +27,8 @@ type ShiftAssignment = {
 type PaydaySettings = {
   date: number;
   symbol: string;
+  paydayType: "weekly" | "fortnightly" | "monthly" | "set-day" | "first-day" | "last-day" | "custom";
+  paydayDate: number;
 };
 
 type ShiftPattern = {
@@ -75,7 +77,9 @@ const Calendar = () => {
   const [selectionStart, setSelectionStart] = useState<string | null>(null);
   const [paydaySettings, setPaydaySettings] = useState<PaydaySettings>({
     date: 25,
-    symbol: "£"
+    symbol: "£",
+    paydayType: "monthly",
+    paydayDate: 15
   });
   const [pattern, setPattern] = useState<ShiftPattern>({
     id: 'default',
@@ -144,14 +148,105 @@ const Calendar = () => {
   };
 
   const getNextPayday = () => {
+    const savedSettings = localStorage.getItem('appSettings');
+    if (!savedSettings) return new Date();
+
+    const settings = JSON.parse(savedSettings);
     const today = new Date();
-    let nextPayday = new Date(today.getFullYear(), today.getMonth(), paydaySettings.date);
-    
-    if (today.getDate() > paydaySettings.date) {
-      nextPayday = new Date(today.getFullYear(), today.getMonth() + 1, paydaySettings.date);
+    let nextPayday: Date;
+
+    switch (settings.paydayType) {
+      case 'weekly':
+        nextPayday = new Date(today);
+        const targetDay = settings.paydayDate; // 1-7 for Monday-Sunday
+        const currentDay = getDay(today);
+        const daysToAdd = (targetDay + (currentDay === 0 ? 7 : -currentDay)) % 7;
+        nextPayday = addDays(nextPayday, daysToAdd);
+        if (daysToAdd <= 0) {
+          nextPayday = addDays(nextPayday, 7);
+        }
+        break;
+
+      case 'fortnightly':
+        nextPayday = new Date(today);
+        const targetDay2 = settings.paydayDate;
+        const currentDay2 = getDay(today);
+        const daysToAdd2 = (targetDay2 + (currentDay2 === 0 ? 7 : -currentDay2)) % 7;
+        nextPayday = addDays(nextPayday, daysToAdd2);
+        if (daysToAdd2 <= 0) {
+          nextPayday = addDays(nextPayday, 7);
+        }
+        // Add another week if we're in the off week
+        if (Math.floor(differenceInDays(nextPayday, startOfMonth(today)) / 14) % 2 === 0) {
+          nextPayday = addWeeks(nextPayday, 1);
+        }
+        break;
+
+      case 'monthly':
+      case 'set-day':
+        nextPayday = new Date(today.getFullYear(), today.getMonth(), settings.paydayDate);
+        if (today.getDate() > settings.paydayDate) {
+          nextPayday = new Date(today.getFullYear(), today.getMonth() + 1, settings.paydayDate);
+        }
+        break;
+
+      case 'first-day':
+        nextPayday = new Date(today.getFullYear(), today.getMonth(), 1);
+        if (today.getDate() > 1) {
+          nextPayday = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+        }
+        break;
+
+      case 'last-day':
+        nextPayday = lastDayOfMonth(today);
+        if (today.getDate() === lastDayOfMonth(today).getDate()) {
+          nextPayday = lastDayOfMonth(addMonths(today, 1));
+        }
+        break;
+
+      case 'custom':
+      default:
+        nextPayday = new Date(today.getFullYear(), today.getMonth(), settings.paydayDate);
+        if (today.getDate() > settings.paydayDate) {
+          nextPayday = new Date(today.getFullYear(), today.getMonth() + 1, settings.paydayDate);
+        }
+        break;
     }
     
     return nextPayday;
+  };
+
+  const isPayday = (date: Date): boolean => {
+    const savedSettings = localStorage.getItem('appSettings');
+    if (!savedSettings) return false;
+
+    const settings = JSON.parse(savedSettings);
+    
+    switch (settings.paydayType) {
+      case 'weekly':
+        return getDay(date) === settings.paydayDate;
+
+      case 'fortnightly': {
+        if (getDay(date) !== settings.paydayDate) return false;
+        const startOfMonthDate = startOfMonth(date);
+        const weeksSinceStart = Math.floor(differenceInDays(date, startOfMonthDate) / 7);
+        return weeksSinceStart % 2 === 0;
+      }
+
+      case 'monthly':
+      case 'set-day':
+      case 'custom':
+        return date.getDate() === settings.paydayDate;
+
+      case 'first-day':
+        return date.getDate() === 1;
+
+      case 'last-day':
+        return date.getDate() === lastDayOfMonth(date).getDate();
+
+      default:
+        return false;
+    }
   };
 
   const handleDayClick = (date: Date) => {
@@ -478,10 +573,6 @@ const Calendar = () => {
     } catch (error) {
       console.error('Error setting alarm:', error);
     }
-  };
-
-  const isPayday = (date: Date): boolean => {
-    return date.getDate() === paydaySettings.date;
   };
 
   return (
