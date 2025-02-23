@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,7 +35,7 @@ interface AppSettings {
     position: 'before' | 'after';
   };
   paydayDate: number;
-  paydayType: 'custom' | 'weekly' | 'fortnightly' | 'set-day' | 'first-day' | 'last-day';
+  paydayType: 'weekly' | 'fortnightly' | 'set-day' | 'first-day' | 'last-day';
   calendarSize: 'small' | 'large';
   calendarNumberLayout: 'centre' | 'top-left' | 'top-right';
 }
@@ -47,7 +46,7 @@ const defaultSettings: AppSettings = {
     position: 'before'
   },
   paydayDate: 25,
-  paydayType: 'custom',
+  paydayType: 'set-day',
   calendarSize: 'small',
   calendarNumberLayout: 'centre'
 };
@@ -301,15 +300,7 @@ const Settings = () => {
 
               <div className="space-y-2">
                 <Label className="text-xs">Payday Schedule</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  <Button
-                    size="sm"
-                    className="h-8"
-                    variant={settings.paydayType === 'custom' ? 'default' : 'outline'}
-                    onClick={() => updatePaydaySettings('custom')}
-                  >
-                    Custom
-                  </Button>
+                <div className="grid grid-cols-2 gap-2">
                   <Button
                     size="sm"
                     className="h-8"
@@ -359,7 +350,7 @@ const Settings = () => {
                 </div>
               </div>
 
-              {(settings.paydayType === 'custom' || settings.paydayType === 'set-day') && (
+              {settings.paydayType === 'set-day' && (
                 <div>
                   <Label htmlFor="payday-date" className="text-xs mb-1">Day of Month</Label>
                   <Input
