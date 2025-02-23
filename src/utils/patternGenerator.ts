@@ -1,6 +1,16 @@
 
 import { addDays, startOfDay } from "date-fns";
-import { ShiftAssignment } from "@/types/calendar";
+
+interface ShiftType {
+  name: string;
+  color: string;
+  gradient: string;
+}
+
+interface ShiftAssignment {
+  date: string;
+  shiftType: ShiftType;
+}
 
 interface ShiftPattern {
   shiftType: {
@@ -43,7 +53,11 @@ export const generatePattern = (
         if (!sequence.isOff && sequence.shiftType) {
           shifts.push({
             date: currentDate.toISOString(),
-            shiftType: sequence.shiftType
+            shiftType: {
+              name: sequence.shiftType.name,
+              color: sequence.shiftType.color,
+              gradient: sequence.shiftType.gradient
+            }
           });
         }
         currentDate = addDays(currentDate, 1);
@@ -62,7 +76,11 @@ export const generatePattern = (
           if (!sequence.isOff && sequence.shiftType) {
             shifts.push({
               date: currentDate.toISOString(),
-              shiftType: sequence.shiftType
+              shiftType: {
+                name: sequence.shiftType.name,
+                color: sequence.shiftType.color,
+                gradient: sequence.shiftType.gradient
+              }
             });
           }
           currentDate = addDays(currentDate, 1);
