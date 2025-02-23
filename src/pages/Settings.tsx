@@ -199,11 +199,15 @@ const Settings = () => {
             <CalendarDays className="h-8 w-8" />
           </Button>
           
-          <div className="relative">
+          <Button
+            variant="ghost"
+            className="relative p-0"
+            onClick={() => navigate("/shift-setup")}
+          >
             <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg">
               <span className="text-primary-foreground font-semibold text-xl">S</span>
             </div>
-          </div>
+          </Button>
           
           <Button 
             variant="ghost" 
