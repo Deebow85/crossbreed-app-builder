@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,9 +5,17 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useTheme } from "next-themes";
-import { Paintbrush, Sun, Moon, CreditCard, CalendarDays, Settings as SettingsIcon } from "lucide-react";
+import { Paintbrush, Sun, Moon, CreditCard, CalendarDays, Settings as SettingsIcon, HelpCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface ShiftTypeSettings {
   name: string;
@@ -54,6 +61,7 @@ const defaultSettings: AppSettings = {
 
 const Settings = () => {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+  const [showTutorial, setShowTutorial] = useState(false);
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -116,6 +124,13 @@ const Settings = () => {
     <div className="h-dvh flex flex-col p-2 sm:p-4">
       <div className="flex justify-between items-center mb-2">
         <h1 className="text-xl font-bold">Settings</h1>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setShowTutorial(true)}
+        >
+          <HelpCircle className="h-4 w-4" />
+        </Button>
       </div>
 
       <Card className="flex-1 overflow-auto mb-20">
@@ -267,6 +282,46 @@ const Settings = () => {
           </Button>
         </div>
       </div>
+
+      <Dialog open={showTutorial} onOpenChange={setShowTutorial}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Welcome to your Shift Calendar!</DialogTitle>
+            <DialogDescription>
+              Let's get you started with the key features.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4 text-sm">
+            <div className="space-y-2">
+              <h4 className="font-medium">📅 Adding Shifts</h4>
+              <p>Click on any day to add a shift. Select the shift type from the buttons above the calendar.</p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-medium">⌚ Setting Alarms</h4>
+              <p>Middle-click on a shift to set an alarm. A bell icon will appear when an alarm is set.</p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-medium">📝 Adding Notes</h4>
+              <p>Right-click on any day to add notes or manage shift swaps.</p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-medium">🔄 Shift Patterns</h4>
+              <p>Use the "Set Pattern" button to quickly add recurring shifts.</p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-medium">💡 Pro Tips</h4>
+              <ul className="list-disc pl-4 space-y-1">
+                <li>Click and drag to add multiple shifts at once</li>
+                <li>Use the search bar to find specific notes or swaps</li>
+                <li>Click the gear icon to customize the app's appearance</li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowTutorial(false)}>Got it, thanks!</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
