@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Banknote, Clock, CalendarDays, StickyNote, S
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, differenceInDays, startOfWeek, endOfWeek, addDays, setHours, setMinutes } from "date-fns";
 import { cn } from "@/lib/utils";
 import { LocalNotifications } from '@capacitor/local-notifications';
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "react-tooltip";
 
 type ShiftType = {
   name: string;
@@ -519,41 +520,72 @@ const Calendar = () => {
   return (
     <Card className="p-4 w-full max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <Button 
-          variant="outline" 
-          size="icon"
-          onClick={() => setCurrentDate(prev => subMonths(prev, 1))}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => setCurrentDate(prev => subMonths(prev, 1))}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Previous month</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
         <div className="text-center">
           <h2 className="text-xl font-bold">
             {format(currentDate, 'MMMM yyyy')}
           </h2>
           <div className="flex flex-col items-center gap-1 mt-1">
-            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-              <Banknote className="h-4 w-4" />
-              <span>{getDaysUntilPayday()} days until payday</span>
-            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <Banknote className="h-4 w-4" />
+                  <span>{getDaysUntilPayday()} days until payday</span>
+                </TooltipTrigger>
+                <TooltipContent>Next payday: {format(getNextPayday(), 'MMM do')}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <div className="flex items-center justify-center gap-4 text-sm">
-              <div className="flex items-center gap-1">
-                <Clock className="h-4 w-4 text-orange-500" />
-                <span>Week: {getWeeklyOTHours()}h</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Clock className="h-4 w-4 text-orange-500" />
-                <span>Month: {getMonthlyOTHours()}h</span>
-              </div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger className="flex items-center gap-1">
+                    <Clock className="h-4 w-4 text-orange-500" />
+                    <span>Week: {getWeeklyOTHours()}h</span>
+                  </TooltipTrigger>
+                  <TooltipContent>Overtime hours this week</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger className="flex items-center gap-1">
+                    <Clock className="h-4 w-4 text-orange-500" />
+                    <span>Month: {getMonthlyOTHours()}h</span>
+                  </TooltipTrigger>
+                  <TooltipContent>Overtime hours this month</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         </div>
-        <Button 
-          variant="outline" 
-          size="icon"
-          onClick={() => setCurrentDate(prev => addMonths(prev, 1))}
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => setCurrentDate(prev => addMonths(prev, 1))}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Next month</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       <div className="relative mb-4">
@@ -583,30 +615,43 @@ const Calendar = () => {
 
       <div className="grid grid-cols-4 gap-2 mb-4">
         {shiftTypes.map((type) => (
-          <Button
-            key={type.name}
-            variant="outline"
-            className={cn(
-              "h-10",
-              selectedShiftType.name === type.name && "border-2 border-primary"
-            )}
-            style={{
-              background: type.gradient,
-              color: "white"
-            }}
-            onClick={() => setSelectedShiftType(type)}
-          >
-            {type.name}
-          </Button>
+          <TooltipProvider key={type.name}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "h-10",
+                    selectedShiftType.name === type.name && "border-2 border-primary"
+                  )}
+                  style={{
+                    background: type.gradient,
+                    color: "white"
+                  }}
+                  onClick={() => setSelectedShiftType(type)}
+                >
+                  {type.name}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Click to select {type.name} shift</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         ))}
-        <Button
-          variant="outline"
-          className="col-span-4 mt-2 bg-primary text-primary-foreground hover:bg-primary/90"
-          onClick={handlePatternInput}
-        >
-          <CalendarDays className="mr-2 h-4 w-4" />
-          Set Pattern ({pattern.daysOn} on, {pattern.daysOff} off)
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                className="col-span-4 mt-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={handlePatternInput}
+              >
+                <CalendarDays className="mr-2 h-4 w-4" />
+                Set Pattern ({pattern.daysOn} on, {pattern.daysOff} off)
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Configure recurring shift pattern</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       <div className="grid grid-cols-7 gap-1 mb-2">
