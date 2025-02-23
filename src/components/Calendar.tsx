@@ -369,7 +369,6 @@ const Calendar = () => {
         onShiftSelect={handleShiftSelection}
       />
 
-      {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t py-4 z-50">
         <div className="container max-w-md mx-auto flex items-center justify-between px-4">
           <Button variant="ghost" size="icon" className="hover:bg-accent">
@@ -385,6 +384,14 @@ const Calendar = () => {
                 setSelectedDatesForShift([]);
               }
             }}
+            className="hover:bg-accent"
+          >
+            <CheckSquare className="h-8 w-8" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
             className="h-12 w-12 rounded-full bg-primary hover:bg-primary/90"
           >
             <span className="text-primary-foreground font-semibold text-xl">S</span>
@@ -401,7 +408,6 @@ const Calendar = () => {
         </div>
       </div>
 
-      {/* Selection Mode Popup */}
       {isSelectingMultiple && (
         <div className="fixed bottom-24 left-0 right-0 bg-background border-t py-2 px-4 flex items-center justify-between animate-in slide-in-from-bottom z-40">
           <div className="text-sm">
