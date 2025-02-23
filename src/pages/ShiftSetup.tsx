@@ -211,16 +211,16 @@ const ShiftSetup = () => {
               <div key={index} className="flex items-center gap-2 p-1.5 border rounded-lg">
                 {!type.isNew && !isEditing ? (
                   <>
-                    <span className="text-base min-w-24">
+                    <span className="text-base flex-1">
                       {type.name} ({type.symbol})
                     </span>
                     <Input
                       value={type.symbol}
                       readOnly
-                      className="h-9 w-16 text-center text-lg font-semibold"
+                      className="h-9 w-16 text-center text-lg font-semibold mx-auto"
                     />
                     <div 
-                      className="w-20 h-9 rounded border"
+                      className="w-32 h-9 rounded border flex-1"
                       style={{ background: type.gradient }}
                       role="button"
                       aria-label="Shift color"
@@ -231,7 +231,7 @@ const ShiftSetup = () => {
                     <Input
                       value={type.name}
                       onChange={(e) => updateShiftType(index, 'name', e.target.value)}
-                      className="w-28 h-9 text-base"
+                      className="h-9 text-base flex-1"
                       placeholder="Name"
                     />
                     <Input
@@ -239,24 +239,26 @@ const ShiftSetup = () => {
                       onChange={(e) => {
                         updateShiftType(index, 'symbol', e.target.value.toUpperCase());
                       }}
-                      className="w-16 h-9 text-center text-lg font-semibold uppercase"
+                      className="h-9 w-16 text-center text-lg font-semibold uppercase mx-auto"
                       placeholder=""
                     />
-                    <div 
-                      className="w-20 h-9 rounded border"
-                      style={{ background: type.gradient }}
-                      onClick={() => isEditing && handleDialogOpen(index)}
-                      role="button"
-                      aria-label="Select color"
-                    />
-                    <Button
-                      size="sm"
-                      onClick={() => handleDialogOpen(index)}
-                      variant="outline"
-                      className="h-9 px-2 text-xs"
-                    >
-                      Select Colour
-                    </Button>
+                    <div className="flex items-center gap-2 flex-1">
+                      <div 
+                        className="w-32 h-9 rounded border"
+                        style={{ background: type.gradient }}
+                        onClick={() => isEditing && handleDialogOpen(index)}
+                        role="button"
+                        aria-label="Select color"
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => handleDialogOpen(index)}
+                        variant="outline"
+                        className="h-9 px-2 text-xs whitespace-nowrap"
+                      >
+                        Select Colour
+                      </Button>
+                    </div>
                   </>
                 )}
               </div>
