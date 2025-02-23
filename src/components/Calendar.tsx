@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Banknote, CalendarDays, Settings } from "lucide-react";
+import { Banknote, CalendarDays, Settings, CheckSquare } from "lucide-react";
 import { 
   format, 
   addMonths, 
@@ -115,8 +115,7 @@ const Calendar = () => {
       return;
     }
 
-    if (window.event && (window.event as MouseEvent).ctrlKey) {
-      setIsSelectingMultiple(true);
+    if (isSelectingMultiple) {
       setSelectedDatesForShift(prev => {
         const exists = prev.some(d => d.getTime() === date.getTime());
         if (exists) {
@@ -125,7 +124,6 @@ const Calendar = () => {
         return [...prev, date];
       });
     } else {
-      setIsSelectingMultiple(false);
       setSelectedDatesForShift([date]);
       setShowShiftDialog(true);
     }
@@ -306,8 +304,8 @@ const Calendar = () => {
             </Tooltip>
           </TooltipProvider>
 
-          <div className="text-center">
-            <div className="flex items-center gap-4">
+          <div className="text-center flex-1 mx-4">
+            <div className="flex items-center justify-center gap-4">
               <h2 className="text-lg sm:text-xl font-bold">
                 {format(currentDate, 'MMMM yyyy')}
               </h2>
@@ -339,6 +337,32 @@ const Calendar = () => {
               <TooltipContent>Next month</TooltipContent>
             </Tooltip>
           </TooltipProvider>
+        </div>
+
+        <div className="flex items-center justify-between mb-4">
+          <Button
+            variant={isSelectingMultiple ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => {
+              setIsSelectingMultiple(!isSelectingMultiple);
+              if (!isSelectingMultiple) {
+                setSelectedDatesForShift([]);
+              }
+            }}
+            className="flex items-center gap-2"
+          >
+            <CheckSquare className="h-4 w-4" />
+            {isSelectingMultiple ? "Done Selecting" : "Select Multiple"}
+          </Button>
+          {isSelectingMultiple && selectedDatesForShift.length > 0 && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setShowShiftDialog(true)}
+            >
+              Set {selectedDatesForShift.length} Shifts
+            </Button>
+          )}
         </div>
 
         <div className="grid grid-cols-7 gap-1 mb-2">
