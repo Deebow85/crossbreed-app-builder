@@ -1,8 +1,9 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Banknote } from "lucide-react";
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, differenceInDays } from "date-fns";
+import { ChevronLeft, ChevronRight, Banknote, Clock } from "lucide-react";
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, differenceInDays, startOfWeek, endOfWeek } from "date-fns";
 import { cn } from "@/lib/utils";
 
 type ShiftType = {
@@ -32,6 +33,7 @@ const shiftTypes: ShiftType[] = [
 type ShiftAssignment = {
   date: string;
   shiftType: ShiftType;
+  otHours?: number;
 };
 
 type PaydaySettings = {
@@ -53,15 +55,27 @@ const Calendar = () => {
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const weekStart = startOfWeek(currentDate);
+  const weekEnd = endOfWeek(currentDate);
 
   const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-  const previousMonth = () => {
-    setCurrentDate(prev => subMonths(prev, 1));
+  const getWeeklyOTHours = () => {
+    return shifts
+      .filter(shift => {
+        const shiftDate = new Date(shift.date);
+        return shiftDate >= weekStart && shiftDate <= weekEnd && shift.otHours;
+      })
+      .reduce((total, shift) => total + (shift.otHours || 0), 0);
   };
 
-  const nextMonth = () => {
-    setCurrentDate(prev => addMonths(prev, 1));
+  const getMonthlyOTHours = () => {
+    return shifts
+      .filter(shift => {
+        const shiftDate = new Date(shift.date);
+        return isSameMonth(shiftDate, currentDate) && shift.otHours;
+      })
+      .reduce((total, shift) => total + (shift.otHours || 0), 0);
   };
 
   const getNextPayday = () => {
@@ -91,9 +105,47 @@ const Calendar = () => {
     if (!isSelecting) {
       const existingShift = shifts.find(s => s.date === dateStr);
       if (existingShift) {
-        setShifts(shifts.filter(s => s.date !== dateStr));
+        if (existingShift.shiftType.name === "OT") {
+          // If it's an OT shift, prompt for hours
+          const hours = window.prompt("Enter OT hours:", existingShift.otHours?.toString() || "0");
+          if (hours === null) return; // User cancelled
+          
+          const otHours = parseFloat(hours);
+          if (isNaN(otHours) || otHours < 0) {
+            alert("Please enter a valid number of hours");
+            return;
+          }
+
+          if (otHours === 0) {
+            setShifts(shifts.filter(s => s.date !== dateStr));
+          } else {
+            setShifts(shifts.map(s => 
+              s.date === dateStr 
+                ? { ...s, otHours } 
+                : s
+            ));
+          }
+        } else {
+          setShifts(shifts.filter(s => s.date !== dateStr));
+        }
       } else {
-        setShifts([...shifts, { date: dateStr, shiftType: selectedShiftType }]);
+        if (selectedShiftType.name === "OT") {
+          // If assigning an OT shift, prompt for hours
+          const hours = window.prompt("Enter OT hours:", "0");
+          if (hours === null) return; // User cancelled
+          
+          const otHours = parseFloat(hours);
+          if (isNaN(otHours) || otHours < 0) {
+            alert("Please enter a valid number of hours");
+            return;
+          }
+
+          if (otHours > 0) {
+            setShifts([...shifts, { date: dateStr, shiftType: selectedShiftType, otHours }]);
+          }
+        } else {
+          setShifts([...shifts, { date: dateStr, shiftType: selectedShiftType }]);
+        }
       }
     }
   };
@@ -114,9 +166,34 @@ const Calendar = () => {
 
       const dateRange = eachDayOfInterval({ start: finalStart, end: finalEnd });
       
+      let otHours = 0;
+      if (selectedShiftType.name === "OT") {
+        const hours = window.prompt("Enter OT hours for each selected day:", "0");
+        if (hours === null) {
+          setIsSelecting(false);
+          setSelectionStart(null);
+          return; // User cancelled
+        }
+        
+        otHours = parseFloat(hours);
+        if (isNaN(otHours) || otHours < 0) {
+          alert("Please enter a valid number of hours");
+          setIsSelecting(false);
+          setSelectionStart(null);
+          return;
+        }
+
+        if (otHours === 0) {
+          setIsSelecting(false);
+          setSelectionStart(null);
+          return;
+        }
+      }
+
       const newShifts = dateRange.map(date => ({
         date: date.toISOString(),
-        shiftType: selectedShiftType
+        shiftType: selectedShiftType,
+        ...(selectedShiftType.name === "OT" ? { otHours } : {})
       }));
 
       const filteredShifts = shifts.filter(shift => 
@@ -140,7 +217,7 @@ const Calendar = () => {
         <Button 
           variant="outline" 
           size="icon"
-          onClick={previousMonth}
+          onClick={() => setCurrentDate(prev => subMonths(prev, 1))}
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -148,15 +225,27 @@ const Calendar = () => {
           <h2 className="text-xl font-bold">
             {format(currentDate, 'MMMM yyyy')}
           </h2>
-          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mt-1">
-            <Banknote className="h-4 w-4" />
-            <span>{getDaysUntilPayday()} days until payday</span>
+          <div className="flex flex-col items-center gap-1 mt-1">
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <Banknote className="h-4 w-4" />
+              <span>{getDaysUntilPayday()} days until payday</span>
+            </div>
+            <div className="flex items-center justify-center gap-4 text-sm">
+              <div className="flex items-center gap-1">
+                <Clock className="h-4 w-4 text-orange-500" />
+                <span>Week: {getWeeklyOTHours()}h</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Clock className="h-4 w-4 text-orange-500" />
+                <span>Month: {getMonthlyOTHours()}h</span>
+              </div>
+            </div>
           </div>
         </div>
         <Button 
           variant="outline" 
           size="icon"
-          onClick={nextMonth}
+          onClick={() => setCurrentDate(prev => addMonths(prev, 1))}
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
@@ -230,9 +319,16 @@ const Calendar = () => {
                 </span>
               )}
               {shift && (
-                <span className="absolute bottom-1 left-1 text-xs font-medium">
-                  {shift.shiftType.name}
-                </span>
+                <>
+                  <span className="absolute bottom-1 left-1 text-xs font-medium">
+                    {shift.shiftType.name}
+                  </span>
+                  {shift.otHours && (
+                    <span className="absolute bottom-1 right-1 text-xs font-medium">
+                      {shift.otHours}h
+                    </span>
+                  )}
+                </>
               )}
             </Button>
           );
