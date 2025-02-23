@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useTheme } from "next-themes";
-import { Paintbrush, Sun, Moon, CreditCard } from "lucide-react";
+import { Paintbrush, Sun, Moon, CreditCard, CalendarDays } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -23,6 +22,7 @@ interface AppSettings {
   };
   shiftTypes: ShiftTypeSettings[];
   paydayDate: number;
+  calendarSize: 'default' | 'large';
 }
 
 const defaultSettings: AppSettings = {
@@ -47,7 +47,8 @@ const defaultSettings: AppSettings = {
       gradient: "linear-gradient(135deg, #F97316 0%, #FB923C 100%)"
     }
   ],
-  paydayDate: 25
+  paydayDate: 25,
+  calendarSize: 'default'
 };
 
 const Settings = () => {
@@ -69,6 +70,13 @@ const Settings = () => {
     toast({
       title: "Settings saved",
       description: "Your preferences have been updated.",
+    });
+  };
+
+  const updateCalendarSize = (size: 'default' | 'large') => {
+    saveSettings({
+      ...settings,
+      calendarSize: size
     });
   };
 
@@ -113,6 +121,29 @@ const Settings = () => {
       </div>
 
       <Card className="p-6 space-y-6">
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <CalendarDays className="h-5 w-5" />
+            Calendar
+          </h2>
+          <div className="flex items-center gap-4">
+            <Button
+              variant={settings.calendarSize === 'default' ? 'default' : 'outline'}
+              onClick={() => updateCalendarSize('default')}
+              className="flex items-center gap-2"
+            >
+              Default Size
+            </Button>
+            <Button
+              variant={settings.calendarSize === 'large' ? 'default' : 'outline'}
+              onClick={() => updateCalendarSize('large')}
+              className="flex items-center gap-2"
+            >
+              Large Size
+            </Button>
+          </div>
+        </div>
+
         <div className="space-y-4">
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <Paintbrush className="h-5 w-5" />

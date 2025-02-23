@@ -85,7 +85,6 @@ const Calendar = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [alarms, setAlarms] = useState<Alarm[]>([]);
-
   const [patterns, setPatterns] = useState<ShiftPattern[]>(() => {
     const savedPatterns = localStorage.getItem('shiftPatterns');
     return savedPatterns ? JSON.parse(savedPatterns) : [];
@@ -93,10 +92,25 @@ const Calendar = () => {
   const [showPatternDialog, setShowPatternDialog] = useState(false);
   const [newPattern, setNewPattern] = useState<Partial<ShiftPattern>>({});
   const [highlightedPattern, setHighlightedPattern] = useState<string | null>(null);
+  const [calendarSize, setCalendarSize] = useState<'default' | 'large'>('default');
 
   useEffect(() => {
     localStorage.setItem('shiftPatterns', JSON.stringify(patterns));
   }, [patterns]);
+
+  useEffect(() => {
+    const loadSettings = () => {
+      const savedSettings = localStorage.getItem('appSettings');
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        setCalendarSize(settings.calendarSize || 'default');
+      }
+    };
+
+    loadSettings();
+    window.addEventListener('storage', loadSettings);
+    return () => window.removeEventListener('storage', loadSettings);
+  }, []);
 
   useEffect(() => {
     const loadShiftTypes = async () => {
@@ -545,7 +559,8 @@ const Calendar = () => {
                 key={date.toISOString()}
                 variant="ghost"
                 className={cn(
-                  "h-10 sm:h-12 p-0 w-full relative hover:bg-accent transition-colors flex items-center justify-center",
+                  "p-0 w-full relative hover:bg-accent transition-colors flex items-center justify-center",
+                  calendarSize === 'large' ? "h-16 sm:h-20" : "h-10 sm:h-12",
                   !isSameMonth(date, currentDate) && "opacity-30",
                   isToday(date) && !shift && "bg-accent"
                 )}
@@ -562,12 +577,18 @@ const Calendar = () => {
                   addOrEditNote(date);
                 }}
               >
-                <span className="absolute top-0.5 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs">
+                <span className={cn(
+                  "absolute top-0.5 left-1/2 -translate-x-1/2",
+                  calendarSize === 'large' ? "text-sm sm:text-base" : "text-[10px] sm:text-xs"
+                )}>
                   {format(date, 'd')}
                 </span>
                 {isPay && (
                   <span 
-                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-base sm:text-lg font-bold"
+                    className={cn(
+                      "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-bold",
+                      calendarSize === 'large' ? "text-xl sm:text-2xl" : "text-base sm:text-lg"
+                    )}
                     style={{ color: shift ? 'white' : '#F97316' }}
                   >
                     {paydaySettings.symbol}
@@ -575,18 +596,27 @@ const Calendar = () => {
                 )}
                 {note && (
                   <StickyNote 
-                    className="absolute bottom-0.5 left-0.5 h-2.5 w-2.5 sm:h-3 sm:w-3"
+                    className={cn(
+                      "absolute bottom-0.5 left-0.5",
+                      calendarSize === 'large' ? "h-3.5 w-3.5 sm:h-4 sm:w-4" : "h-2.5 w-2.5 sm:h-3 sm:w-3"
+                    )}
                     style={{ color: shift ? 'white' : '#F97316' }}
                   />
                 )}
                 {alarm && (
                   <Bell 
-                    className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 sm:h-3 sm:w-3"
+                    className={cn(
+                      "absolute bottom-0.5 right-0.5",
+                      calendarSize === 'large' ? "h-3.5 w-3.5 sm:h-4 sm:w-4" : "h-2.5 w-2.5 sm:h-3 sm:w-3"
+                    )}
                     style={{ color: shift ? 'white' : '#F97316' }}
                   />
                 )}
                 {shift && (
-                  <span className="absolute bottom-0.5 text-[8px] sm:text-xs font-medium">
+                  <span className={cn(
+                    "absolute bottom-0.5 font-medium",
+                    calendarSize === 'large' ? "text-xs sm:text-sm" : "text-[8px] sm:text-xs"
+                  )}>
                     {shift.shiftType.name}
                   </span>
                 )}
