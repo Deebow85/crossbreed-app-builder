@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,10 +35,6 @@ const ShiftSetup = () => {
     const settings = savedSettings ? JSON.parse(savedSettings) : {};
     settings.shiftTypes = newShiftTypes;
     localStorage.setItem('appSettings', JSON.stringify(settings));
-    toast({
-      title: "Shift types saved",
-      description: "Your shift types have been updated.",
-    });
   };
 
   const updateShiftType = (index: number, field: keyof ShiftTypeSettings, value: string) => {
