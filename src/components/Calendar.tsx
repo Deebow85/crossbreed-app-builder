@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -475,10 +476,10 @@ const Calendar = () => {
               <TooltipTrigger asChild>
                 <Button 
                   variant="outline" 
-                  size="icon"
                   onClick={() => setCurrentDate(prev => subMonths(prev, 1))}
+                  className="px-3"
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  {format(subMonths(currentDate, 1), 'MMM')}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Previous month</TooltipContent>
@@ -506,11 +507,11 @@ const Calendar = () => {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
-                  variant="outline" 
-                  size="icon"
+                  variant="outline"
                   onClick={() => setCurrentDate(prev => addMonths(prev, 1))}
+                  className="px-3"
                 >
-                  <ChevronRight className="h-4 w-4" />
+                  {format(addMonths(currentDate, 1), 'MMM')}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Next month</TooltipContent>
@@ -726,7 +727,7 @@ const Calendar = () => {
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t py-4">
         <div className="container max-w-md mx-auto flex items-center justify-between px-4">
           <Button variant="ghost" size="icon" className="hover:bg-accent">
-            <CalendarDays className="h-6 w-6" />
+            <CalendarDays className="h-8 w-8" />
           </Button>
           
           <div className="relative">
@@ -736,7 +737,7 @@ const Calendar = () => {
           </div>
           
           <Button variant="ghost" size="icon" className="hover:bg-accent">
-            <Settings className="h-6 w-6" />
+            <Settings className="h-8 w-8" />
           </Button>
         </div>
       </div>
