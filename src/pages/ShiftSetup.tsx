@@ -32,6 +32,7 @@ interface PatternCycle {
   sequences: ShiftPattern[];
   repeatTimes: number;
   daysOffAfter: number;
+  patternName?: string;
 }
 
 const ShiftSetup = () => {
@@ -51,6 +52,13 @@ const ShiftSetup = () => {
   const [repeatTimes, setRepeatTimes] = useState(1);
   const [daysOffAfter, setDaysOffAfter] = useState(0);
   const [yearsToGenerate, setYearsToGenerate] = useState(1);
+  const [patternName, setPatternName] = useState("Pattern 1");
+  const [existingPatterns, setExistingPatterns] = useState<{
+    pattern: PatternCycle;
+    startDate: string;
+    years: number;
+    patternName: string;
+  }[]>([]);
 
   useEffect(() => {
     const savedSettings = localStorage.getItem('appSettings');
@@ -59,6 +67,11 @@ const ShiftSetup = () => {
       if (settings.shiftTypes) {
         setShiftTypes(settings.shiftTypes);
       }
+    }
+
+    const patterns = sessionStorage.getItem('savedPatterns');
+    if (patterns) {
+      setExistingPatterns(JSON.parse(patterns));
     }
   }, []);
 
@@ -215,20 +228,45 @@ const ShiftSetup = () => {
         isOff: p.isOff
       })),
       repeatTimes,
-      daysOffAfter
+      daysOffAfter,
+      patternName
     };
-    
-    console.log('Generating pattern:', pattern);
-    console.log('Start date:', startDate.toISOString());
-    
-    sessionStorage.setItem('patternData', JSON.stringify({
+
+    const patternData = {
       pattern,
       startDate: startDate.toISOString().split('T')[0],
-      years: yearsToGenerate
-    }));
+      years: yearsToGenerate,
+      patternName
+    };
+    
+    const updatedPatterns = [...existingPatterns, patternData];
+    sessionStorage.setItem('savedPatterns', JSON.stringify(updatedPatterns));
+    
+    sessionStorage.setItem('patternData', JSON.stringify(patternData));
     
     setShowPatternDialog(false);
     navigate('/');
+  };
+
+  const switchToPattern = (patternData: any) => {
+    sessionStorage.setItem('patternData', JSON.stringify(patternData));
+    navigate('/');
+  };
+
+  const deletePattern = (index: number) => {
+    const updatedPatterns = existingPatterns.filter((_, i) => i !== index);
+    setExistingPatterns(updatedPatterns);
+    sessionStorage.setItem('savedPatterns', JSON.stringify(updatedPatterns));
+  };
+
+  const openNewPatternDialog = () => {
+    setPatternName(`Pattern ${existingPatterns.length + 1}`);
+    setCurrentPattern([]);
+    setRepeatTimes(1);
+    setDaysOffAfter(0);
+    setYearsToGenerate(1);
+    setPatternStartDate(format(new Date(), 'yyyy-MM-dd'));
+    setShowPatternDialog(true);
   };
 
   return (
@@ -246,7 +284,7 @@ const ShiftSetup = () => {
                 variant="outline" 
                 size="sm"
                 className="h-7 px-2 text-xs"
-                onClick={() => setShowPatternDialog(true)}
+                onClick={openNewPatternDialog}
               >
                 <Wand2 className="h-3 w-3 mr-1" />
                 Generate
@@ -435,6 +473,16 @@ const ShiftSetup = () => {
             <DialogTitle>Generate Shift Pattern</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label>Pattern Name</Label>
+              <Input
+                type="text"
+                value={patternName}
+                onChange={(e) => setPatternName(e.target.value)}
+                placeholder="Enter pattern name"
+              />
+            </div>
+
             <div className="space-y-2">
               <Label>Start Date</Label>
               <Input
