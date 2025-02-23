@@ -163,71 +163,57 @@ const Calendar = () => {
         
         const newShifts: ShiftAssignment[] = [];
         
-        // Calculate total days in one sequence (e.g., 5 days on + 2 off = 7 days)
         const daysInOneSequence = pattern.sequences.reduce((total, seq) => total + seq.days, 0);
         
-        // Calculate total days for all repeated sequences (e.g., 7 days × 3 repeats = 21 days)
-        const totalDaysInPattern = daysInOneSequence * pattern.repeatTimes;
-        
-        // Calculate cycles needed for the requested number of years
         const daysPerYear = 365.25;
-        const totalDaysNeeded = daysPerYear * yearsToGenerate;
-        const cyclesNeeded = Math.ceil(totalDaysNeeded / totalDaysInPattern);
+        const totalDaysNeeded = Math.ceil(daysPerYear * yearsToGenerate);
         
         console.log('Pattern metrics:', {
           daysInOneSequence,
-          totalDaysInPattern,
           yearsToGenerate,
-          cyclesNeeded
+          totalDaysNeeded,
+          daysPerYear
         });
         
-        let currentDay = 0;
-        
-        while (currentDay < totalDaysNeeded) {
-          const dayInPattern = currentDay % daysInOneSequence;
-          const cycleProgress = Math.floor(currentDay / totalDaysInPattern);
+        for (let currentDay = 0; currentDay < totalDaysNeeded; currentDay++) {
+          const dayInSequence = currentDay % daysInOneSequence;
           let daysAccumulated = 0;
           
-          // Only process days within the pattern repeat count
-          if (cycleProgress < pattern.repeatTimes) {
-            for (const sequence of pattern.sequences) {
-              if (dayInPattern >= daysAccumulated && 
-                  dayInPattern < daysAccumulated + sequence.days) {
-                if (sequence.shiftType && !sequence.isOff) {
-                  const shiftDate = addDays(startDate, currentDay);
-                  console.log('Adding shift:', {
-                    day: currentDay,
-                    dayInPattern,
-                    cycleProgress,
-                    date: shiftDate.toISOString(),
-                    type: sequence.shiftType.name
-                  });
-                  
-                  newShifts.push({
-                    date: shiftDate.toISOString(),
-                    shiftType: {
-                      name: sequence.shiftType.name,
-                      color: sequence.shiftType.color,
-                      gradient: sequence.shiftType.gradient
-                    }
-                  });
-                }
-                break;
+          for (const sequence of pattern.sequences) {
+            if (dayInSequence >= daysAccumulated && 
+                dayInSequence < daysAccumulated + sequence.days) {
+              if (sequence.shiftType && !sequence.isOff) {
+                const shiftDate = addDays(startDate, currentDay);
+                console.log('Adding shift:', {
+                  day: currentDay,
+                  dayInSequence,
+                  date: shiftDate.toISOString(),
+                  type: sequence.shiftType.name,
+                  yearProgress: currentDay / daysPerYear
+                });
+                
+                newShifts.push({
+                  date: shiftDate.toISOString(),
+                  shiftType: {
+                    name: sequence.shiftType.name,
+                    color: sequence.shiftType.color,
+                    gradient: sequence.shiftType.gradient
+                  }
+                });
               }
-              daysAccumulated += sequence.days;
+              break;
             }
+            daysAccumulated += sequence.days;
           }
-          
-          currentDay++;
         }
         
         console.log('Pattern summary:', {
           totalShifts: newShifts.length,
-          cyclesGenerated: cyclesNeeded,
           totalDays: totalDaysNeeded,
           yearsGenerated: yearsToGenerate,
           firstShift: newShifts[0]?.date,
-          lastShift: newShifts[newShifts.length - 1]?.date
+          lastShift: newShifts[newShifts.length - 1]?.date,
+          approximateYearsGenerated: newShifts.length / (daysPerYear * (pattern.sequences.find(s => !s.isOff)?.days || 1) / daysInOneSequence)
         });
         
         setShifts(prevShifts => {
