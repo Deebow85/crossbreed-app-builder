@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Banknote, CalendarDays, Settings, CheckSquare } from "lucide-react";
+import { Banknote, CalendarDays, Settings, CheckSquare, Clock } from "lucide-react"; // Added Clock icon
 import { 
   format, 
   addMonths, 
@@ -263,6 +263,10 @@ const Calendar = () => {
   const settings = savedSettings ? JSON.parse(savedSettings) : { calendarNumberLayout: 'centre' };
   const numberLayout = settings.calendarNumberLayout || 'centre';
 
+  const totalOvertimeHours = shifts.reduce((total, shift) => {
+    return total + (shift.otHours || 0);
+  }, 0);
+
   return (
     <div className="relative flex flex-col min-h-screen pb-20">
       <Card className="w-full mx-auto px-2 sm:px-4 py-4 flex-1">
@@ -289,15 +293,27 @@ const Calendar = () => {
               </h2>
             </div>
             <div className="flex flex-col items-center gap-1 mt-1">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                    <Banknote className="h-4 w-4" />
-                    <span>{differenceInDays(getNextPayday(settings), new Date())} days until payday</span>
-                  </TooltipTrigger>
-                  <TooltipContent>Next payday: {format(getNextPayday(settings), 'MMM do')}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <div className="flex flex-wrap items-center justify-center gap-4">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                      <Banknote className="h-4 w-4" />
+                      <span>{differenceInDays(getNextPayday(settings), new Date())} days until payday</span>
+                    </TooltipTrigger>
+                    <TooltipContent>Next payday: {format(getNextPayday(settings), 'MMM do')}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                      <Clock className="h-4 w-4" />
+                      <span>{totalOvertimeHours} hours overtime</span>
+                    </TooltipTrigger>
+                    <TooltipContent>Total overtime hours this pay period</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             </div>
           </div>
 
