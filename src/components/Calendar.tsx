@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -163,8 +164,10 @@ const Calendar = () => {
         
         const newShifts: ShiftAssignment[] = [];
         
+        // Calculate total days in one sequence
         const daysInOneSequence = pattern.sequences.reduce((total, seq) => total + seq.days, 0);
         
+        // Calculate total days needed for the requested years (365.25 days per year to account for leap years)
         const daysPerYear = 365.25;
         const totalDaysNeeded = Math.ceil(daysPerYear * yearsToGenerate);
         
@@ -175,6 +178,7 @@ const Calendar = () => {
           daysPerYear
         });
         
+        // Generate shifts for each day up to totalDaysNeeded
         for (let currentDay = 0; currentDay < totalDaysNeeded; currentDay++) {
           const dayInSequence = currentDay % daysInOneSequence;
           let daysAccumulated = 0;
