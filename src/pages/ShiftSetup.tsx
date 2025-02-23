@@ -328,7 +328,7 @@ const ShiftSetup = () => {
   };
 
   const handleSetDays = () => {
-    const weekdayPattern = [
+    const defaultPattern = [
       {
         shiftType: shiftTypes.length > 0 ? shiftTypes[0] : null,
         days: 5,
@@ -341,7 +341,7 @@ const ShiftSetup = () => {
       }
     ];
 
-    setCurrentPattern(weekdayPattern);
+    setCurrentPattern(defaultPattern);
     setRepeatTimes(52);
     setDaysOffAfter(0);
     setYearsToGenerate(1);
@@ -575,7 +575,7 @@ const ShiftSetup = () => {
           <DialogHeader className="flex-none p-4 pb-2">
             <DialogTitle>Set Working Days Pattern</DialogTitle>
             <DialogDescription>
-              Configure a 5 days on, 2 days off pattern
+              Configure your working days and off days pattern
             </DialogDescription>
           </DialogHeader>
           
@@ -600,30 +600,63 @@ const ShiftSetup = () => {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Working Days</Label>
-                <div className="p-2 border rounded bg-muted/50">
-                  <div className="flex items-center gap-2">
-                    <select
-                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      value={currentPattern[0]?.shiftType?.name || ""}
-                      onChange={(e) => {
-                        const selectedType = shiftTypes.find(t => t.name === e.target.value);
-                        const newPattern = [...currentPattern];
-                        newPattern[0] = { ...newPattern[0], shiftType: selectedType || null };
-                        setCurrentPattern(newPattern);
-                      }}
-                    >
-                      {shiftTypes.map((type) => (
-                        <option key={type.name} value={type.name}>
-                          {type.name}
-                        </option>
-                      ))}
-                    </select>
-                    <span className="text-sm">5 working days</span>
+              <div className="space-y-4">
+                <Label>Working Pattern</Label>
+                <div className="p-3 border rounded bg-muted/50 space-y-4">
+                  <div className="space-y-2">
+                    <Label>Working Days</Label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        value={currentPattern[0]?.shiftType?.name || ""}
+                        onChange={(e) => {
+                          const selectedType = shiftTypes.find(t => t.name === e.target.value);
+                          const newPattern = [...currentPattern];
+                          newPattern[0] = { ...newPattern[0], shiftType: selectedType || null };
+                          setCurrentPattern(newPattern);
+                        }}
+                      >
+                        {shiftTypes.map((type) => (
+                          <option key={type.name} value={type.name}>
+                            {type.name}
+                          </option>
+                        ))}
+                      </select>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="7"
+                        value={currentPattern[0]?.days || 5}
+                        onChange={(e) => {
+                          const days = Math.min(Math.max(parseInt(e.target.value) || 1, 1), 7);
+                          const newPattern = [...currentPattern];
+                          newPattern[0] = { ...newPattern[0], days };
+                          setCurrentPattern(newPattern);
+                        }}
+                        className="w-20"
+                      />
+                      <span className="text-sm">days</span>
+                    </div>
                   </div>
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    Followed by 2 days off
+
+                  <div className="space-y-2">
+                    <Label>Off Days</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min="1"
+                        max="7"
+                        value={currentPattern[1]?.days || 2}
+                        onChange={(e) => {
+                          const days = Math.min(Math.max(parseInt(e.target.value) || 1, 1), 7);
+                          const newPattern = [...currentPattern];
+                          newPattern[1] = { ...newPattern[1], days, isOff: true, shiftType: null };
+                          setCurrentPattern(newPattern);
+                        }}
+                        className="w-20"
+                      />
+                      <span className="text-sm">days off</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -638,7 +671,8 @@ const ShiftSetup = () => {
                   onChange={(e) => {
                     const years = Math.min(Math.max(parseInt(e.target.value) || 0, 0), 10);
                     setYearsToGenerate(years);
-                    setRepeatTimes(years * 52);
+                    const totalDays = (currentPattern[0]?.days || 5) + (currentPattern[1]?.days || 2);
+                    setRepeatTimes(Math.floor(years * 365.25 / totalDays));
                   }}
                 />
                 <span className="text-sm text-muted-foreground">years (0-10)</span>
