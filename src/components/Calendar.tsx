@@ -1,4 +1,3 @@
-<lov-code>
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -908,4 +907,39 @@ const Calendar = () => {
                 onChange={(e) => setNewPattern({ ...newPattern, color: e.target.value })}
               />
             </div>
-            <div className="grid grid-
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="daysOn" className="text-right">
+                Days On
+              </Label>
+              <Input
+                id="daysOn"
+                type="number"
+                className="col-span-3"
+                value={newPattern.daysOn || ''}
+                onChange={(e) => setNewPattern({ ...newPattern, daysOn: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="daysOff" className="text-right">
+                Days Off
+              </Label>
+              <Input
+                id="daysOff"
+                type="number"
+                className="col-span-3"
+                value={newPattern.daysOff || ''}
+                onChange={(e) => setNewPattern({ ...newPattern, daysOff: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowPatternDialog(false)}>Cancel</Button>
+            <Button variant="default" onClick={handleAddPattern}>Create</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+};
+
+export default Calendar;
