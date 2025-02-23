@@ -202,7 +202,7 @@ const ShiftSetup = () => {
                     }
                   }}
                   className="w-12 h-7 text-center font-semibold uppercase"
-                  placeholder="D"
+                  placeholder=""
                   disabled={!isEditing && !type.isNew}
                   maxLength={1}
                 />
