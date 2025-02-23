@@ -567,7 +567,7 @@ const Calendar = () => {
                   variant="ghost"
                   className={cn(
                     "p-0 w-full relative hover:bg-accent transition-colors flex items-center justify-center",
-                    calendarSize === 'large' ? "h-24 sm:h-32" : "h-10 sm:h-12",
+                    calendarSize === 'large' ? "h-16 sm:h-20" : "h-10 sm:h-12",
                     !isSameMonth(date, currentDate) && "opacity-30",
                     isToday(date) && !shift && "bg-accent"
                   )}
@@ -656,78 +656,6 @@ const Calendar = () => {
           </Button>
         </div>
       </div>
-
-      <Dialog open={showPatternDialog} onOpenChange={setShowPatternDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Shift Pattern</DialogTitle>
-            <DialogDescription>
-              Set up a new named shift pattern with custom colors.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Name
-              </Label>
-              <Input
-                id="name"
-                className="col-span-3"
-                value={newPattern.name || ''}
-                onChange={(e) => setNewPattern({ ...newPattern, name: e.target.value })}
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="color" className="text-right">
-                Color
-              </Label>
-              <Input
-                id="color"
-                type="color"
-                className="col-span-3"
-                value={newPattern.color || '#000000'}
-                onChange={(e) => setNewPattern({ ...newPattern, color: e.target.value })}
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="daysOn" className="text-right">
-                Days On
-              </Label>
-              <Input
-                id="daysOn"
-                type="number"
-                min="1"
-                className="col-span-3"
-                value={newPattern.daysOn || ''}
-                onChange={(e) => setNewPattern({ 
-                  ...newPattern, 
-                  daysOn: parseInt(e.target.value) || 0 
-                })}
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="daysOff" className="text-right">
-                Days Off
-              </Label>
-              <Input
-                id="daysOff"
-                type="number"
-                min="1"
-                className="col-span-3"
-                value={newPattern.daysOff || ''}
-                onChange={(e) => setNewPattern({ 
-                  ...newPattern, 
-                  daysOff: parseInt(e.target.value) || 0 
-                })}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setShowPatternDialog(false)}>Cancel</Button>
-            <Button variant="default" onClick={handleAddPattern}>Create</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
