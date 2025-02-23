@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/lib/theme";
-import { Paintbrush, Sun, Moon, CreditCard, CalendarDays, Settings as SettingsIcon, HelpCircle } from "lucide-react";
+import { Paintbrush, Sun, Moon, CreditCard, CalendarDays, Settings as SettingsIcon, HelpCircle, ChevronDown } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import {
@@ -22,6 +22,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface AppSettings {
   currency: {
@@ -63,6 +68,11 @@ const currencySymbols = [
 const Settings = () => {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+    calendar: false,
+    theme: false,
+    payment: false
+  });
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -125,6 +135,13 @@ const Settings = () => {
     saveSettings(newSettings);
   };
 
+  const toggleSection = (section: string) => {
+    setOpenSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
   return (
     <div className="h-dvh flex flex-col p-2 sm:p-4">
       <div className="flex justify-between items-center mb-2 relative">
@@ -142,13 +159,22 @@ const Settings = () => {
 
       <Card className="flex-1 overflow-auto mb-20 max-w-2xl mx-auto">
         <div className="p-2 sm:p-4 space-y-3">
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="space-y-4">
+          <Collapsible open={openSections.calendar} onOpenChange={() => toggleSection('calendar')}>
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex items-center justify-between w-full p-2"
+              >
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4" />
+                  <span className="font-semibold">Calendar Settings</span>
+                </div>
+                <ChevronDown className={cn("h-4 w-4 transition-transform", openSections.calendar && "transform rotate-180")} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="p-2 space-y-4">
               <div className="space-y-1.5">
-                <h2 className="text-sm font-semibold flex items-center gap-1.5">
-                  <CalendarDays className="h-3.5 w-3.5" />
-                  Calendar Size
-                </h2>
+                <Label className="text-xs">Calendar Size</Label>
                 <div className="flex gap-2">
                   <Button
                     size="sm"
@@ -170,10 +196,7 @@ const Settings = () => {
               </div>
 
               <div className="space-y-1.5">
-                <h2 className="text-sm font-semibold flex items-center gap-1.5">
-                  <CalendarDays className="h-3.5 w-3.5" />
-                  Calendar Number Layout
-                </h2>
+                <Label className="text-xs">Calendar Number Layout</Label>
                 <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"
@@ -201,13 +224,23 @@ const Settings = () => {
                   </Button>
                 </div>
               </div>
-            </div>
+            </CollapsibleContent>
+          </Collapsible>
 
-            <div className="space-y-1.5">
-              <h2 className="text-sm font-semibold flex items-center gap-1.5">
-                <Paintbrush className="h-3.5 w-3.5" />
-                Theme
-              </h2>
+          <Collapsible open={openSections.theme} onOpenChange={() => toggleSection('theme')}>
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex items-center justify-between w-full p-2"
+              >
+                <div className="flex items-center gap-2">
+                  <Paintbrush className="h-4 w-4" />
+                  <span className="font-semibold">Theme Settings</span>
+                </div>
+                <ChevronDown className={cn("h-4 w-4 transition-transform", openSections.theme && "transform rotate-180")} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="p-2">
               <div className="flex gap-2">
                 <Button
                   size="sm"
@@ -228,133 +261,141 @@ const Settings = () => {
                   Dark
                 </Button>
               </div>
-            </div>
+            </CollapsibleContent>
+          </Collapsible>
 
-            <div className="space-y-1.5 col-span-2">
-              <h2 className="text-sm font-semibold flex items-center gap-1.5">
-                <CreditCard className="h-3.5 w-3.5" />
-                Payment Settings
-              </h2>
-              <div className="grid gap-2">
-                <div className="space-y-1">
-                  <Label htmlFor="currency-symbol" className="text-xs">Currency</Label>
-                  <Select
-                    value={settings.currency.symbol}
-                    onValueChange={updateCurrency}
+          <Collapsible open={openSections.payment} onOpenChange={() => toggleSection('payment')}>
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex items-center justify-between w-full p-2"
+              >
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-4 w-4" />
+                  <span className="font-semibold">Payment Settings</span>
+                </div>
+                <ChevronDown className={cn("h-4 w-4 transition-transform", openSections.payment && "transform rotate-180")} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="p-2 space-y-4">
+              <div className="space-y-1">
+                <Label htmlFor="currency-symbol" className="text-xs">Currency</Label>
+                <Select
+                  value={settings.currency.symbol}
+                  onValueChange={updateCurrency}
+                >
+                  <SelectTrigger id="currency-symbol" className="h-7">
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currencySymbols.map(({ symbol, name }) => (
+                      <SelectItem key={symbol} value={symbol}>
+                        {name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs">Payday Schedule</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <Button
+                    size="sm"
+                    className="h-8"
+                    variant={settings.paydayType === 'custom' ? 'default' : 'outline'}
+                    onClick={() => updatePaydaySettings('custom')}
                   >
-                    <SelectTrigger id="currency-symbol" className="h-7">
-                      <SelectValue placeholder="Select currency" />
+                    Custom
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-8"
+                    variant={settings.paydayType === 'weekly' ? 'default' : 'outline'}
+                    onClick={() => updatePaydaySettings('weekly')}
+                  >
+                    Weekly
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-8"
+                    variant={settings.paydayType === 'fortnightly' ? 'default' : 'outline'}
+                    onClick={() => updatePaydaySettings('fortnightly')}
+                  >
+                    Fortnightly
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs">Monthly Options</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    size="sm"
+                    className="h-8"
+                    variant={settings.paydayType === 'set-day' ? 'default' : 'outline'}
+                    onClick={() => updatePaydaySettings('set-day')}
+                  >
+                    Set Day
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-8"
+                    variant={settings.paydayType === 'first-day' ? 'default' : 'outline'}
+                    onClick={() => updatePaydaySettings('first-day', 1)}
+                  >
+                    First Day
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-8"
+                    variant={settings.paydayType === 'last-day' ? 'default' : 'outline'}
+                    onClick={() => updatePaydaySettings('last-day', 31)}
+                  >
+                    Last Day
+                  </Button>
+                </div>
+              </div>
+
+              {(settings.paydayType === 'custom' || settings.paydayType === 'set-day') && (
+                <div>
+                  <Label htmlFor="payday-date" className="text-xs mb-1">Day of Month</Label>
+                  <Input
+                    id="payday-date"
+                    type="number"
+                    min={1}
+                    max={31}
+                    value={settings.paydayDate}
+                    onChange={(e) => updatePaydayDate(parseInt(e.target.value))}
+                    className="h-7"
+                  />
+                </div>
+              )}
+
+              {(settings.paydayType === 'weekly' || settings.paydayType === 'fortnightly') && (
+                <div>
+                  <Label htmlFor="payday-weekday" className="text-xs mb-1">Day of Week</Label>
+                  <Select
+                    value={settings.paydayDate.toString()}
+                    onValueChange={(value) => updatePaydayDate(parseInt(value))}
+                  >
+                    <SelectTrigger id="payday-weekday" className="h-7">
+                      <SelectValue placeholder="Select day" />
                     </SelectTrigger>
                     <SelectContent>
-                      {currencySymbols.map(({ symbol, name }) => (
-                        <SelectItem key={symbol} value={symbol}>
-                          {name}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="1">Monday</SelectItem>
+                      <SelectItem value="2">Tuesday</SelectItem>
+                      <SelectItem value="3">Wednesday</SelectItem>
+                      <SelectItem value="4">Thursday</SelectItem>
+                      <SelectItem value="5">Friday</SelectItem>
+                      <SelectItem value="6">Saturday</SelectItem>
+                      <SelectItem value="7">Sunday</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div className="space-y-2">
-                  <Label className="text-xs">Payday Schedule</Label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    <Button
-                      size="sm"
-                      className="h-8"
-                      variant={settings.paydayType === 'custom' ? 'default' : 'outline'}
-                      onClick={() => updatePaydaySettings('custom')}
-                    >
-                      Custom
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="h-8"
-                      variant={settings.paydayType === 'weekly' ? 'default' : 'outline'}
-                      onClick={() => updatePaydaySettings('weekly')}
-                    >
-                      Weekly
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="h-8"
-                      variant={settings.paydayType === 'fortnightly' ? 'default' : 'outline'}
-                      onClick={() => updatePaydaySettings('fortnightly')}
-                    >
-                      Fortnightly
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-xs">Monthly Options</Label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Button
-                      size="sm"
-                      className="h-8"
-                      variant={settings.paydayType === 'set-day' ? 'default' : 'outline'}
-                      onClick={() => updatePaydaySettings('set-day')}
-                    >
-                      Set Day
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="h-8"
-                      variant={settings.paydayType === 'first-day' ? 'default' : 'outline'}
-                      onClick={() => updatePaydaySettings('first-day', 1)}
-                    >
-                      First Day
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="h-8"
-                      variant={settings.paydayType === 'last-day' ? 'default' : 'outline'}
-                      onClick={() => updatePaydaySettings('last-day', 31)}
-                    >
-                      Last Day
-                    </Button>
-                  </div>
-                </div>
-
-                {(settings.paydayType === 'custom' || settings.paydayType === 'set-day') && (
-                  <div>
-                    <Label htmlFor="payday-date" className="text-xs mb-1">Day of Month</Label>
-                    <Input
-                      id="payday-date"
-                      type="number"
-                      min={1}
-                      max={31}
-                      value={settings.paydayDate}
-                      onChange={(e) => updatePaydayDate(parseInt(e.target.value))}
-                      className="h-7"
-                    />
-                  </div>
-                )}
-
-                {(settings.paydayType === 'weekly' || settings.paydayType === 'fortnightly') && (
-                  <div>
-                    <Label htmlFor="payday-weekday" className="text-xs mb-1">Day of Week</Label>
-                    <Select
-                      value={settings.paydayDate.toString()}
-                      onValueChange={(value) => updatePaydayDate(parseInt(value))}
-                    >
-                      <SelectTrigger id="payday-weekday" className="h-7">
-                        <SelectValue placeholder="Select day" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">Monday</SelectItem>
-                        <SelectItem value="2">Tuesday</SelectItem>
-                        <SelectItem value="3">Wednesday</SelectItem>
-                        <SelectItem value="4">Thursday</SelectItem>
-                        <SelectItem value="5">Friday</SelectItem>
-                        <SelectItem value="6">Saturday</SelectItem>
-                        <SelectItem value="7">Sunday</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+              )}
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </Card>
 
