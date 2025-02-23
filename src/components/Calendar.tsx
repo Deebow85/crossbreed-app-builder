@@ -94,7 +94,7 @@ const Calendar = () => {
   const [showPatternDialog, setShowPatternDialog] = useState(false);
   const [newPattern, setNewPattern] = useState<Partial<ShiftPattern>>({});
   const [highlightedPattern, setHighlightedPattern] = useState<string | null>(null);
-  const [calendarSize, setCalendarSize] = useState<'default' | 'large'>('default');
+  const [calendarSize, setCalendarSize] = useState<'default' | 'large' | 'small'>('default');
 
   useEffect(() => {
     localStorage.setItem('shiftPatterns', JSON.stringify(patterns));
@@ -105,7 +105,7 @@ const Calendar = () => {
       const savedSettings = localStorage.getItem('appSettings');
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
-        setCalendarSize(settings.calendarSize || 'default');
+        setCalendarSize(settings.calendarSize || 'small');
       }
     };
 
@@ -555,11 +555,21 @@ const Calendar = () => {
             const endWeek = endOfWeek(lastDayOfMonth, { weekStartsOn: 1 });
             const daysToDisplay = eachDayOfInterval({ start: startWeek, end: endWeek });
 
+            const savedSettings = localStorage.getItem('appSettings');
+            const settings = savedSettings ? JSON.parse(savedSettings) : { calendarNumberLayout: 'centre' };
+            const numberLayout = settings.calendarNumberLayout || 'centre';
+
             return daysToDisplay.map((date) => {
               const shift = getShiftForDate(date);
               const isPay = isPayday(date);
               const note = getNote(date);
               const alarm = alarms.find(a => a.date === date.toISOString());
+              
+              const numberPositionClasses = {
+                'centre': 'left-1/2 -translate-x-1/2',
+                'top-left': 'left-1',
+                'top-right': 'right-1'
+              }[numberLayout];
               
               return (
                 <Button
@@ -585,7 +595,8 @@ const Calendar = () => {
                   }}
                 >
                   <span className={cn(
-                    "absolute top-0.5 left-1/2 -translate-x-1/2",
+                    "absolute top-0.5",
+                    numberPositionClasses,
                     calendarSize === 'large' ? "text-base sm:text-lg" : "text-[10px] sm:text-xs"
                   )}>
                     {format(date, 'd')}
