@@ -10,7 +10,7 @@ const ShiftSetup = () => {
 
   return (
     <div className="h-dvh flex flex-col p-2 sm:p-4">
-      <div className="flex justify-between items-center mb-2">
+      <div className="flex justify-center items-center mb-2">
         <h1 className="text-xl font-bold">Shift Setup</h1>
       </div>
 

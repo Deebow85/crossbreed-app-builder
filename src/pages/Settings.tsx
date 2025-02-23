@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -122,15 +123,17 @@ const Settings = () => {
 
   return (
     <div className="h-dvh flex flex-col p-2 sm:p-4">
-      <div className="flex justify-between items-center mb-2">
-        <h1 className="text-xl font-bold">Settings</h1>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setShowTutorial(true)}
-        >
-          <HelpCircle className="h-4 w-4" />
-        </Button>
+      <div className="flex justify-between items-center mb-2 relative">
+        <div className="absolute right-0">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setShowTutorial(true)}
+          >
+            <HelpCircle className="h-4 w-4" />
+          </Button>
+        </div>
+        <h1 className="text-xl font-bold w-full text-center">Settings</h1>
       </div>
 
       <Card className="flex-1 overflow-auto mb-20">
