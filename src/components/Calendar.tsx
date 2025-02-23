@@ -393,6 +393,7 @@ const Calendar = () => {
             variant="ghost"
             size="icon"
             className="h-12 w-12 rounded-full bg-primary hover:bg-primary/90"
+            onClick={() => navigate("/shift-setup")}
           >
             <span className="text-primary-foreground font-semibold text-xl">S</span>
           </Button>
