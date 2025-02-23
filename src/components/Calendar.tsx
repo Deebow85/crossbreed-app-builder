@@ -775,9 +775,6 @@ const Calendar = () => {
                     color: theme === 'dark' ? 'white' : 'inherit'
                   } : undefined}
                   onClick={() => handleDayClick(date)}
-                  onMouseDown={() => handleDayMouseDown(date)}
-                  onMouseUp={() => handleDayMouseUp(date)}
-                  onMouseEnter={() => isSelecting && handleDayMouseUp(date)}
                   onContextMenu={(e) => {
                     e.preventDefault();
                     addOrEditNote(date);
