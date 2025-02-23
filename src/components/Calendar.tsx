@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Banknote } from "lucide-react";
+import { Banknote } from "lucide-react";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, differenceInDays, startOfWeek, endOfWeek, addDays, getDay, addWeeks, lastDayOfMonth } from "date-fns";
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -58,7 +58,7 @@ const Calendar = () => {
           console.error('Invalid start date:', state.startDate);
           return;
         }
-        
+
         try {
           const newShifts = generatePattern(pattern, startDate, yearsToGenerate);
           
