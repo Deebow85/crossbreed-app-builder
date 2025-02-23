@@ -23,7 +23,7 @@ interface AppSettings {
   };
   paydayDate: number;
   calendarSize: 'default' | 'large';
-  calendarNumberLayout: 'default' | 'large';
+  calendarNumberLayout: 'centre' | 'top-left' | 'top-right';
 }
 
 const defaultSettings: AppSettings = {
@@ -33,7 +33,7 @@ const defaultSettings: AppSettings = {
   },
   paydayDate: 25,
   calendarSize: 'default',
-  calendarNumberLayout: 'default'
+  calendarNumberLayout: 'centre'
 };
 
 const Settings = () => {
@@ -85,7 +85,7 @@ const Settings = () => {
     }
   };
 
-  const updateCalendarNumberLayout = (layout: 'default' | 'large') => {
+  const updateCalendarNumberLayout = (layout: 'centre' | 'top-left' | 'top-right') => {
     saveSettings({
       ...settings,
       calendarNumberLayout: layout
@@ -141,22 +141,30 @@ const Settings = () => {
                   <CalendarDays className="h-3.5 w-3.5" />
                   Calendar Number Layout
                 </h2>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"
                     className="h-8"
-                    variant={settings.calendarNumberLayout === 'default' ? 'default' : 'outline'}
-                    onClick={() => updateCalendarNumberLayout('default')}
+                    variant={settings.calendarNumberLayout === 'centre' ? 'default' : 'outline'}
+                    onClick={() => updateCalendarNumberLayout('centre')}
                   >
-                    Default
+                    Centre
                   </Button>
                   <Button
                     size="sm"
                     className="h-8"
-                    variant={settings.calendarNumberLayout === 'large' ? 'default' : 'outline'}
-                    onClick={() => updateCalendarNumberLayout('large')}
+                    variant={settings.calendarNumberLayout === 'top-left' ? 'default' : 'outline'}
+                    onClick={() => updateCalendarNumberLayout('top-left')}
                   >
-                    Large
+                    Top Left
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-8"
+                    variant={settings.calendarNumberLayout === 'top-right' ? 'default' : 'outline'}
+                    onClick={() => updateCalendarNumberLayout('top-right')}
+                  >
+                    Top Right
                   </Button>
                 </div>
               </div>
