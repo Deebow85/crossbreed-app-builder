@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useNavigate } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, Banknote, Clock, CalendarDays, StickyNote, Search, Bell, Plus, Check, Settings } from "lucide-react";
@@ -64,6 +64,7 @@ type Alarm = {
 const shiftTypes: ShiftType[] = [];
 
 const Calendar = () => {
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedShiftType, setSelectedShiftType] = useState<ShiftType | null>(null);
   const [shifts, setShifts] = useState<ShiftAssignment[]>([]);
@@ -638,7 +639,12 @@ const Calendar = () => {
             </div>
           </div>
           
-          <Button variant="ghost" size="icon" className="hover:bg-accent">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="hover:bg-accent"
+            onClick={() => navigate("/settings")}
+          >
             <Settings className="h-8 w-8" />
           </Button>
         </div>
