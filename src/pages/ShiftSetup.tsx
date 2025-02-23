@@ -3,14 +3,16 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { CalendarDays, Settings, Plus, Trash2, PencilIcon, Check } from "lucide-react";
+import { CalendarDays, Settings, Plus, Trash2, PencilIcon, Check, Wand2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import { format } from "date-fns";
 
 interface ShiftTypeSettings {
   name: string;
@@ -18,6 +20,17 @@ interface ShiftTypeSettings {
   color: string;
   gradient: string;
   isNew?: boolean;
+}
+
+interface ShiftPattern {
+  shiftType: ShiftTypeSettings | null;
+  days: number;
+}
+
+interface PatternCycle {
+  sequences: ShiftPattern[];
+  repeatTimes: number;
+  daysOffAfter: number;
 }
 
 const ShiftSetup = () => {
@@ -31,6 +44,11 @@ const ShiftSetup = () => {
   const [endColor, setEndColor] = useState("#6B7280");
   const [isEditing, setIsEditing] = useState(false);
   const [selectedToRemove, setSelectedToRemove] = useState<number[]>([]);
+  const [showPatternDialog, setShowPatternDialog] = useState(false);
+  const [patternStartDate, setPatternStartDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+  const [currentPattern, setCurrentPattern] = useState<ShiftPattern[]>([]);
+  const [repeatTimes, setRepeatTimes] = useState(1);
+  const [daysOffAfter, setDaysOffAfter] = useState(0);
 
   useEffect(() => {
     const savedSettings = localStorage.getItem('appSettings');
@@ -154,6 +172,43 @@ const ShiftSetup = () => {
     setIsEditing(!isEditing);
   };
 
+  const addToPattern = () => {
+    setCurrentPattern([...currentPattern, { shiftType: null, days: 1 }]);
+  };
+
+  const updatePattern = (index: number, field: keyof ShiftPattern, value: any) => {
+    const newPattern = [...currentPattern];
+    newPattern[index] = { ...newPattern[index], [field]: value };
+    setCurrentPattern(newPattern);
+  };
+
+  const removeFromPattern = (index: number) => {
+    setCurrentPattern(currentPattern.filter((_, i) => i !== index));
+  };
+
+  const generateShifts = () => {
+    const savedSettings = localStorage.getItem('appSettings');
+    const settings = savedSettings ? JSON.parse(savedSettings) : {};
+    
+    const pattern: PatternCycle = {
+      sequences: currentPattern,
+      repeatTimes,
+      daysOffAfter
+    };
+    
+    settings.lastPattern = pattern;
+    localStorage.setItem('appSettings', JSON.stringify(settings));
+    
+    setShowPatternDialog(false);
+    
+    navigate('/', { 
+      state: { 
+        pattern,
+        startDate: patternStartDate
+      }
+    });
+  };
+
   return (
     <div className="h-dvh flex flex-col p-2 sm:p-4">
       <div className="flex justify-center items-center mb-2">
@@ -165,6 +220,15 @@ const ShiftSetup = () => {
           <div className="flex justify-between items-center gap-1">
             <h2 className="text-lg font-semibold">Shift Types</h2>
             <div className="flex gap-1">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => setShowPatternDialog(true)}
+              >
+                <Wand2 className="h-3 w-3 mr-1" />
+                Generate
+              </Button>
               <Button 
                 variant="outline" 
                 size="sm"
@@ -340,6 +404,102 @@ const ShiftSetup = () => {
               </Button>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showPatternDialog} onOpenChange={setShowPatternDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Generate Shift Pattern</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label>Start Date</Label>
+              <Input
+                type="date"
+                value={patternStartDate}
+                onChange={(e) => setPatternStartDate(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label>Pattern Sequence</Label>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={addToPattern}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Step
+                </Button>
+              </div>
+              
+              {currentPattern.map((step, index) => (
+                <div key={index} className="flex items-center gap-2 p-2 border rounded">
+                  <select
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    value={step.shiftType?.name || ""}
+                    onChange={(e) => {
+                      const selectedType = shiftTypes.find(t => t.name === e.target.value);
+                      updatePattern(index, 'shiftType', selectedType || null);
+                    }}
+                  >
+                    <option value="">Off</option>
+                    {shiftTypes.map((type) => (
+                      <option key={type.name} value={type.name}>
+                        {type.name}
+                      </option>
+                    ))}
+                  </select>
+                  
+                  <Input
+                    type="number"
+                    min="1"
+                    value={step.days}
+                    onChange={(e) => updatePattern(index, 'days', parseInt(e.target.value))}
+                    className="w-20"
+                  />
+                  <span className="text-sm text-muted-foreground">days</span>
+                  
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeFromPattern(index)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Repeat Pattern</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  value={repeatTimes}
+                  onChange={(e) => setRepeatTimes(parseInt(e.target.value))}
+                />
+                <span className="text-sm text-muted-foreground">times</span>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Days Off After Cycle</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={daysOffAfter}
+                  onChange={(e) => setDaysOffAfter(parseInt(e.target.value))}
+                />
+                <span className="text-sm text-muted-foreground">days</span>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={generateShifts}>Generate Pattern</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
