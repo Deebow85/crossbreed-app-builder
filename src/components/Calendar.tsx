@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Banknote, Clock, CalendarDays, StickyNote, Search, Bell, Plus, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, Banknote, Clock, CalendarDays, StickyNote, Search, Bell, Plus, Check, Settings } from "lucide-react";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, differenceInDays, startOfWeek, endOfWeek, addDays, setHours, setMinutes } from "date-fns";
 import { cn } from "@/lib/utils";
 import { LocalNotifications } from '@capacitor/local-notifications';
