@@ -166,6 +166,13 @@ const Calendar = () => {
         const patternRepeatDays = daysInOneSequence * pattern.repeatTimes;
         const totalDaysInCycle = patternRepeatDays + pattern.daysOffAfter;
         
+        console.log('Pattern metrics:', {
+          daysInOneSequence,
+          patternRepeatDays,
+          daysOffAfter: pattern.daysOffAfter,
+          totalDaysInCycle
+        });
+        
         const numberOfCyclesToGenerate = 6;
         const totalDaysToGenerate = totalDaysInCycle * numberOfCyclesToGenerate;
         
@@ -186,8 +193,17 @@ const Calendar = () => {
             if (dayInPattern >= daysAccumulated && 
                 dayInPattern < daysAccumulated + sequence.days) {
               if (sequence.shiftType && !sequence.isOff) {
+                const shiftDate = addDays(startDate, currentDay);
+                console.log('Adding shift:', {
+                  day: currentDay,
+                  dayInCycle: dayInCurrentCycle,
+                  dayInPattern,
+                  date: shiftDate.toISOString(),
+                  type: sequence.shiftType.name
+                });
+                
                 newShifts.push({
-                  date: addDays(startDate, currentDay).toISOString(),
+                  date: shiftDate.toISOString(),
                   shiftType: {
                     name: sequence.shiftType.name,
                     color: sequence.shiftType.color,
@@ -203,7 +219,13 @@ const Calendar = () => {
           currentDay++;
         }
         
-        console.log('Generated shifts:', newShifts);
+        console.log('Pattern summary:', {
+          totalShifts: newShifts.length,
+          cyclesGenerated: numberOfCyclesToGenerate,
+          totalDays: totalDaysToGenerate,
+          firstShift: newShifts[0]?.date,
+          lastShift: newShifts[newShifts.length - 1]?.date
+        });
         
         setShifts(prevShifts => {
           const patternEndDate = addDays(startDate, totalDaysToGenerate);
