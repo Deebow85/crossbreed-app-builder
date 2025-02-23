@@ -1,3 +1,4 @@
+
 import { addDays, startOfDay } from "date-fns";
 
 export interface ShiftType {
@@ -31,6 +32,8 @@ export const generatePattern = (
   startDate: Date,
   years: number
 ): ShiftAssignment[] => {
+  console.log('Pattern generation started:', { pattern, startDate, years });
+  
   const shifts: ShiftAssignment[] = [];
   const sequences = pattern.sequences;
   const repeatTimes = pattern.repeatTimes;
@@ -40,17 +43,19 @@ export const generatePattern = (
   let currentDate = startOfDay(new Date(startDate));
   const endDate = addDays(currentDate, years * 365);
 
-  // For continuous pattern mode, just follow the sequence continuously
   if (isContinuous) {
     while (currentDate < endDate) {
+      // Process each sequence in the pattern
       for (const sequence of sequences) {
-        // Skip if we've passed the end date
         if (currentDate >= endDate) break;
-
-        // Whether it's a work shift or off days, we need to advance the date by the specified days
+        
+        const daysInSequence = sequence.days;
+        
         if (!sequence.isOff && sequence.shiftType) {
-          for (let day = 0; day < sequence.days; day++) {
+          // Add work shifts
+          for (let i = 0; i < daysInSequence; i++) {
             if (currentDate >= endDate) break;
+            
             shifts.push({
               date: currentDate.toISOString(),
               shiftType: sequence.shiftType
@@ -58,24 +63,21 @@ export const generatePattern = (
             currentDate = addDays(currentDate, 1);
           }
         } else {
-          // For off days, just advance the date without adding shifts
-          currentDate = addDays(currentDate, sequence.days);
+          // Add off days by just advancing the date
+          currentDate = addDays(currentDate, daysInSequence);
         }
       }
-      // No additional days off are added in continuous mode - it just keeps repeating
     }
     return shifts;
   }
 
-  // Original logic for repeated patterns
+  // Non-continuous pattern (repeating with breaks)
   while (currentDate < endDate) {
     for (let repeat = 0; repeat < repeatTimes; repeat++) {
       for (const sequence of sequences) {
-        // Skip if we've passed the end date
         if (currentDate >= endDate) break;
 
         if (!sequence.isOff && sequence.shiftType) {
-          // Add shift for each non-off day in the sequence
           for (let day = 0; day < sequence.days; day++) {
             if (currentDate >= endDate) break;
             
@@ -86,15 +88,13 @@ export const generatePattern = (
             currentDate = addDays(currentDate, 1);
           }
         } else {
-          // For off days, just advance the date
           currentDate = addDays(currentDate, sequence.days);
         }
       }
     }
-    
-    // Add days off after the pattern cycle (only for non-continuous mode)
     currentDate = addDays(currentDate, daysOffAfter);
   }
 
+  console.log('Generated shifts:', shifts);
   return shifts;
 };
