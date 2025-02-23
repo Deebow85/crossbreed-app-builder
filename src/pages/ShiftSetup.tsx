@@ -190,26 +190,22 @@ const ShiftSetup = () => {
             {shiftTypes.map((type, index) => (
               <div key={index} className="flex items-center justify-between p-1.5 border rounded-lg">
                 {!type.isNew && !isEditing ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 w-full">
+                    <span className="text-sm min-w-20">
+                      {type.name} ({type.symbol})
+                    </span>
+                    <span className="text-sm flex-1">
+                      Label text goes here
+                    </span>
                     <div 
-                      className="w-14 h-7 rounded border"
+                      className="w-14 h-7 rounded border ml-auto"
                       style={{ background: type.gradient }}
                       role="button"
                       aria-label="Shift color"
                     />
-                    <span className="text-sm">
-                      {type.name} ({type.symbol})
-                    </span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-14 h-7 rounded border"
-                      style={{ background: type.gradient }}
-                      onClick={() => isEditing && handleDialogOpen(index)}
-                      role="button"
-                      aria-label="Select color"
-                    />
+                  <div className="flex items-center gap-2 w-full">
                     <Input
                       value={type.name}
                       onChange={(e) => updateShiftType(index, 'name', e.target.value)}
@@ -223,6 +219,14 @@ const ShiftSetup = () => {
                       }}
                       className="w-16 h-7 text-center font-semibold uppercase"
                       placeholder=""
+                    />
+                    <div className="flex-1" />
+                    <div 
+                      className="w-14 h-7 rounded border"
+                      style={{ background: type.gradient }}
+                      onClick={() => isEditing && handleDialogOpen(index)}
+                      role="button"
+                      aria-label="Select color"
                     />
                     <Button
                       size="sm"
