@@ -169,6 +169,13 @@ const Calendar = () => {
           for (const sequence of pattern.sequences) {
             // Only add to shifts if it's not a days off period
             if (sequence.shiftType && !sequence.isOff) {
+              const shiftType = {
+                name: sequence.shiftType.name,
+                color: sequence.shiftType.color,
+                gradient: sequence.shiftType.gradient,
+                symbol: sequence.shiftType.symbol
+              };
+              
               for (let day = 0; day < sequence.days; day++) {
                 const shiftDate = new Date(currentDate);
                 if (isNaN(shiftDate.getTime())) {
@@ -177,7 +184,7 @@ const Calendar = () => {
                 }
                 newShifts.push({
                   date: shiftDate.toISOString(),
-                  shiftType: sequence.shiftType
+                  shiftType: shiftType
                 });
                 currentDate = addDays(currentDate, 1);
               }
@@ -193,16 +200,8 @@ const Calendar = () => {
         
         console.log('Generated shifts:', newShifts); // Debug log
         
-        // Clear existing shifts and set new ones
-        setShifts(prevShifts => {
-          // Keep shifts outside the pattern date range
-          const otherShifts = prevShifts.filter(shift => {
-            const shiftDate = new Date(shift.date);
-            return !isNaN(shiftDate.getTime()) && 
-              (shiftDate < startDate || shiftDate > currentDate);
-          });
-          return [...otherShifts, ...newShifts];
-        });
+        // Set new shifts immediately
+        setShifts(newShifts);
         
         // Set calendar to show the month of the start date
         setCurrentDate(startDate);
