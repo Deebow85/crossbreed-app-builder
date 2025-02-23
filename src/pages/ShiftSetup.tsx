@@ -211,16 +211,16 @@ const ShiftSetup = () => {
               <div key={index} className="flex items-center gap-2 p-1.5 border rounded-lg">
                 {!type.isNew && !isEditing ? (
                   <>
-                    <span className="text-sm min-w-20">
+                    <span className="text-base min-w-24">
                       {type.name} ({type.symbol})
                     </span>
                     <Input
                       value={type.symbol}
                       readOnly
-                      className="h-7 flex-1 text-center font-semibold"
+                      className="h-9 w-16 text-center text-lg font-semibold"
                     />
                     <div 
-                      className="w-14 h-7 rounded border"
+                      className="w-20 h-9 rounded border"
                       style={{ background: type.gradient }}
                       role="button"
                       aria-label="Shift color"
@@ -231,7 +231,7 @@ const ShiftSetup = () => {
                     <Input
                       value={type.name}
                       onChange={(e) => updateShiftType(index, 'name', e.target.value)}
-                      className="w-24 h-7"
+                      className="w-28 h-9 text-base"
                       placeholder="Name"
                     />
                     <Input
@@ -239,11 +239,11 @@ const ShiftSetup = () => {
                       onChange={(e) => {
                         updateShiftType(index, 'symbol', e.target.value.toUpperCase());
                       }}
-                      className="w-16 h-7 text-center font-semibold uppercase"
+                      className="w-16 h-9 text-center text-lg font-semibold uppercase"
                       placeholder=""
                     />
                     <div 
-                      className="w-14 h-7 rounded border"
+                      className="w-20 h-9 rounded border"
                       style={{ background: type.gradient }}
                       onClick={() => isEditing && handleDialogOpen(index)}
                       role="button"
@@ -253,7 +253,7 @@ const ShiftSetup = () => {
                       size="sm"
                       onClick={() => handleDialogOpen(index)}
                       variant="outline"
-                      className="h-7 px-2 text-xs"
+                      className="h-9 px-2 text-xs"
                     >
                       Select Colour
                     </Button>
