@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShiftType } from "@/types/calendar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { AppSettings } from "@/types/settings";
 
 type ShiftSelectionDialogProps = {
   open: boolean;
@@ -25,6 +26,14 @@ const ShiftSelectionDialog = ({
 }: ShiftSelectionDialogProps) => {
   const [overtimeHours, setOvertimeHours] = useState<{ [date: string]: string }>({});
   const [selectedType, setSelectedType] = useState<ShiftType | null>(null);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
+
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('appSettings');
+    if (savedSettings) {
+      setSettings(JSON.parse(savedSettings));
+    }
+  }, []);
 
   const handleShiftSelect = (type: ShiftType | null) => {
     setSelectedType(type);
@@ -32,6 +41,23 @@ const ShiftSelectionDialog = ({
       onShiftSelect(type);
       setOvertimeHours({});
     }
+  };
+
+  const getOvertimeRate = (date: Date): number => {
+    if (!settings?.overtime) return 1;
+
+    const dayOfWeek = date.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+    // TODO: Add holiday check when holiday system is implemented
+    const isHoliday = false;
+
+    if (isHoliday) {
+      return settings.overtime.specialRates.holiday;
+    } else if (isWeekend) {
+      return settings.overtime.specialRates.weekend;
+    }
+    return settings.overtime.defaultRate;
   };
 
   const handleOvertimeConfirm = () => {
@@ -116,23 +142,31 @@ const ShiftSelectionDialog = ({
             <ScrollArea className="h-[200px]">
               <div className="space-y-4 p-4 border rounded-lg bg-orange-50/50">
                 <Label>Overtime Hours Per Day</Label>
-                {selectedDates.map((date) => (
-                  <div key={date.toISOString()} className="space-y-2">
-                    <Label htmlFor={`ot-${date.toISOString()}`} className="text-sm">
-                      {format(date, 'MMMM d, yyyy')}
-                    </Label>
-                    <Input
-                      id={`ot-${date.toISOString()}`}
-                      type="number"
-                      step="0.5"
-                      min="0"
-                      value={overtimeHours[date.toISOString()] || ''}
-                      onChange={(e) => handleHoursChange(date, e.target.value)}
-                      placeholder="Enter overtime hours"
-                      className="flex-1"
-                    />
-                  </div>
-                ))}
+                {selectedDates.map((date) => {
+                  const rate = getOvertimeRate(date);
+                  return (
+                    <div key={date.toISOString()} className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <Label htmlFor={`ot-${date.toISOString()}`} className="text-sm">
+                          {format(date, 'MMMM d, yyyy')}
+                        </Label>
+                        <span className="text-sm text-muted-foreground">
+                          {rate}x rate
+                        </span>
+                      </div>
+                      <Input
+                        id={`ot-${date.toISOString()}`}
+                        type="number"
+                        step="0.5"
+                        min="0"
+                        value={overtimeHours[date.toISOString()] || ''}
+                        onChange={(e) => handleHoursChange(date, e.target.value)}
+                        placeholder="Enter overtime hours"
+                        className="flex-1"
+                      />
+                    </div>
+                  );
+                })}
                 <Button 
                   onClick={handleOvertimeConfirm}
                   disabled={!areAllHoursValid()}
