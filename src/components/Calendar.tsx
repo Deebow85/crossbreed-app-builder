@@ -61,6 +61,13 @@ const Calendar = () => {
         if (settings.shiftTypes) {
           setShiftTypes(settings.shiftTypes);
         }
+        if (settings.paydayDate !== undefined) {
+          setPaydaySettings(prev => ({
+            ...prev,
+            paydayType: settings.paydayType || 'monthly',
+            paydayDate: settings.paydayDate || 15
+          }));
+        }
       }
     };
 
@@ -260,7 +267,11 @@ const Calendar = () => {
   const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   const savedSettings = localStorage.getItem('appSettings');
-  const settings = savedSettings ? JSON.parse(savedSettings) : { calendarNumberLayout: 'centre' };
+  const settings = savedSettings ? JSON.parse(savedSettings) : { 
+    paydayType: 'monthly',
+    paydayDate: 15,
+    calendarNumberLayout: 'centre'
+  };
   const numberLayout = settings.calendarNumberLayout || 'centre';
 
   const totalOvertimeHours = shifts.reduce((total, shift) => {
@@ -298,9 +309,9 @@ const Calendar = () => {
                   <Tooltip>
                     <TooltipTrigger className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
                       <Banknote className="h-4 w-4" />
-                      <span>{differenceInDays(getNextPayday(settings), new Date())} days until payday</span>
+                      <span>{differenceInDays(getNextPayday(settings) || new Date(), new Date())} days until payday</span>
                     </TooltipTrigger>
-                    <TooltipContent>Next payday: {format(getNextPayday(settings), 'MMM do')}</TooltipContent>
+                    <TooltipContent>Next payday: {format(getNextPayday(settings) || new Date(), 'MMM do')}</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
 
