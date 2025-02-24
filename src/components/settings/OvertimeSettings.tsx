@@ -117,8 +117,8 @@ export function OvertimeSettings({ settings, onSave }: OvertimeSettingsProps) {
             <Label className="text-xs">Recurring Overtime Schedule</Label>
             
             <Select
-              value={settings.overtime.schedule?.type || 'none'}
-              onValueChange={(value: 'none' | 'weekly' | 'fortnightly' | 'monthly' | 'monthly-day' | 'full-month') => {
+              value={settings.overtime.schedule?.type || 'weekly'}
+              onValueChange={(value: 'weekly' | 'fortnightly' | 'monthly' | 'monthly-day' | 'full-month') => {
                 onSave({
                   ...settings,
                   overtime: {
@@ -135,7 +135,6 @@ export function OvertimeSettings({ settings, onSave }: OvertimeSettingsProps) {
                 <SelectValue placeholder="Select schedule type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">No recurring overtime</SelectItem>
                 <SelectItem value="weekly">Weekly</SelectItem>
                 <SelectItem value="fortnightly">Fortnightly</SelectItem>
                 <SelectItem value="monthly">Monthly (specific week)</SelectItem>
@@ -144,7 +143,7 @@ export function OvertimeSettings({ settings, onSave }: OvertimeSettingsProps) {
               </SelectContent>
             </Select>
 
-            {(settings.overtime.schedule?.type !== 'none' && settings.overtime.schedule?.type) && (
+            {settings.overtime.schedule?.type && (
               <>
                 {(settings.overtime.schedule?.type === 'weekly' || settings.overtime.schedule?.type === 'fortnightly') && (
                   <div className="space-y-1.5">
