@@ -101,6 +101,13 @@ const Calendar = () => {
       return;
     }
 
+    // If clicking on an existing overtime shift, allow editing
+    if (shift?.shiftType.isOvertime && shift.otHours !== undefined) {
+      setSelectedDatesForShift([date]);
+      setShowShiftDialog(true);
+      return;
+    }
+
     if (isSelectingMultiple) {
       setSelectedDatesForShift(prev => {
         const exists = prev.some(d => d.getTime() === date.getTime());
