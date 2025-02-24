@@ -29,9 +29,14 @@ const currencySymbols = [
 
 const gradientColors = [
   '#F97316', // Orange
+  '#EF4444', // Red
+  '#EC4899', // Pink
+  '#D946EF', // Fuchsia
   '#8B5CF6', // Purple
-  '#D946EF', // Pink
+  '#6366F1', // Indigo
   '#0EA5E9', // Blue
+  '#10B981', // Emerald
+  '#84CC16', // Lime
   '#9b87f5', // Primary Purple
 ];
 
