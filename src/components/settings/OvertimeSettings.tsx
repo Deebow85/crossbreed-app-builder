@@ -1,3 +1,4 @@
+
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -124,8 +125,7 @@ export function OvertimeSettings({ settings, onSave }: OvertimeSettingsProps) {
                     ...settings.overtime,
                     schedule: {
                       ...settings.overtime.schedule,
-                      type: value,
-                      hours: settings.overtime.schedule?.hours || 0
+                      type: value
                     }
                   }
                 });
@@ -146,42 +146,6 @@ export function OvertimeSettings({ settings, onSave }: OvertimeSettingsProps) {
 
             {(settings.overtime.schedule?.type !== 'none' && settings.overtime.schedule?.type) && (
               <>
-                <div className="space-y-1.5">
-                  <Label htmlFor="overtime-hours" className="text-xs">
-                    {settings.overtime.schedule?.type === 'full-month' 
-                      ? "Hours of Overtime Per Day" 
-                      : "Hours of Overtime"}
-                  </Label>
-                  <Input
-                    id="overtime-hours"
-                    type="number"
-                    min="0"
-                    step="0.5"
-                    value={settings.overtime.schedule?.hours || 0}
-                    onChange={(e) => {
-                      const value = parseFloat(e.target.value);
-                      if (value >= 0) {
-                        onSave({
-                          ...settings,
-                          overtime: {
-                            ...settings.overtime,
-                            schedule: {
-                              ...settings.overtime.schedule,
-                              hours: value
-                            }
-                          }
-                        });
-                      }
-                    }}
-                    className="h-7"
-                  />
-                  {settings.overtime.schedule?.type === 'full-month' && (
-                    <p className="text-xs text-muted-foreground">
-                      This amount of overtime will be applied to each day of the month
-                    </p>
-                  )}
-                </div>
-
                 {(settings.overtime.schedule?.type === 'weekly' || settings.overtime.schedule?.type === 'fortnightly') && (
                   <div className="space-y-1.5">
                     <Label htmlFor="overtime-day" className="text-xs">Day of Week</Label>
