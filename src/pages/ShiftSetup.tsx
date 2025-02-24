@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -352,6 +351,16 @@ const ShiftSetup = () => {
     sessionStorage.setItem('patternData', JSON.stringify(patternData));
     setShowSetDaysDialog(false);
     navigate('/');
+  };
+
+  const toggleShiftToRemove = (index: number) => {
+    setSelectedToRemove(prev => {
+      if (prev.includes(index)) {
+        return prev.filter(i => i !== index);
+      } else {
+        return [...prev, index];
+      }
+    });
   };
 
   return (
