@@ -100,7 +100,6 @@ const Calendar = () => {
       return;
     }
 
-    // If clicking on an existing overtime shift, allow editing
     if (shift?.shiftType.isOvertime && shift.otHours !== undefined) {
       setSelectedDatesForShift([date]);
       setShowShiftDialog(true);
@@ -280,16 +279,17 @@ const Calendar = () => {
 
   const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-  const defaultSettings = { 
+  const storedSettings = localStorage.getItem('appSettings');
+  const parsedSettings = storedSettings ? JSON.parse(storedSettings) : {};
+  
+  const settings = {
     paydayType: 'monthly' as const,
     paydayDate: 15,
     paydayColor: '#F97316',
     calendarNumberLayout: 'centre' as const,
-    showOverlappingDates: true
+    showOverlappingDates: true,
+    ...parsedSettings
   };
-  
-  const savedSettings = localStorage.getItem('appSettings');
-  const settings = savedSettings ? { ...defaultSettings, ...JSON.parse(savedSettings) } : defaultSettings;
   
   const totalOvertimeHours = shifts.reduce((total, shift) => {
     if (!shift.otHours) return total;
