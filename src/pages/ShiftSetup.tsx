@@ -425,7 +425,7 @@ const ShiftSetup = () => {
               </Button>
               <div className="flex gap-1">
                 <Button 
-                  variant="outline"
+                  variant="outline" 
                   size="sm"
                   className="h-7 px-2 text-xs"
                   onClick={addShiftType}
@@ -928,4 +928,4 @@ const ShiftSetup = () => {
       <Dialog open={isRemoveDialogOpen} onOpenChange={setIsRemoveDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Remove Shift Types</DialogTitle>
+            <DialogTitle>Remove Shift Types</DialogTitle
