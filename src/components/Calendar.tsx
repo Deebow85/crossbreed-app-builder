@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -298,13 +297,21 @@ const Calendar = () => {
     if (!settings?.overtime?.enabled) return 0;
     
     const date = new Date(shift.date);
-    const dayOfWeek = date.getDay();
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    const currentMonthStart = startOfMonth(currentDate);
+    const currentMonthEnd = endOfMonth(currentDate);
+
+    // Only count overtime if the shift is within the current displayed month
+    if (date >= currentMonthStart && date <= currentMonthEnd) {
+      const dayOfWeek = date.getDay();
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      
+      // TODO: Add holiday check when holiday system is implemented
+      const isHoliday = false;
+      
+      return total + shift.otHours;
+    }
     
-    // TODO: Add holiday check when holiday system is implemented
-    const isHoliday = false;
-    
-    return total + shift.otHours;
+    return total;
   }, 0);
 
   return (
@@ -356,7 +363,7 @@ const Calendar = () => {
                           <Clock className="h-4 w-4" />
                           <span>{totalOvertimeHours} hours overtime</span>
                         </TooltipTrigger>
-                        <TooltipContent>Total overtime hours this pay period</TooltipContent>
+                        <TooltipContent>Total overtime hours for {format(currentDate, 'MMMM yyyy')}</TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   </div>
@@ -401,6 +408,7 @@ const Calendar = () => {
             const settings = savedSettings ? JSON.parse(savedSettings) : { 
               paydayType: 'monthly',
               paydayDate: 15,
+              calendarNumberLayout: 'centre',
               calendarNumberLayout: 'centre',
               paydayColor: '#F97316',
               showOverlappingDates: true
