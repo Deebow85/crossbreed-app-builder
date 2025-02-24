@@ -11,6 +11,7 @@ export interface AppSettings {
   calendarSize: 'small' | 'large';
   calendarNumberLayout: 'centre' | 'top-left' | 'top-right';
   longPressEnabled: boolean;
+  showOverlappingDates: boolean;
   overtime: {
     enabled: boolean;
     defaultRate: number;
@@ -40,6 +41,7 @@ export const defaultSettings: AppSettings = {
   calendarSize: 'small',
   calendarNumberLayout: 'centre',
   longPressEnabled: true,
+  showOverlappingDates: true,
   overtime: {
     enabled: true,
     defaultRate: 1.5,

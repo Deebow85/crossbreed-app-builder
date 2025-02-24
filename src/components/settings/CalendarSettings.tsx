@@ -93,6 +93,22 @@ export function CalendarSettings({ settings, onSave }: CalendarSettingsProps) {
           <Label className="text-sm">Enable long press to activate multi-select</Label>
         </div>
       </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs">Show Overlapping Dates</Label>
+        <div className="flex items-center space-x-2">
+          <Switch
+            checked={settings.showOverlappingDates}
+            onCheckedChange={(checked) => {
+              onSave({
+                ...settings,
+                showOverlappingDates: checked
+              });
+            }}
+          />
+          <Label className="text-sm">Show dates from previous/next month</Label>
+        </div>
+      </div>
     </div>
   );
 }
