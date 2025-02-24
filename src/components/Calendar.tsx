@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -391,6 +392,14 @@ const Calendar = () => {
             const endWeek = endOfWeek(lastDayOfMonth, { weekStartsOn: 1 });
             const daysToDisplay = eachDayOfInterval({ start: startWeek, end: endWeek });
 
+            const savedSettings = localStorage.getItem('appSettings');
+            const settings = savedSettings ? JSON.parse(savedSettings) : { 
+              paydayType: 'monthly',
+              paydayDate: 15,
+              calendarNumberLayout: 'centre',
+              paydayColor: '#F97316'
+            };
+
             return daysToDisplay.map((date) => (
               <CalendarDay
                 key={date.toISOString()}
@@ -401,8 +410,9 @@ const Calendar = () => {
                 note={getNote(date)}
                 alarm={alarms.find(a => a.date === date.toISOString())}
                 paydaySymbol={paydaySettings.symbol}
+                paydayColor={settings.paydayColor}
                 calendarSize={calendarSize}
-                numberLayout={numberLayout}
+                numberLayout={settings.calendarNumberLayout}
                 onDayClick={handleDayClick}
                 onLongPress={handleLongPress}
                 onContextMenu={(e, date) => {
