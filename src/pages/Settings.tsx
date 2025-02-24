@@ -112,7 +112,20 @@ const Settings = () => {
   useEffect(() => {
     const savedSettings = localStorage.getItem('appSettings');
     if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
+      const parsed = JSON.parse(savedSettings);
+      const settings = {
+        ...defaultSettings,
+        ...parsed,
+        overtime: {
+          ...defaultSettings.overtime,
+          ...parsed.overtime,
+          schedule: {
+            ...defaultSettings.overtime.schedule,
+            ...(parsed.overtime?.schedule || {})
+          }
+        }
+      };
+      setSettings(settings);
     }
   }, []);
 
@@ -555,7 +568,7 @@ const Settings = () => {
                     <Label className="text-xs">Recurring Overtime Schedule</Label>
                     
                     <Select
-                      value={settings.overtime.schedule.type}
+                      value={settings.overtime.schedule?.type || 'none'}
                       onValueChange={(value: 'none' | 'weekly' | 'fortnightly' | 'monthly') => {
                         saveSettings({
                           ...settings,
@@ -564,7 +577,7 @@ const Settings = () => {
                             schedule: {
                               ...settings.overtime.schedule,
                               type: value,
-                              hours: settings.overtime.schedule.hours || 0
+                              hours: settings.overtime.schedule?.hours || 0
                             }
                           }
                         });
@@ -581,7 +594,7 @@ const Settings = () => {
                       </SelectContent>
                     </Select>
 
-                    {settings.overtime.schedule.type !== 'none' && (
+                    {(settings.overtime.schedule?.type !== 'none' && settings.overtime.schedule?.type) && (
                       <>
                         <div className="space-y-1.5">
                           <Label htmlFor="overtime-hours" className="text-xs">Hours of Overtime</Label>
@@ -590,7 +603,7 @@ const Settings = () => {
                             type="number"
                             min="0"
                             step="0.5"
-                            value={settings.overtime.schedule.hours}
+                            value={settings.overtime.schedule?.hours || 0}
                             onChange={(e) => {
                               const value = parseFloat(e.target.value);
                               if (value >= 0) {
@@ -610,11 +623,11 @@ const Settings = () => {
                           />
                         </div>
 
-                        {(settings.overtime.schedule.type === 'weekly' || settings.overtime.schedule.type === 'fortnightly') && (
+                        {(settings.overtime.schedule?.type === 'weekly' || settings.overtime.schedule?.type === 'fortnightly') && (
                           <div className="space-y-1.5">
                             <Label htmlFor="overtime-day" className="text-xs">Day of Week</Label>
                             <Select
-                              value={settings.overtime.schedule.dayOfWeek?.toString() || "1"}
+                              value={settings.overtime.schedule?.dayOfWeek?.toString() || "1"}
                               onValueChange={(value) => {
                                 saveSettings({
                                   ...settings,
@@ -644,12 +657,12 @@ const Settings = () => {
                           </div>
                         )}
 
-                        {settings.overtime.schedule.type === 'monthly' && (
+                        {settings.overtime.schedule?.type === 'monthly' && (
                           <>
                             <div className="space-y-1.5">
                               <Label htmlFor="overtime-week" className="text-xs">Week of Month</Label>
                               <Select
-                                value={settings.overtime.schedule.weekNumber?.toString() || "1"}
+                                value={settings.overtime.schedule?.weekNumber?.toString() || "1"}
                                 onValueChange={(value) => {
                                   saveSettings({
                                     ...settings,
@@ -678,7 +691,7 @@ const Settings = () => {
                             <div className="space-y-1.5">
                               <Label htmlFor="overtime-day-of-week" className="text-xs">Day of Week</Label>
                               <Select
-                                value={settings.overtime.schedule.dayOfWeek?.toString() || "1"}
+                                value={settings.overtime.schedule?.dayOfWeek?.toString() || "1"}
                                 onValueChange={(value) => {
                                   saveSettings({
                                     ...settings,
