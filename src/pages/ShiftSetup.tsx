@@ -494,7 +494,6 @@ const ShiftSetup = () => {
                             };
                             saveShiftTypes(newShiftTypes);
                           }}
-                          size="sm"
                         />
                         <Label className="text-xs text-muted-foreground">Overtime</Label>
                       </div>
