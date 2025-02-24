@@ -64,6 +64,15 @@ const Calendar = () => {
 
   const years = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
 
+  const handleMonthSelect = (monthIndex: number) => {
+    setCurrentDate(setMonth(currentDate, monthIndex));
+    setShowDatePicker(false);
+  };
+
+  const handleYearSelect = (year: number) => {
+    setCurrentDate(setYear(currentDate, year));
+  };
+
   useEffect(() => {
     localStorage.setItem('calendarShifts', JSON.stringify(shifts));
   }, [shifts]);
