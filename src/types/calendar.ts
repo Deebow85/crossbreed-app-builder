@@ -3,6 +3,7 @@ export type ShiftType = {
   name: string;
   color: string;
   gradient: string;
+  isOvertime?: boolean;
 };
 
 export type ShiftAssignment = {
