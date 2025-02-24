@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -394,9 +393,9 @@ const ShiftSetup = () => {
 
       <Card className="flex-1 overflow-auto mb-20">
         <div className="p-2 sm:p-4 space-y-3">
-          <div className="flex flex-wrap justify-between items-center gap-2">
+          <div className="flex justify-between items-center gap-1">
             <h2 className="text-lg font-semibold">Shift Types</h2>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex gap-1">
               <Button 
                 variant="outline" 
                 size="sm"
@@ -424,28 +423,26 @@ const ShiftSetup = () => {
                 <PencilIcon className="h-3 w-3" />
                 {isEditing ? "Done" : "Edit"}
               </Button>
-              <div className="flex gap-1">
+              <Button 
+                variant="outline"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={addShiftType}
+              >
+                <Plus className="h-3 w-3" />
+                Add
+              </Button>
+              {shiftTypes.length > 0 && (
                 <Button 
-                  variant="outline" 
+                  variant="destructive"
                   size="sm"
                   className="h-7 px-2 text-xs"
-                  onClick={addShiftType}
+                  onClick={handleRemoveDialogOpen}
                 >
-                  <Plus className="h-3 w-3" />
-                  Add
+                  <Trash2 className="h-3 w-3" />
+                  Remove
                 </Button>
-                {shiftTypes.length > 0 && (
-                  <Button 
-                    variant="destructive"
-                    size="sm"
-                    className="h-7 px-2 text-xs"
-                    onClick={handleRemoveDialogOpen}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                    Remove
-                  </Button>
-                )}
-              </div>
+              )}
             </div>
           </div>
 
@@ -453,35 +450,33 @@ const ShiftSetup = () => {
             {shiftTypes.map((type, index) => (
               <div 
                 key={index} 
-                className={`flex flex-col sm:flex-row items-start sm:items-center gap-2 p-1.5 border rounded-lg ${
+                className={`flex items-center gap-2 p-1.5 border rounded-lg ${
                   type.isOvertime ? 'border-orange-500 bg-orange-50/50' : ''
                 }`}
               >
                 {!type.isNew && !isEditing ? (
                   <>
-                    <div className="flex-1 flex items-center gap-2 min-w-0">
-                      <span className="text-base truncate">{type.name} ({type.symbol})</span>
+                    <div className="flex-1 flex items-center gap-2">
+                      <span className="text-base">{type.name} ({type.symbol})</span>
                       {type.isOvertime && (
-                        <span className="text-xs text-orange-600 font-medium whitespace-nowrap">Overtime</span>
+                        <span className="text-xs text-orange-600 font-medium">Overtime</span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                      <Input
-                        value={type.symbol}
-                        readOnly
-                        className="h-9 w-16 text-center text-lg font-semibold"
-                      />
-                      <div 
-                        className="flex-1 sm:w-32 h-9 rounded border"
-                        style={{ background: type.gradient }}
-                        role="button"
-                        aria-label="Shift color"
-                      />
-                    </div>
+                    <Input
+                      value={type.symbol}
+                      readOnly
+                      className="h-9 w-16 text-center text-lg font-semibold mx-auto"
+                    />
+                    <div 
+                      className="w-32 h-9 rounded border flex-1"
+                      style={{ background: type.gradient }}
+                      role="button"
+                      aria-label="Shift color"
+                    />
                   </>
                 ) : (
                   <>
-                    <div className="flex-1 space-y-1 min-w-0 w-full sm:w-auto">
+                    <div className="flex-1 space-y-1">
                       <Input
                         value={type.name}
                         onChange={(e) => updateShiftType(index, 'name', e.target.value)}
@@ -503,15 +498,15 @@ const ShiftSetup = () => {
                         <Label className="text-xs text-muted-foreground">Overtime</Label>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                      <Input
-                        value={type.symbol}
-                        onChange={(e) => {
-                          updateShiftType(index, 'symbol', e.target.value.toUpperCase());
-                        }}
-                        className="h-9 w-16 text-center text-lg font-semibold uppercase"
-                        placeholder=""
-                      />
+                    <Input
+                      value={type.symbol}
+                      onChange={(e) => {
+                        updateShiftType(index, 'symbol', e.target.value.toUpperCase());
+                      }}
+                      className="h-9 w-16 text-center text-lg font-semibold uppercase mx-auto"
+                      placeholder=""
+                    />
+                    <div className="flex items-center gap-2 flex-1">
                       <div 
                         className="w-32 h-9 rounded border"
                         style={{ background: type.gradient }}
@@ -557,7 +552,7 @@ const ShiftSetup = () => {
                 {existingPatterns.map((patternData, index) => (
                   <div 
                     key={index}
-                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 border rounded-lg bg-background/50 gap-2"
+                    className="flex items-center justify-between p-3 border rounded-lg bg-background/50"
                   >
                     <div className="space-y-1">
                       <div className="font-medium">{patternData.patternName}</div>
@@ -566,7 +561,7 @@ const ShiftSetup = () => {
                         Generates for {patternData.years} year{patternData.years !== 1 ? 's' : ''}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <div className="flex items-center gap-2">
                       <Button
                         variant="ghost"
                         size="icon"
@@ -597,110 +592,12 @@ const ShiftSetup = () => {
         </div>
       </Card>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Select Colour Type</DialogTitle>
-          </DialogHeader>
-          {!colorMode ? (
-            <div className="flex justify-center gap-4 pt-4">
-              <Button onClick={handleSolidColor}>Solid Colour</Button>
-              <Button onClick={handleGradient}>Gradient</Button>
-            </div>
-          ) : (
-            <div className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label>{colorMode === 'solid' ? 'Colour' : 'Start Colour'}</Label>
-                <Input
-                  type="color"
-                  value={startColor}
-                  onChange={(e) => setStartColor(e.target.value)}
-                  className="w-full h-10"
-                />
-              </div>
-              
-              {colorMode === 'gradient' && (
-                <div className="space-y-2">
-                  <Label>End Colour</Label>
-                  <Input
-                    type="color"
-                    value={endColor}
-                    onChange={(e) => setEndColor(e.target.value)}
-                    className="w-full h-10"
-                  />
-                </div>
-              )}
-
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={selectedIndex !== null ? shiftTypes[selectedIndex].isOvertime : false}
-                  onCheckedChange={(checked) => {
-                    if (selectedIndex !== null) {
-                      const newShiftTypes = [...shiftTypes];
-                      newShiftTypes[selectedIndex] = {
-                        ...newShiftTypes[selectedIndex],
-                        isOvertime: checked
-                      };
-                      saveShiftTypes(newShiftTypes);
-                    }
-                  }}
-                />
-                <Label>Calculate as Overtime</Label>
-              </div>
-              
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setColorMode(null)}>Back</Button>
-                <Button onClick={handleColorConfirm}>Confirm</Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isRemoveDialogOpen} onOpenChange={setIsRemoveDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Remove Shift Types</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-2 py-4">
-            {shiftTypes.map((type, index) => (
-              <div 
-                key={index} 
-                className={`flex items-center justify-between p-2 border rounded-lg cursor-pointer ${
-                  selectedToRemove.includes(index) ? 'border-destructive bg-destructive/10' : ''
-                }`}
-                onClick={() => toggleShiftToRemove(index)}
-              >
-                <div className="flex items-center gap-2">
-                  <div 
-                    className="w-8 h-8 rounded border flex items-center justify-center font-semibold"
-                    style={{ background: type.gradient }}
-                  >
-                    {type.symbol}
-                  </div>
-                  <span>{type.name}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {selectedToRemove.includes(index) && (
-                    <Check className="h-4 w-4 text-destructive" />
-                  )}
-                </div>
-              </div>
-            ))}
-            {selectedToRemove.length > 0 && (
-              <Button
-                variant="destructive"
-                onClick={removeSelectedShiftTypes}
-                className="mt-2"
-              >
-                Remove Selected ({selectedToRemove.length})
-              </Button>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showSetDaysDialog} onOpenChange={setShowSetDaysDialog}>
+      <Dialog 
+        open={showSetDaysDialog} 
+        onOpenChange={(open) => {
+          if (!open) setShowSetDaysDialog(false);
+        }}
+      >
         <DialogContent className="flex h-[85vh] flex-col overflow-hidden">
           <DialogHeader className="flex-none p-4 pb-2">
             <DialogTitle>Set Working Days Pattern</DialogTitle>
@@ -818,7 +715,12 @@ const ShiftSetup = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showPatternDialog} onOpenChange={setShowPatternDialog}>
+      <Dialog 
+        open={showPatternDialog} 
+        onOpenChange={(open) => {
+          if (!open) closePatternDialog();
+        }}
+      >
         <DialogContent className="flex h-[85vh] flex-col overflow-hidden">
           <DialogHeader className="flex-none p-4 pb-2">
             <DialogTitle>
@@ -911,7 +813,7 @@ const ShiftSetup = () => {
                     min="1"
                     value={repeatTimes}
                     onChange={(e) => setRepeatTimes(parseInt(e.target.value))}
-                    readOnly={currentPattern.length === 2 && currentPattern[0]?.days === 5 && currentPattern[1]?.days === 2}
+                    readOnly={currentPattern.length === 2 && currentPattern[0].days === 5 && currentPattern[1].days === 2}
                   />
                   <span className="text-sm text-muted-foreground">times</span>
                 </div>
@@ -956,6 +858,109 @@ const ShiftSetup = () => {
               {editingPattern ? 'Update Pattern' : 'Generate Pattern'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select Colour Type</DialogTitle>
+          </DialogHeader>
+          {!colorMode ? (
+            <div className="flex justify-center gap-4 pt-4">
+              <Button onClick={handleSolidColor}>Solid Colour</Button>
+              <Button onClick={handleGradient}>Gradient</Button>
+            </div>
+          ) : (
+            <div className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label>{colorMode === 'solid' ? 'Colour' : 'Start Colour'}</Label>
+                <Input
+                  type="color"
+                  value={startColor}
+                  onChange={(e) => setStartColor(e.target.value)}
+                  className="w-full h-10"
+                />
+              </div>
+              
+              {colorMode === 'gradient' && (
+                <div className="space-y-2">
+                  <Label>End Colour</Label>
+                  <Input
+                    type="color"
+                    value={endColor}
+                    onChange={(e) => setEndColor(e.target.value)}
+                    className="w-full h-10"
+                  />
+                </div>
+              )}
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={selectedIndex !== null ? shiftTypes[selectedIndex].isOvertime : false}
+                  onCheckedChange={(checked) => {
+                    if (selectedIndex !== null) {
+                      const newShiftTypes = [...shiftTypes];
+                      newShiftTypes[selectedIndex] = {
+                        ...newShiftTypes[selectedIndex],
+                        isOvertime: checked
+                      };
+                      saveShiftTypes(newShiftTypes);
+                    }
+                  }}
+                />
+                <Label>Calculate as Overtime</Label>
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setColorMode(null)}>Back</Button>
+                <Button onClick={handleColorConfirm}>Confirm</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isRemoveDialogOpen} onOpenChange={setIsRemoveDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remove Shift Types</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-2 py-4">
+            {shiftTypes.map((type, index) => (
+              <div 
+                key={index} 
+                className={`flex items-center justify-between p-2 border rounded-lg cursor-pointer ${
+                  selectedToRemove.includes(index) ? 'border-destructive bg-destructive/10' : ''
+                }`}
+                onClick={() => toggleShiftToRemove(index)}
+              >
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-8 h-8 rounded border flex items-center justify-center font-semibold"
+                    style={{ background: type.gradient }}
+                  >
+                    {type.symbol}
+                  </div>
+                  <span>{type.name}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {selectedToRemove.includes(index) && (
+                    <Check className="h-4 w-4 text-destructive" />
+                  )}
+                </div>
+              </div>
+            ))}
+            {selectedToRemove.length > 0 && (
+              <Button
+                variant="destructive"
+                onClick={removeSelectedShiftTypes}
+                className="mt-2"
+              >
+                Remove Selected ({selectedToRemove.length})
+              </Button>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
