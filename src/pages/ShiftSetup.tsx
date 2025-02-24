@@ -448,12 +448,20 @@ const ShiftSetup = () => {
 
           <div className="grid gap-1.5">
             {shiftTypes.map((type, index) => (
-              <div key={index} className="flex items-center gap-2 p-1.5 border rounded-lg">
+              <div 
+                key={index} 
+                className={`flex items-center gap-2 p-1.5 border rounded-lg ${
+                  type.isOvertime ? 'border-orange-500 bg-orange-50/50' : ''
+                }`}
+              >
                 {!type.isNew && !isEditing ? (
                   <>
-                    <span className="text-base flex-1">
-                      {type.name} ({type.symbol})
-                    </span>
+                    <div className="flex-1 flex items-center gap-2">
+                      <span className="text-base">{type.name} ({type.symbol})</span>
+                      {type.isOvertime && (
+                        <span className="text-xs text-orange-600 font-medium">Overtime</span>
+                      )}
+                    </div>
                     <Input
                       value={type.symbol}
                       readOnly
@@ -468,12 +476,29 @@ const ShiftSetup = () => {
                   </>
                 ) : (
                   <>
-                    <Input
-                      value={type.name}
-                      onChange={(e) => updateShiftType(index, 'name', e.target.value)}
-                      className="h-9 text-base flex-1"
-                      placeholder="Name"
-                    />
+                    <div className="flex-1 space-y-1">
+                      <Input
+                        value={type.name}
+                        onChange={(e) => updateShiftType(index, 'name', e.target.value)}
+                        className="h-9 text-base"
+                        placeholder="Name"
+                      />
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={type.isOvertime}
+                          onCheckedChange={(checked) => {
+                            const newShiftTypes = [...shiftTypes];
+                            newShiftTypes[index] = {
+                              ...newShiftTypes[index],
+                              isOvertime: checked
+                            };
+                            saveShiftTypes(newShiftTypes);
+                          }}
+                          size="sm"
+                        />
+                        <Label className="text-xs text-muted-foreground">Overtime</Label>
+                      </div>
+                    </div>
                     <Input
                       value={type.symbol}
                       onChange={(e) => {
