@@ -118,7 +118,7 @@ const Calendar = () => {
     setSelectedDatesForShift([date]);
   };
 
-  const handleShiftSelection = (selectedType: ShiftType | null) => {
+  const handleShiftSelection = (selectedType: ShiftType | null, otHours?: number) => {
     if (selectedDatesForShift.length === 0) return;
     
     setShifts(prevShifts => {
@@ -128,10 +128,16 @@ const Calendar = () => {
         const existingIndex = newShifts.findIndex(s => s.date === dateStr);
         
         if (selectedType) {
+          const shiftAssignment = {
+            date: dateStr,
+            shiftType: selectedType,
+            ...(otHours && selectedType.isOvertime ? { otHours } : {})
+          };
+          
           if (existingIndex >= 0) {
-            newShifts[existingIndex] = { date: dateStr, shiftType: selectedType };
+            newShifts[existingIndex] = shiftAssignment;
           } else {
-            newShifts.push({ date: dateStr, shiftType: selectedType });
+            newShifts.push(shiftAssignment);
           }
         } else {
           if (existingIndex >= 0) {
