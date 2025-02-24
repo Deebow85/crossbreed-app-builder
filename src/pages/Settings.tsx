@@ -47,6 +47,13 @@ interface AppSettings {
       weekend: number;
       holiday: number;
     };
+    schedule: {
+      type: 'none' | 'weekly' | 'fortnightly' | 'monthly';
+      hours: number;
+      dayOfWeek?: number;
+      dayOfMonth?: number;
+      weekNumber?: number;
+    };
   };
 }
 
@@ -66,6 +73,10 @@ const defaultSettings: AppSettings = {
     specialRates: {
       weekend: 2,
       holiday: 2.5
+    },
+    schedule: {
+      type: 'none',
+      hours: 0
     }
   }
 };
@@ -538,6 +549,167 @@ const Settings = () => {
                       }}
                       className="h-7"
                     />
+                  </div>
+
+                  <div className="space-y-4 border-t pt-4 mt-4">
+                    <Label className="text-xs">Recurring Overtime Schedule</Label>
+                    
+                    <Select
+                      value={settings.overtime.schedule.type}
+                      onValueChange={(value: 'none' | 'weekly' | 'fortnightly' | 'monthly') => {
+                        saveSettings({
+                          ...settings,
+                          overtime: {
+                            ...settings.overtime,
+                            schedule: {
+                              ...settings.overtime.schedule,
+                              type: value,
+                              hours: settings.overtime.schedule.hours || 0
+                            }
+                          }
+                        });
+                      }}
+                    >
+                      <SelectTrigger className="h-7">
+                        <SelectValue placeholder="Select schedule type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No recurring overtime</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="fortnightly">Fortnightly</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {settings.overtime.schedule.type !== 'none' && (
+                      <>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="overtime-hours" className="text-xs">Hours of Overtime</Label>
+                          <Input
+                            id="overtime-hours"
+                            type="number"
+                            min="0"
+                            step="0.5"
+                            value={settings.overtime.schedule.hours}
+                            onChange={(e) => {
+                              const value = parseFloat(e.target.value);
+                              if (value >= 0) {
+                                saveSettings({
+                                  ...settings,
+                                  overtime: {
+                                    ...settings.overtime,
+                                    schedule: {
+                                      ...settings.overtime.schedule,
+                                      hours: value
+                                    }
+                                  }
+                                });
+                              }
+                            }}
+                            className="h-7"
+                          />
+                        </div>
+
+                        {(settings.overtime.schedule.type === 'weekly' || settings.overtime.schedule.type === 'fortnightly') && (
+                          <div className="space-y-1.5">
+                            <Label htmlFor="overtime-day" className="text-xs">Day of Week</Label>
+                            <Select
+                              value={settings.overtime.schedule.dayOfWeek?.toString() || "1"}
+                              onValueChange={(value) => {
+                                saveSettings({
+                                  ...settings,
+                                  overtime: {
+                                    ...settings.overtime,
+                                    schedule: {
+                                      ...settings.overtime.schedule,
+                                      dayOfWeek: parseInt(value)
+                                    }
+                                  }
+                                });
+                              }}
+                            >
+                              <SelectTrigger id="overtime-day" className="h-7">
+                                <SelectValue placeholder="Select day" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1">Monday</SelectItem>
+                                <SelectItem value="2">Tuesday</SelectItem>
+                                <SelectItem value="3">Wednesday</SelectItem>
+                                <SelectItem value="4">Thursday</SelectItem>
+                                <SelectItem value="5">Friday</SelectItem>
+                                <SelectItem value="6">Saturday</SelectItem>
+                                <SelectItem value="7">Sunday</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+
+                        {settings.overtime.schedule.type === 'monthly' && (
+                          <>
+                            <div className="space-y-1.5">
+                              <Label htmlFor="overtime-week" className="text-xs">Week of Month</Label>
+                              <Select
+                                value={settings.overtime.schedule.weekNumber?.toString() || "1"}
+                                onValueChange={(value) => {
+                                  saveSettings({
+                                    ...settings,
+                                    overtime: {
+                                      ...settings.overtime,
+                                      schedule: {
+                                        ...settings.overtime.schedule,
+                                        weekNumber: parseInt(value)
+                                      }
+                                    }
+                                  });
+                                }}
+                              >
+                                <SelectTrigger id="overtime-week" className="h-7">
+                                  <SelectValue placeholder="Select week" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="1">First Week</SelectItem>
+                                  <SelectItem value="2">Second Week</SelectItem>
+                                  <SelectItem value="3">Third Week</SelectItem>
+                                  <SelectItem value="4">Fourth Week</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <Label htmlFor="overtime-day-of-week" className="text-xs">Day of Week</Label>
+                              <Select
+                                value={settings.overtime.schedule.dayOfWeek?.toString() || "1"}
+                                onValueChange={(value) => {
+                                  saveSettings({
+                                    ...settings,
+                                    overtime: {
+                                      ...settings.overtime,
+                                      schedule: {
+                                        ...settings.overtime.schedule,
+                                        dayOfWeek: parseInt(value)
+                                      }
+                                    }
+                                  });
+                                }}
+                              >
+                                <SelectTrigger id="overtime-day-of-week" className="h-7">
+                                  <SelectValue placeholder="Select day" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="1">Monday</SelectItem>
+                                  <SelectItem value="2">Tuesday</SelectItem>
+                                  <SelectItem value="3">Wednesday</SelectItem>
+                                  <SelectItem value="4">Thursday</SelectItem>
+                                  <SelectItem value="5">Friday</SelectItem>
+                                  <SelectItem value="6">Saturday</SelectItem>
+                                  <SelectItem value="7">Sunday</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </>
+                        )}
+                      </>
+                    )}
                   </div>
                 </>
               )}
