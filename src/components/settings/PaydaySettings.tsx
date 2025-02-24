@@ -1,4 +1,3 @@
-
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -37,7 +36,15 @@ const gradientColors = [
   '#0EA5E9', // Blue
   '#10B981', // Emerald
   '#84CC16', // Lime
+  '#FACC15', // Yellow
+  '#FB923C', // Light Orange
+  '#E879F9', // Light Pink
+  '#818CF8', // Light Indigo
+  '#2DD4BF', // Teal
+  '#4ADE80', // Green
   '#9b87f5', // Primary Purple
+  '#7E69AB', // Secondary Purple
+  '#6E59A5', // Tertiary Purple
 ];
 
 export function PaydaySettings({ settings, onSave }: PaydaySettingsProps) {
