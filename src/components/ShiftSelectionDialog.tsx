@@ -1,186 +1,91 @@
 
-import { format } from "date-fns";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useState, useEffect } from "react";
+import { format } from "date-fns";
 import { ShiftType } from "@/types/calendar";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { AppSettings } from "@/types/settings";
+import { useState } from "react";
 
-type ShiftSelectionDialogProps = {
+interface ShiftSelectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedDates: Date[];
   shiftTypes: ShiftType[];
-  onShiftSelect: (type: ShiftType | null, overtimeHours?: { [date: string]: number }) => void;
-};
+  onShiftSelect: (selectedType: ShiftType | null, overtimeHours?: { [date: string]: number }) => void;
+  showOvertimeInput?: boolean;
+}
 
-const ShiftSelectionDialog = ({
+export default function ShiftSelectionDialog({
   open,
   onOpenChange,
   selectedDates,
   shiftTypes,
   onShiftSelect,
-}: ShiftSelectionDialogProps) => {
-  const [overtimeHours, setOvertimeHours] = useState<{ [date: string]: string }>({});
-  const [selectedType, setSelectedType] = useState<ShiftType | null>(null);
-  const [settings, setSettings] = useState<AppSettings | null>(null);
+  showOvertimeInput = true,
+}: ShiftSelectionDialogProps) {
+  const [overtimeHours, setOvertimeHours] = useState<{ [date: string]: number }>({});
 
-  useEffect(() => {
-    const savedSettings = localStorage.getItem('appSettings');
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
-    }
-  }, []);
-
-  const handleShiftSelect = (type: ShiftType | null) => {
-    setSelectedType(type);
-    if (!type?.isOvertime) {
-      onShiftSelect(type);
-      setOvertimeHours({});
-    }
-  };
-
-  const getOvertimeRate = (date: Date): number => {
-    if (!settings?.overtime) return 1;
-
-    const dayOfWeek = date.getDay();
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-
-    // TODO: Add holiday check when holiday system is implemented
-    const isHoliday = false;
-
-    if (isHoliday) {
-      return settings.overtime.specialRates.holiday;
-    } else if (isWeekend) {
-      return settings.overtime.specialRates.weekend;
-    }
-    return settings.overtime.defaultRate;
-  };
-
-  const handleOvertimeConfirm = () => {
-    if (selectedType) {
-      const validHours: { [date: string]: number } = {};
-      let isValid = true;
-
-      // Validate all overtime entries
-      selectedDates.forEach(date => {
-        const dateStr = date.toISOString();
-        const hours = parseFloat(overtimeHours[dateStr] || '0');
-        if (isNaN(hours) || hours <= 0) {
-          isValid = false;
-        } else {
-          validHours[dateStr] = hours;
-        }
-      });
-
-      if (isValid && Object.keys(validHours).length > 0) {
-        onShiftSelect(selectedType, validHours);
-      }
-    }
-  };
-
-  const handleHoursChange = (date: Date, value: string) => {
-    setOvertimeHours(prev => ({
-      ...prev,
-      [date.toISOString()]: value
-    }));
-  };
-
-  const areAllHoursValid = () => {
-    return selectedDates.every(date => {
-      const hours = parseFloat(overtimeHours[date.toISOString()] || '0');
-      return !isNaN(hours) && hours > 0;
-    });
+  const handleShiftSelect = (shiftType: ShiftType | null) => {
+    onShiftSelect(shiftType, showOvertimeInput ? overtimeHours : undefined);
+    setOvertimeHours({});
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      onOpenChange(isOpen);
-      if (!isOpen) {
-        setOvertimeHours({});
-        setSelectedType(null);
-      }
-    }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Select Shift</DialogTitle>
-          <DialogDescription>
-            {selectedDates.length === 1 
-              ? `Select shift type for ${format(selectedDates[0], 'MMMM d, yyyy')}`
-              : `Select shift type for ${selectedDates.length} dates`
-            }
-          </DialogDescription>
+          <DialogTitle>
+            Set shift for {selectedDates.length === 1 
+              ? format(selectedDates[0], 'MMM do, yyyy')
+              : `${selectedDates.length} selected dates`}
+          </DialogTitle>
         </DialogHeader>
+
         <div className="grid gap-4 py-4">
-          {shiftTypes.map((type) => (
-            <Button
-              key={type.name}
-              onClick={() => handleShiftSelect(type)}
-              className={`w-full justify-start ${
-                selectedType?.name === type.name ? 'ring-2 ring-primary' : ''
-              }`}
-              style={{
-                background: type.gradient,
-                color: 'white'
-              }}
-            >
-              {type.name}
-            </Button>
+          <div className="grid grid-cols-2 gap-2">
+            {shiftTypes.map((type) => (
+              <Button
+                key={type.name}
+                style={{
+                  background: type.gradient,
+                }}
+                onClick={() => handleShiftSelect(type)}
+              >
+                {type.name}
+              </Button>
+            ))}
+          </div>
+
+          {showOvertimeInput && selectedDates.map(date => (
+            <div key={date.toISOString()} className="space-y-2">
+              <label className="text-sm">
+                Overtime hours for {format(date, 'MMM do')}:
+              </label>
+              <Input
+                type="number"
+                min="0"
+                step="0.5"
+                value={overtimeHours[date.toISOString()] || ""}
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value);
+                  setOvertimeHours(prev => ({
+                    ...prev,
+                    [date.toISOString()]: isNaN(value) ? 0 : value
+                  }));
+                }}
+              />
+            </div>
           ))}
+
           <Button
             variant="outline"
             onClick={() => handleShiftSelect(null)}
-            className="w-full justify-start"
+            className="mt-2"
           >
-            Remove Shift
+            Clear Shift
           </Button>
-
-          {selectedType?.isOvertime && (
-            <ScrollArea className="h-[200px]">
-              <div className="space-y-4 p-4 border rounded-lg bg-orange-50/50">
-                <Label>Overtime Hours Per Day</Label>
-                {selectedDates.map((date) => {
-                  const rate = getOvertimeRate(date);
-                  return (
-                    <div key={date.toISOString()} className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <Label htmlFor={`ot-${date.toISOString()}`} className="text-sm">
-                          {format(date, 'MMMM d, yyyy')}
-                        </Label>
-                        <span className="text-sm text-muted-foreground">
-                          {rate}x rate
-                        </span>
-                      </div>
-                      <Input
-                        id={`ot-${date.toISOString()}`}
-                        type="number"
-                        step="0.5"
-                        min="0"
-                        value={overtimeHours[date.toISOString()] || ''}
-                        onChange={(e) => handleHoursChange(date, e.target.value)}
-                        placeholder="Enter overtime hours"
-                        className="flex-1"
-                      />
-                    </div>
-                  );
-                })}
-                <Button 
-                  onClick={handleOvertimeConfirm}
-                  disabled={!areAllHoursValid()}
-                  className="w-full mt-4"
-                >
-                  Confirm All Hours
-                </Button>
-              </div>
-            </ScrollArea>
-          )}
         </div>
       </DialogContent>
     </Dialog>
   );
-};
-
-export default ShiftSelectionDialog;
+}

@@ -286,7 +286,7 @@ const Calendar = () => {
     const savedSettings = localStorage.getItem('appSettings');
     const settings = savedSettings ? JSON.parse(savedSettings) : null;
     
-    if (!settings?.overtime) return total + shift.otHours;
+    if (!settings?.overtime?.enabled) return 0;
     
     const date = new Date(shift.date);
     const dayOfWeek = date.getDay();
@@ -295,14 +295,7 @@ const Calendar = () => {
     // TODO: Add holiday check when holiday system is implemented
     const isHoliday = false;
     
-    let rate = settings.overtime.defaultRate;
-    if (isHoliday) {
-      rate = settings.overtime.specialRates.holiday;
-    } else if (isWeekend) {
-      rate = settings.overtime.specialRates.weekend;
-    }
-    
-    return total + (shift.otHours * rate);
+    return total + shift.otHours;
   }, 0);
 
   return (
@@ -344,17 +337,19 @@ const Calendar = () => {
                   </Tooltip>
                 </TooltipProvider>
 
-                <div className="-mt-4">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                        <Clock className="h-4 w-4" />
-                        <span>{totalOvertimeHours} hours overtime</span>
-                      </TooltipTrigger>
-                      <TooltipContent>Total overtime hours this pay period</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
+                {settings?.overtime?.enabled && (
+                  <div className="-mt-4">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                          <Clock className="h-4 w-4" />
+                          <span>{totalOvertimeHours} hours overtime</span>
+                        </TooltipTrigger>
+                        <TooltipContent>Total overtime hours this pay period</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -431,6 +426,7 @@ const Calendar = () => {
         selectedDates={selectedDatesForShift}
         shiftTypes={shiftTypes}
         onShiftSelect={handleShiftSelection}
+        showOvertimeInput={settings?.overtime?.enabled}
       />
 
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t py-4 z-50">
