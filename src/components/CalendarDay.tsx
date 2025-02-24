@@ -15,7 +15,7 @@ type CalendarDayProps = {
   note?: Note;
   alarm?: Alarm;
   paydaySymbol: string;
-  paydayColor?: string;
+  paydayColor: string;
   calendarSize: 'default' | 'large' | 'small';
   numberLayout: string;
   onDayClick: (date: Date) => void;
@@ -33,7 +33,7 @@ const CalendarDay = ({
   note,
   alarm,
   paydaySymbol,
-  paydayColor = '#F97316',
+  paydayColor,
   calendarSize,
   numberLayout,
   onDayClick,
