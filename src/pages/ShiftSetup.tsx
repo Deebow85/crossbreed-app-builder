@@ -423,26 +423,28 @@ const ShiftSetup = () => {
                 <PencilIcon className="h-3 w-3" />
                 {isEditing ? "Done" : "Edit"}
               </Button>
-              <Button 
-                variant="outline"
-                size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={addShiftType}
-              >
-                <Plus className="h-3 w-3" />
-                Add
-              </Button>
-              {shiftTypes.length > 0 && (
+              <div className="flex gap-1">
                 <Button 
-                  variant="destructive"
+                  variant="outline"
                   size="sm"
                   className="h-7 px-2 text-xs"
-                  onClick={handleRemoveDialogOpen}
+                  onClick={addShiftType}
                 >
-                  <Trash2 className="h-3 w-3" />
-                  Remove
+                  <Plus className="h-3 w-3" />
+                  Add
                 </Button>
-              )}
+                {shiftTypes.length > 0 && (
+                  <Button 
+                    variant="destructive"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={handleRemoveDialogOpen}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    Remove
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -927,74 +929,3 @@ const ShiftSetup = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Remove Shift Types</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-2 py-4">
-            {shiftTypes.map((type, index) => (
-              <div 
-                key={index} 
-                className={`flex items-center justify-between p-2 border rounded-lg cursor-pointer ${
-                  selectedToRemove.includes(index) ? 'border-destructive bg-destructive/10' : ''
-                }`}
-                onClick={() => toggleShiftToRemove(index)}
-              >
-                <div className="flex items-center gap-2">
-                  <div 
-                    className="w-8 h-8 rounded border flex items-center justify-center font-semibold"
-                    style={{ background: type.gradient }}
-                  >
-                    {type.symbol}
-                  </div>
-                  <span>{type.name}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {selectedToRemove.includes(index) && (
-                    <Check className="h-4 w-4 text-destructive" />
-                  )}
-                </div>
-              </div>
-            ))}
-            {selectedToRemove.length > 0 && (
-              <Button
-                variant="destructive"
-                onClick={removeSelectedShiftTypes}
-                className="mt-2"
-              >
-                Remove Selected ({selectedToRemove.length})
-              </Button>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t py-4">
-        <div className="container max-w-md mx-auto flex items-center justify-between px-4">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="hover:bg-accent"
-            onClick={() => navigate("/")}
-          >
-            <CalendarDays className="h-8 w-8" />
-          </Button>
-          
-          <div className="relative">
-            <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg">
-              <span className="text-primary-foreground font-semibold text-xl">S</span>
-            </div>
-          </div>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="hover:bg-accent"
-            onClick={() => navigate("/settings")}
-          >
-            <Settings className="h-8 w-8" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default ShiftSetup;
