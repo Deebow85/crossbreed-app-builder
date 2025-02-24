@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { ShiftType } from "@/types/calendar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface ShiftSelectionDialogProps {
   open: boolean;
@@ -13,6 +13,8 @@ interface ShiftSelectionDialogProps {
   shiftTypes: ShiftType[];
   onShiftSelect: (selectedType: ShiftType | null, overtimeHours?: { [date: string]: number }) => void;
   showOvertimeInput?: boolean;
+  initialShiftType?: ShiftType;
+  initialOvertimeHours?: { [date: string]: number };
 }
 
 export default function ShiftSelectionDialog({
@@ -22,9 +24,18 @@ export default function ShiftSelectionDialog({
   shiftTypes,
   onShiftSelect,
   showOvertimeInput = true,
+  initialShiftType,
+  initialOvertimeHours,
 }: ShiftSelectionDialogProps) {
-  const [overtimeHours, setOvertimeHours] = useState<{ [date: string]: number }>({});
-  const [selectedType, setSelectedType] = useState<ShiftType | null>(null);
+  const [overtimeHours, setOvertimeHours] = useState<{ [date: string]: number }>(initialOvertimeHours || {});
+  const [selectedType, setSelectedType] = useState<ShiftType | null>(initialShiftType || null);
+
+  useEffect(() => {
+    if (open && initialShiftType && initialOvertimeHours) {
+      setSelectedType(initialShiftType);
+      setOvertimeHours(initialOvertimeHours);
+    }
+  }, [open, initialShiftType, initialOvertimeHours]);
 
   const handleShiftSelect = (shiftType: ShiftType | null) => {
     setSelectedType(shiftType);
@@ -61,7 +72,7 @@ export default function ShiftSelectionDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            Set shift for {selectedDates.length === 1 
+            {selectedType?.isOvertime ? "Edit overtime hours" : "Set shift"} for {selectedDates.length === 1 
               ? format(selectedDates[0], 'MMM do, yyyy')
               : `${selectedDates.length} selected dates`}
           </DialogTitle>
@@ -106,7 +117,7 @@ export default function ShiftSelectionDialog({
 
           {showOTInput && (
             <Button onClick={handleSubmit} className="mt-2">
-              Set Shift with Overtime
+              {initialOvertimeHours ? "Update" : "Set"} Overtime Hours
             </Button>
           )}
 

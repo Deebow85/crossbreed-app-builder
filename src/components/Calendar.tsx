@@ -476,6 +476,14 @@ const Calendar = () => {
         shiftTypes={shiftTypes}
         onShiftSelect={handleShiftSelection}
         showOvertimeInput={settings?.overtime?.enabled}
+        initialShiftType={selectedDatesForShift.length === 1 
+          ? getShiftForDate(selectedDatesForShift[0])?.shiftType 
+          : undefined}
+        initialOvertimeHours={selectedDatesForShift.length === 1 
+          ? getShiftForDate(selectedDatesForShift[0])?.otHours !== undefined
+            ? { [selectedDatesForShift[0].toISOString()]: getShiftForDate(selectedDatesForShift[0])!.otHours! }
+            : undefined
+          : undefined}
       />
 
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t py-4 z-50">
