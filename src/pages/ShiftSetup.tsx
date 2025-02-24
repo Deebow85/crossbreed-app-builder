@@ -557,6 +557,15 @@ const ShiftSetup = () => {
         </div>
       </Card>
 
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t flex justify-end gap-2">
+        <Button variant="outline" onClick={() => navigate('/')}>
+          Cancel
+        </Button>
+        <Button onClick={() => navigate('/')}>
+          Save
+        </Button>
+      </div>
+
       <Dialog open={showSetDaysDialog} onOpenChange={(open) => {
         if (!open) setShowSetDaysDialog(false);
       }}>
