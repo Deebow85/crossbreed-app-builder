@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Calendar from "@/components/Calendar";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Settings } from "lucide-react";
+import { CalendarDays, Settings, Notebook } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Dialog,
@@ -45,15 +45,25 @@ const Index = () => {
             <CalendarDays className="h-8 w-8" />
           </Button>
           
-          <Button
-            variant="ghost"
-            className="relative p-0"
-            onClick={() => navigate("/shift-setup")}
-          >
-            <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg">
-              <span className="text-primary-foreground font-semibold text-xl">S</span>
-            </div>
-          </Button>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              className="relative p-0"
+              onClick={() => navigate("/shift-setup")}
+            >
+              <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg">
+                <span className="text-primary-foreground font-semibold text-xl">S</span>
+              </div>
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:bg-accent"
+            >
+              <Notebook className="h-8 w-8" />
+            </Button>
+          </div>
           
           <Button 
             variant="ghost" 
