@@ -325,17 +325,19 @@ const Calendar = () => {
             </div>
             <div className="flex flex-col items-center">
               <div className="flex flex-col items-center">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                      <Banknote className="h-4 w-4" />
-                      <span>
-                        {differenceInDays(getNextPayday(settings) || new Date(), new Date()) + 1} days until payday
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>Next payday: {format(getNextPayday(settings) || new Date(), 'MMM do')}</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                {settings?.paydayEnabled && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                        <Banknote className="h-4 w-4" />
+                        <span>
+                          {differenceInDays(getNextPayday(settings) || new Date(), new Date()) + 1} days until payday
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>Next payday: {format(getNextPayday(settings) || new Date(), 'MMM do')}</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
 
                 {settings?.overtime?.enabled && (
                   <div className="-mt-4">
@@ -408,6 +410,7 @@ const Calendar = () => {
                   addOrEditNote(date);
                 }}
                 isSelected={selectedDatesForShift.some(d => d.getTime() === date.getTime())}
+                showPayday={settings?.paydayEnabled}
               />
             ));
           })()}

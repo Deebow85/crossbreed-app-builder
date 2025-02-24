@@ -21,6 +21,7 @@ type CalendarDayProps = {
   onLongPress: (date: Date) => void;
   onContextMenu: (e: React.MouseEvent, date: Date) => void;
   isSelected?: boolean;
+  showPayday?: boolean;
 };
 
 const CalendarDay = ({
@@ -37,6 +38,7 @@ const CalendarDay = ({
   onLongPress,
   onContextMenu,
   isSelected,
+  showPayday = true,
 }: CalendarDayProps) => {
   const { theme } = useTheme();
   const longPressTimer = useRef<NodeJS.Timeout>();
@@ -79,7 +81,7 @@ const CalendarDay = ({
       variant="ghost"
       className={cn(
         "p-0 w-full relative hover:bg-accent transition-colors flex items-center justify-center",
-        calendarSize === 'large' ? "h-16 sm:h-20" : "h-10 sm:h-12", // Reduced from h-20 sm:h-24
+        calendarSize === 'large' ? "h-16 sm:h-20" : "h-10 sm:h-12",
         !isSameMonth(date, currentDate) && "opacity-30",
         isToday(date) && !shift && "bg-accent",
         isSelected && "ring-2 ring-primary",
@@ -102,7 +104,7 @@ const CalendarDay = ({
       )}>
         {format(date, 'd')}
       </span>
-      {isPay && (
+      {showPayday && isPay && (
         <span 
           className={cn(
             "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-bold",
