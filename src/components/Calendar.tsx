@@ -281,14 +281,19 @@ const Calendar = () => {
 
   const storedSettings = localStorage.getItem('appSettings');
   const parsedSettings = storedSettings ? JSON.parse(storedSettings) : {};
+
+  const getSettingValue = <T,>(key: string, defaultValue: T): T => {
+    return parsedSettings[key] !== undefined ? parsedSettings[key] : defaultValue;
+  };
   
   const settings = {
-    ...parsedSettings,
-    paydayType: parsedSettings.paydayType || 'monthly',
-    paydayDate: parsedSettings.paydayDate || 15,
-    paydayColor: parsedSettings.paydayColor || '#F97316',
-    calendarNumberLayout: parsedSettings.calendarNumberLayout || 'centre',
-    showOverlappingDates: parsedSettings.showOverlappingDates ?? true
+    paydayEnabled: getSettingValue('paydayEnabled', true),
+    overtime: getSettingValue('overtime', { enabled: false }),
+    paydayType: getSettingValue('paydayType', 'monthly'),
+    paydayDate: getSettingValue('paydayDate', 15),
+    paydayColor: getSettingValue('paydayColor', '#F97316'),
+    calendarNumberLayout: getSettingValue('calendarNumberLayout', 'centre'),
+    showOverlappingDates: getSettingValue('showOverlappingDates', true)
   } as const;
   
   const totalOvertimeHours = shifts.reduce((total, shift) => {
