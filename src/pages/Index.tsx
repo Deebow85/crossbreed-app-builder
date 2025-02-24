@@ -54,7 +54,7 @@ const Index = () => {
               <span className="text-primary-foreground font-semibold text-xl">S</span>
             </div>
           </Button>
-
+          
           <Button 
             variant="ghost" 
             size="icon" 
