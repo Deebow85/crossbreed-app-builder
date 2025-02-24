@@ -1,8 +1,10 @@
+<lov-code>
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { CalendarDays, Settings, Plus, Trash2, PencilIcon, Check, Wand2, ChevronDown, RefreshCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -25,6 +27,7 @@ interface ShiftTypeSettings {
   symbol: string;
   color: string;
   gradient: string;
+  isOvertime?: boolean;
   isNew?: boolean;
 }
 
@@ -159,7 +162,8 @@ const ShiftSetup = () => {
       symbol: "",
       color: "#4B5563",
       gradient: "linear-gradient(135deg, #4B5563 0%, #6B7280 100%)",
-      isNew: true
+      isNew: true,
+      isOvertime: false
     };
     saveShiftTypes([...shiftTypes, newShiftType]);
   };
@@ -867,12 +871,29 @@ const ShiftSetup = () => {
                   />
                 </div>
               )}
-              
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setColorMode(null)}>Back</Button>
-                <Button onClick={handleColorConfirm}>Confirm</Button>
-              </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={selectedIndex !== null ? shiftTypes[selectedIndex].isOvertime : false}
+                onCheckedChange={(checked) => {
+                  if (selectedIndex !== null) {
+                    const newShiftTypes = [...shiftTypes];
+                    newShiftTypes[selectedIndex] = {
+                      ...newShiftTypes[selectedIndex],
+                      isOvertime: checked
+                    };
+                    saveShiftTypes(newShiftTypes);
+                  }
+                }}
+              />
+              <Label>Calculate as Overtime</Label>
             </div>
+            
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setColorMode(null)}>Back</Button>
+              <Button onClick={handleColorConfirm}>Confirm</Button>
+            </div>
+          </div>
           )}
         </DialogContent>
       </Dialog>
@@ -920,35 +941,4 @@ const ShiftSetup = () => {
         </DialogContent>
       </Dialog>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t py-4">
-        <div className="container max-w-md mx-auto flex items-center justify-between px-4">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="hover:bg-accent"
-            onClick={() => navigate("/")}
-          >
-            <CalendarDays className="h-8 w-8" />
-          </Button>
-          
-          <div className="relative">
-            <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg">
-              <span className="text-primary-foreground font-semibold text-xl">S</span>
-            </div>
-          </div>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="hover:bg-accent"
-            onClick={() => navigate("/settings")}
-          >
-            <Settings className="h-8 w-8" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default ShiftSetup;
+      <div className="fixed bottom-0 left-0 right

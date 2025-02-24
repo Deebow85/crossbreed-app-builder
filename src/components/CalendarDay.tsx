@@ -1,8 +1,7 @@
-
 import { format, isSameMonth, isToday } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Bell, StickyNote } from "lucide-react";
+import { Bell, StickyNote, Clock } from "lucide-react";
 import { ShiftAssignment, Note, Alarm } from "@/types/calendar";
 import { useTheme } from "@/lib/theme";
 import { useEffect, useRef } from "react";
@@ -79,7 +78,7 @@ const CalendarDay = ({
       variant="ghost"
       className={cn(
         "p-0 w-full relative hover:bg-accent transition-colors flex items-center justify-center",
-        calendarSize === 'large' ? "h-16 sm:h-20" : "h-10 sm:h-12", // Reduced from h-20 sm:h-24
+        calendarSize === 'large' ? "h-16 sm:h-20" : "h-10 sm:h-12",
         !isSameMonth(date, currentDate) && "opacity-30",
         isToday(date) && !shift && "bg-accent",
         isSelected && "ring-2 ring-primary",
@@ -132,13 +131,26 @@ const CalendarDay = ({
         />
       )}
       {shift && (
-        <span className={cn(
-          "absolute bottom-0.5 font-medium",
-          calendarSize === 'large' ? "text-sm sm:text-base" : "text-[8px] sm:text-xs",
-          theme === 'dark' && "text-foreground"
-        )}>
-          {shift.shiftType.name}
-        </span>
+        <>
+          <span className={cn(
+            "absolute bottom-0.5 font-medium",
+            calendarSize === 'large' ? "text-sm sm:text-base" : "text-[8px] sm:text-xs",
+            theme === 'dark' && "text-foreground"
+          )}>
+            {shift.shiftType.name}
+          </span>
+          {shift.shiftType.isOvertime && shift.otHours && (
+            <div className={cn(
+              "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center gap-0.5",
+              calendarSize === 'large' ? "text-xs sm:text-sm" : "text-[8px] sm:text-xs"
+            )}>
+              <Clock className={cn(
+                calendarSize === 'large' ? "h-3 w-3 sm:h-4 sm:w-4" : "h-2 w-2 sm:h-3 sm:w-3"
+              )} />
+              <span>{shift.otHours}h</span>
+            </div>
+          )}
+        </>
       )}
     </Button>
   );
