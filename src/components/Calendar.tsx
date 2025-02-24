@@ -283,13 +283,13 @@ const Calendar = () => {
   const parsedSettings = storedSettings ? JSON.parse(storedSettings) : {};
   
   const settings = {
-    paydayType: 'monthly' as const,
-    paydayDate: 15,
-    paydayColor: '#F97316',
-    calendarNumberLayout: 'centre' as const,
-    showOverlappingDates: true,
-    ...parsedSettings
-  };
+    ...parsedSettings,
+    paydayType: parsedSettings.paydayType || 'monthly',
+    paydayDate: parsedSettings.paydayDate || 15,
+    paydayColor: parsedSettings.paydayColor || '#F97316',
+    calendarNumberLayout: parsedSettings.calendarNumberLayout || 'centre',
+    showOverlappingDates: parsedSettings.showOverlappingDates ?? true
+  } as const;
   
   const totalOvertimeHours = shifts.reduce((total, shift) => {
     if (!shift.otHours) return total;
