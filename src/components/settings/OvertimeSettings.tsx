@@ -117,7 +117,7 @@ export function OvertimeSettings({ settings, onSave }: OvertimeSettingsProps) {
             
             <Select
               value={settings.overtime.schedule?.type || 'none'}
-              onValueChange={(value: 'none' | 'weekly' | 'fortnightly' | 'monthly' | 'monthly-day') => {
+              onValueChange={(value: 'none' | 'weekly' | 'fortnightly' | 'monthly' | 'monthly-day' | 'full-month') => {
                 onSave({
                   ...settings,
                   overtime: {
@@ -140,13 +140,18 @@ export function OvertimeSettings({ settings, onSave }: OvertimeSettingsProps) {
                 <SelectItem value="fortnightly">Fortnightly</SelectItem>
                 <SelectItem value="monthly">Monthly (specific week)</SelectItem>
                 <SelectItem value="monthly-day">Monthly (specific day)</SelectItem>
+                <SelectItem value="full-month">Full Month</SelectItem>
               </SelectContent>
             </Select>
 
             {(settings.overtime.schedule?.type !== 'none' && settings.overtime.schedule?.type) && (
               <>
                 <div className="space-y-1.5">
-                  <Label htmlFor="overtime-hours" className="text-xs">Hours of Overtime</Label>
+                  <Label htmlFor="overtime-hours" className="text-xs">
+                    {settings.overtime.schedule?.type === 'full-month' 
+                      ? "Hours of Overtime Per Day" 
+                      : "Hours of Overtime"}
+                  </Label>
                   <Input
                     id="overtime-hours"
                     type="number"
@@ -170,6 +175,11 @@ export function OvertimeSettings({ settings, onSave }: OvertimeSettingsProps) {
                     }}
                     className="h-7"
                   />
+                  {settings.overtime.schedule?.type === 'full-month' && (
+                    <p className="text-xs text-muted-foreground">
+                      This amount of overtime will be applied to each day of the month
+                    </p>
+                  )}
                 </div>
 
                 {(settings.overtime.schedule?.type === 'weekly' || settings.overtime.schedule?.type === 'fortnightly') && (
