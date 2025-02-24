@@ -213,4 +213,14 @@ const Settings = () => {
               <p>Middle-click on a shift to set an alarm. A bell icon will appear when an alarm is set.</p>
             </div>
             <div className="space-y-2">
-              <h4 className="font-medium
+              <h4 className="font-medium">⚙️ Customization</h4>
+              <p>Customize your calendar appearance and settings here in the settings panel.</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default Settings;
