@@ -24,14 +24,40 @@ export default function ShiftSelectionDialog({
   showOvertimeInput = true,
 }: ShiftSelectionDialogProps) {
   const [overtimeHours, setOvertimeHours] = useState<{ [date: string]: number }>({});
+  const [selectedType, setSelectedType] = useState<ShiftType | null>(null);
 
   const handleShiftSelect = (shiftType: ShiftType | null) => {
-    onShiftSelect(shiftType, showOvertimeInput ? overtimeHours : undefined);
-    setOvertimeHours({});
+    setSelectedType(shiftType);
+    
+    // If the shift type doesn't have overtime, or clearing the shift, submit immediately
+    if (!shiftType?.isOvertime) {
+      onShiftSelect(shiftType, undefined);
+      setOvertimeHours({});
+      setSelectedType(null);
+    }
   };
 
+  const handleSubmit = () => {
+    if (selectedType) {
+      onShiftSelect(selectedType, overtimeHours);
+      setOvertimeHours({});
+      setSelectedType(null);
+    }
+  };
+
+  const showOTInput = selectedType?.isOvertime && showOvertimeInput;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog 
+      open={open} 
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          setSelectedType(null);
+          setOvertimeHours({});
+        }
+        onOpenChange(isOpen);
+      }}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
@@ -49,6 +75,7 @@ export default function ShiftSelectionDialog({
                 style={{
                   background: type.gradient,
                 }}
+                variant={selectedType?.name === type.name ? "default" : "secondary"}
                 onClick={() => handleShiftSelect(type)}
               >
                 {type.name}
@@ -56,7 +83,7 @@ export default function ShiftSelectionDialog({
             ))}
           </div>
 
-          {showOvertimeInput && selectedDates.map(date => (
+          {showOTInput && selectedDates.map(date => (
             <div key={date.toISOString()} className="space-y-2">
               <label className="text-sm">
                 Overtime hours for {format(date, 'MMM do')}:
@@ -76,6 +103,12 @@ export default function ShiftSelectionDialog({
               />
             </div>
           ))}
+
+          {showOTInput && (
+            <Button onClick={handleSubmit} className="mt-2">
+              Set Shift with Overtime
+            </Button>
+          )}
 
           <Button
             variant="outline"
