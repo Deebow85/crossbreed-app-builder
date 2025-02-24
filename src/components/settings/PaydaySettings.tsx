@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import { AppSettings } from "@/types/settings";
 
 interface PaydaySettingsProps {
@@ -26,14 +27,12 @@ const currencySymbols = [
   { symbol: 'CHF', name: 'Swiss Franc (CHF)' },
 ];
 
-const predefinedColors = [
-  { name: 'Orange', value: '#F97316' },
-  { name: 'Purple', value: '#8B5CF6' },
-  { name: 'Pink', value: '#D946EF' },
-  { name: 'Blue', value: '#0EA5E9' },
-  { name: 'Primary Purple', value: '#9b87f5' },
-  { name: 'Secondary Purple', value: '#7E69AB' },
-  { name: 'Tertiary Purple', value: '#6E59A5' },
+const gradientColors = [
+  '#F97316', // Orange
+  '#8B5CF6', // Purple
+  '#D946EF', // Pink
+  '#0EA5E9', // Blue
+  '#9b87f5', // Primary Purple
 ];
 
 export function PaydaySettings({ settings, onSave }: PaydaySettingsProps) {
@@ -64,11 +63,40 @@ export function PaydaySettings({ settings, onSave }: PaydaySettingsProps) {
     });
   };
 
-  const updatePaydayColor = (color: string) => {
-    onSave({
-      ...settings,
-      paydayColor: color
-    });
+  const handleColorChange = (value: number[]) => {
+    const colorIndex = Math.floor((value[0] / 100) * (gradientColors.length - 1));
+    const nextColorIndex = Math.min(colorIndex + 1, gradientColors.length - 1);
+    const progress = (value[0] / 100) * (gradientColors.length - 1) - colorIndex;
+    
+    // Interpolate between colors
+    const color1 = gradientColors[colorIndex];
+    const color2 = gradientColors[nextColorIndex];
+    
+    // Convert hex to RGB and interpolate
+    const rgb1 = hexToRgb(color1);
+    const rgb2 = hexToRgb(color2);
+    
+    if (rgb1 && rgb2) {
+      const r = Math.round(rgb1.r + (rgb2.r - rgb1.r) * progress);
+      const g = Math.round(rgb1.g + (rgb2.g - rgb1.g) * progress);
+      const b = Math.round(rgb1.b + (rgb2.b - rgb1.b) * progress);
+      
+      const resultColor = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+      onSave({
+        ...settings,
+        paydayColor: resultColor
+      });
+    }
+  };
+
+  // Helper function to convert hex to RGB
+  const hexToRgb = (hex: string) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : null;
   };
 
   return (
@@ -111,25 +139,24 @@ export function PaydaySettings({ settings, onSave }: PaydaySettingsProps) {
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="payday-color" className="text-xs">Payday Symbol Color</Label>
-            <div className="grid grid-cols-4 gap-2">
-              {predefinedColors.map(({ name, value }) => (
-                <Button
-                  key={value}
-                  type="button"
-                  variant="outline"
-                  className={`h-8 w-full relative ${settings.paydayColor === value ? 'ring-2 ring-primary' : ''}`}
-                  style={{ backgroundColor: value }}
-                  onClick={() => updatePaydayColor(value)}
-                  title={name}
-                />
-              ))}
-              <Input
-                id="payday-color"
-                type="color"
-                value={settings.paydayColor}
-                onChange={(e) => updatePaydayColor(e.target.value)}
-                className="h-8 p-0 cursor-pointer"
+            <Label className="text-xs">Payday Symbol Color</Label>
+            <div className="space-y-2">
+              <div 
+                className="h-7 rounded-md w-full"
+                style={{
+                  background: `linear-gradient(to right, ${gradientColors.join(', ')})`
+                }}
+              />
+              <Slider
+                defaultValue={[0]}
+                max={100}
+                step={1}
+                className="w-full"
+                onValueChange={handleColorChange}
+              />
+              <div 
+                className="h-7 w-full rounded-md"
+                style={{ backgroundColor: settings.paydayColor }}
               />
             </div>
           </div>
