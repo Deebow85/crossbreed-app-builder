@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { CalendarDays, Settings, Plus, Trash2, PencilIcon, Check, Wand2, ChevronDown, RefreshCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -26,6 +27,7 @@ interface ShiftTypeSettings {
   color: string;
   gradient: string;
   isNew?: boolean;
+  isOvertime?: boolean;
 }
 
 interface ShiftPattern {
@@ -159,7 +161,8 @@ const ShiftSetup = () => {
       symbol: "",
       color: "#4B5563",
       gradient: "linear-gradient(135deg, #4B5563 0%, #6B7280 100%)",
-      isNew: true
+      isNew: true,
+      isOvertime: false
     };
     saveShiftTypes([...shiftTypes, newShiftType]);
   };
@@ -867,6 +870,23 @@ const ShiftSetup = () => {
                   />
                 </div>
               )}
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={selectedIndex !== null ? shiftTypes[selectedIndex].isOvertime : false}
+                  onCheckedChange={(checked) => {
+                    if (selectedIndex !== null) {
+                      const newShiftTypes = [...shiftTypes];
+                      newShiftTypes[selectedIndex] = {
+                        ...newShiftTypes[selectedIndex],
+                        isOvertime: checked
+                      };
+                      saveShiftTypes(newShiftTypes);
+                    }
+                  }}
+                />
+                <Label>Calculate as Overtime</Label>
+              </div>
               
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setColorMode(null)}>Back</Button>
