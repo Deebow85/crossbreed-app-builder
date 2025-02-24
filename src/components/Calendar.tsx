@@ -13,6 +13,7 @@ import {
   eachDayOfInterval, 
   startOfWeek, 
   endOfWeek,
+  isSameMonth,
   differenceInDays 
 } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -388,41 +389,69 @@ const Calendar = () => {
           {(() => {
             const firstDayOfMonth = startOfMonth(currentDate);
             const lastDayOfMonth = endOfMonth(currentDate);
-            const startWeek = startOfWeek(firstDayOfMonth, { weekStartsOn: 1 });
-            const endWeek = endOfWeek(lastDayOfMonth, { weekStartsOn: 1 });
-            const daysToDisplay = eachDayOfInterval({ start: startWeek, end: endWeek });
-
+            
             const savedSettings = localStorage.getItem('appSettings');
             const settings = savedSettings ? JSON.parse(savedSettings) : { 
               paydayType: 'monthly',
               paydayDate: 15,
               calendarNumberLayout: 'centre',
-              paydayColor: '#F97316'
+              paydayColor: '#F97316',
+              showOverlappingDates: true
             };
 
-            return daysToDisplay.map((date) => (
-              <CalendarDay
-                key={date.toISOString()}
-                date={date}
-                currentDate={currentDate}
-                shift={getShiftForDate(date)}
-                isPay={isPayday(date, settings)}
-                note={getNote(date)}
-                alarm={alarms.find(a => a.date === date.toISOString())}
-                paydaySymbol={paydaySettings.symbol}
-                paydayColor={settings.paydayColor}
-                calendarSize={calendarSize}
-                numberLayout={settings.calendarNumberLayout}
-                onDayClick={handleDayClick}
-                onLongPress={handleLongPress}
-                onContextMenu={(e, date) => {
-                  e.preventDefault();
-                  addOrEditNote(date);
-                }}
-                isSelected={selectedDatesForShift.some(d => d.getTime() === date.getTime())}
-                showPayday={settings?.paydayEnabled}
-              />
-            ));
+            let daysToDisplay: Date[];
+            
+            if (settings.showOverlappingDates) {
+              const startWeek = startOfWeek(firstDayOfMonth, { weekStartsOn: 1 });
+              const endWeek = endOfWeek(lastDayOfMonth, { weekStartsOn: 1 });
+              daysToDisplay = eachDayOfInterval({ start: startWeek, end: endWeek });
+            } else {
+              daysToDisplay = eachDayOfInterval({ start: firstDayOfMonth, end: lastDayOfMonth });
+              
+              // Add empty cells for days before the first of the month
+              const emptyDaysBefore = firstDayOfMonth.getDay() === 0 ? 6 : firstDayOfMonth.getDay() - 1;
+              for (let i = 0; i < emptyDaysBefore; i++) {
+                daysToDisplay.unshift(new Date(0)); // Use epoch date to represent empty cell
+              }
+              
+              // Add empty cells for days after the last of the month
+              const lastDayOfWeek = lastDayOfMonth.getDay() === 0 ? 7 : lastDayOfMonth.getDay();
+              const emptyDaysAfter = 7 - lastDayOfWeek;
+              for (let i = 0; i < emptyDaysAfter; i++) {
+                daysToDisplay.push(new Date(0)); // Use epoch date to represent empty cell
+              }
+            }
+
+            return daysToDisplay.map((date) => {
+              // Return empty div for epoch dates (empty cells)
+              if (date.getTime() === 0) {
+                return <div key={Math.random()} className="h-10 sm:h-12" />;
+              }
+
+              return (
+                <CalendarDay
+                  key={date.toISOString()}
+                  date={date}
+                  currentDate={currentDate}
+                  shift={getShiftForDate(date)}
+                  isPay={isPayday(date, settings)}
+                  note={getNote(date)}
+                  alarm={alarms.find(a => a.date === date.toISOString())}
+                  paydaySymbol={paydaySettings.symbol}
+                  paydayColor={settings.paydayColor}
+                  calendarSize={calendarSize}
+                  numberLayout={settings.calendarNumberLayout}
+                  onDayClick={handleDayClick}
+                  onLongPress={handleLongPress}
+                  onContextMenu={(e, date) => {
+                    e.preventDefault();
+                    addOrEditNote(date);
+                  }}
+                  isSelected={selectedDatesForShift.some(d => d.getTime() === date.getTime())}
+                  showPayday={settings?.paydayEnabled}
+                />
+              );
+            });
           })()}
         </div>
       </Card>
