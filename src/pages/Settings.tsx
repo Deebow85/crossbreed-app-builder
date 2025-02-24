@@ -1,20 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { useTheme } from "@/lib/theme";
-import { Paintbrush, Sun, Moon, CreditCard, CalendarDays, Settings as SettingsIcon, HelpCircle, ChevronDown, Clock } from "lucide-react";
+import { CalendarDays, CreditCard, HelpCircle, Settings as SettingsIcon, Paintbrush, Clock, ChevronDown } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -28,73 +19,11 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Switch } from "@/components/ui/switch";
-
-interface AppSettings {
-  currency: {
-    symbol: string;
-    position: 'before' | 'after';
-  };
-  paydayDate: number;
-  paydayType: 'weekly' | 'fortnightly' | 'set-day' | 'first-day' | 'last-day';
-  calendarSize: 'small' | 'large';
-  calendarNumberLayout: 'centre' | 'top-left' | 'top-right';
-  longPressEnabled: boolean;
-  overtime: {
-    enabled: boolean;
-    defaultRate: number;
-    specialRates: {
-      weekend: number;
-      holiday: number;
-    };
-    schedule: {
-      type: 'none' | 'weekly' | 'fortnightly' | 'monthly';
-      hours: number;
-      dayOfWeek?: number;
-      dayOfMonth?: number;
-      weekNumber?: number;
-    };
-  };
-}
-
-const defaultSettings: AppSettings = {
-  currency: {
-    symbol: '£',
-    position: 'before'
-  },
-  paydayDate: 25,
-  paydayType: 'set-day',
-  calendarSize: 'small',
-  calendarNumberLayout: 'centre',
-  longPressEnabled: true,
-  overtime: {
-    enabled: true,
-    defaultRate: 1.5,
-    specialRates: {
-      weekend: 2,
-      holiday: 2.5
-    },
-    schedule: {
-      type: 'none',
-      hours: 0
-    }
-  }
-};
-
-const currencySymbols = [
-  { symbol: '£', name: 'British Pound (£)' },
-  { symbol: '$', name: 'US Dollar ($)' },
-  { symbol: '€', name: 'Euro (€)' },
-  { symbol: '¥', name: 'Japanese Yen (¥)' },
-  { symbol: '₹', name: 'Indian Rupee (₹)' },
-  { symbol: '₽', name: 'Russian Ruble (₽)' },
-  { symbol: '₿', name: 'Bitcoin (₿)' },
-  { symbol: '₴', name: 'Ukrainian Hryvnia (₴)' },
-  { symbol: '₩', name: 'South Korean Won (₩)' },
-  { symbol: 'A$', name: 'Australian Dollar (A$)' },
-  { symbol: 'C$', name: 'Canadian Dollar (C$)' },
-  { symbol: 'CHF', name: 'Swiss Franc (CHF)' },
-];
+import { CalendarSettings } from "@/components/settings/CalendarSettings";
+import { ThemeSettings } from "@/components/settings/ThemeSettings";
+import { PaydaySettings } from "@/components/settings/PaydaySettings";
+import { OvertimeSettings } from "@/components/settings/OvertimeSettings";
+import { AppSettings, defaultSettings } from "@/types/settings";
 
 const Settings = () => {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
@@ -105,7 +34,6 @@ const Settings = () => {
     payment: false,
     overtime: false
   });
-  const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -136,48 +64,6 @@ const Settings = () => {
       title: "Settings saved",
       description: "Your preferences have been updated.",
     });
-  };
-
-  const updateCalendarSize = (size: 'small' | 'large') => {
-    saveSettings({
-      ...settings,
-      calendarSize: size
-    });
-  };
-
-  const updateCurrency = (symbol: string) => {
-    saveSettings({
-      ...settings,
-      currency: {
-        ...settings.currency,
-        symbol
-      }
-    });
-  };
-
-  const updatePaydayDate = (date: number) => {
-    if (date >= 1 && date <= 31) {
-      saveSettings({
-        ...settings,
-        paydayDate: date
-      });
-    }
-  };
-
-  const updateCalendarNumberLayout = (layout: 'centre' | 'top-left' | 'top-right') => {
-    saveSettings({
-      ...settings,
-      calendarNumberLayout: layout
-    });
-  };
-
-  const updatePaydaySettings = (type: AppSettings['paydayType'], date?: number) => {
-    const newSettings = {
-      ...settings,
-      paydayType: type,
-      paydayDate: date ?? settings.paydayDate
-    };
-    saveSettings(newSettings);
   };
 
   const toggleSection = (section: string) => {
@@ -217,74 +103,8 @@ const Settings = () => {
                 <ChevronDown className={cn("h-4 w-4 transition-transform", openSections.calendar && "transform rotate-180")} />
               </Button>
             </CollapsibleTrigger>
-            <CollapsibleContent className="p-2 space-y-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Calendar Size</Label>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    className="h-8"
-                    variant={settings.calendarSize === 'small' ? 'default' : 'outline'}
-                    onClick={() => updateCalendarSize('small')}
-                  >
-                    Small
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="h-8"
-                    variant={settings.calendarSize === 'large' ? 'default' : 'outline'}
-                    onClick={() => updateCalendarSize('large')}
-                  >
-                    Large
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs">Calendar Number Layout</Label>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    className="h-8"
-                    variant={settings.calendarNumberLayout === 'centre' ? 'default' : 'outline'}
-                    onClick={() => updateCalendarNumberLayout('centre')}
-                  >
-                    Centre
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="h-8"
-                    variant={settings.calendarNumberLayout === 'top-left' ? 'default' : 'outline'}
-                    onClick={() => updateCalendarNumberLayout('top-left')}
-                  >
-                    Top Left
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="h-8"
-                    variant={settings.calendarNumberLayout === 'top-right' ? 'default' : 'outline'}
-                    onClick={() => updateCalendarNumberLayout('top-right')}
-                  >
-                    Top Right
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs">Long Press to Multi-select</Label>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={settings.longPressEnabled}
-                    onCheckedChange={(checked) => {
-                      saveSettings({
-                        ...settings,
-                        longPressEnabled: checked
-                      });
-                    }}
-                  />
-                  <Label className="text-sm">Enable long press to activate multi-select</Label>
-                </div>
-              </div>
+            <CollapsibleContent>
+              <CalendarSettings settings={settings} onSave={saveSettings} />
             </CollapsibleContent>
           </Collapsible>
 
@@ -301,27 +121,8 @@ const Settings = () => {
                 <ChevronDown className={cn("h-4 w-4 transition-transform", openSections.theme && "transform rotate-180")} />
               </Button>
             </CollapsibleTrigger>
-            <CollapsibleContent className="p-2">
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  className="h-8"
-                  variant={theme === 'light' ? 'default' : 'outline'}
-                  onClick={() => setTheme('light')}
-                >
-                  <Sun className="h-3.5 w-3.5 mr-1" />
-                  Light
-                </Button>
-                <Button
-                  size="sm"
-                  className="h-8"
-                  variant={theme === 'dark' ? 'default' : 'outline'}
-                  onClick={() => setTheme('dark')}
-                >
-                  <Moon className="h-3.5 w-3.5 mr-1" />
-                  Dark
-                </Button>
-              </div>
+            <CollapsibleContent>
+              <ThemeSettings />
             </CollapsibleContent>
           </Collapsible>
 
@@ -338,115 +139,8 @@ const Settings = () => {
                 <ChevronDown className={cn("h-4 w-4 transition-transform", openSections.payment && "transform rotate-180")} />
               </Button>
             </CollapsibleTrigger>
-            <CollapsibleContent className="p-2 space-y-4">
-              <div className="space-y-1">
-                <Label htmlFor="currency-symbol" className="text-xs">Currency</Label>
-                <Select
-                  value={settings.currency.symbol}
-                  onValueChange={updateCurrency}
-                >
-                  <SelectTrigger id="currency-symbol" className="h-7">
-                    <SelectValue placeholder="Select currency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {currencySymbols.map(({ symbol, name }) => (
-                      <SelectItem key={symbol} value={symbol}>
-                        {name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-xs">Payday Schedule</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    size="sm"
-                    className="h-8"
-                    variant={settings.paydayType === 'weekly' ? 'default' : 'outline'}
-                    onClick={() => updatePaydaySettings('weekly')}
-                  >
-                    Weekly
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="h-8"
-                    variant={settings.paydayType === 'fortnightly' ? 'default' : 'outline'}
-                    onClick={() => updatePaydaySettings('fortnightly')}
-                  >
-                    Fortnightly
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-xs">Monthly Options</Label>
-                <div className="grid grid-cols-3 gap-2">
-                  <Button
-                    size="sm"
-                    className="h-8"
-                    variant={settings.paydayType === 'set-day' ? 'default' : 'outline'}
-                    onClick={() => updatePaydaySettings('set-day')}
-                  >
-                    Set Day
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="h-8"
-                    variant={settings.paydayType === 'first-day' ? 'default' : 'outline'}
-                    onClick={() => updatePaydaySettings('first-day', 1)}
-                  >
-                    First Day
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="h-8"
-                    variant={settings.paydayType === 'last-day' ? 'default' : 'outline'}
-                    onClick={() => updatePaydaySettings('last-day', 31)}
-                  >
-                    Last Day
-                  </Button>
-                </div>
-              </div>
-
-              {settings.paydayType === 'set-day' && (
-                <div>
-                  <Label htmlFor="payday-date" className="text-xs mb-1">Day of Month</Label>
-                  <Input
-                    id="payday-date"
-                    type="number"
-                    min={1}
-                    max={31}
-                    value={settings.paydayDate}
-                    onChange={(e) => updatePaydayDate(parseInt(e.target.value))}
-                    className="h-7"
-                  />
-                </div>
-              )}
-
-              {(settings.paydayType === 'weekly' || settings.paydayType === 'fortnightly') && (
-                <div>
-                  <Label htmlFor="payday-weekday" className="text-xs mb-1">Day of Week</Label>
-                  <Select
-                    value={settings.paydayDate.toString()}
-                    onValueChange={(value) => updatePaydayDate(parseInt(value))}
-                  >
-                    <SelectTrigger id="payday-weekday" className="h-7">
-                      <SelectValue placeholder="Select day" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">Monday</SelectItem>
-                      <SelectItem value="2">Tuesday</SelectItem>
-                      <SelectItem value="3">Wednesday</SelectItem>
-                      <SelectItem value="4">Thursday</SelectItem>
-                      <SelectItem value="5">Friday</SelectItem>
-                      <SelectItem value="6">Saturday</SelectItem>
-                      <SelectItem value="7">Sunday</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+            <CollapsibleContent>
+              <PaydaySettings settings={settings} onSave={saveSettings} />
             </CollapsibleContent>
           </Collapsible>
 
@@ -463,269 +157,8 @@ const Settings = () => {
                 <ChevronDown className={cn("h-4 w-4 transition-transform", openSections.overtime && "transform rotate-180")} />
               </Button>
             </CollapsibleTrigger>
-            <CollapsibleContent className="p-2 space-y-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Enable Overtime Tracking</Label>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={settings.overtime?.enabled ?? true}
-                    onCheckedChange={(checked) => {
-                      saveSettings({
-                        ...settings,
-                        overtime: {
-                          ...settings.overtime,
-                          enabled: checked
-                        }
-                      });
-                    }}
-                  />
-                  <Label className="text-sm">Track overtime hours and rates</Label>
-                </div>
-              </div>
-
-              {settings.overtime?.enabled && (
-                <>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="default-rate" className="text-xs">Default Overtime Rate (×)</Label>
-                    <Input
-                      id="default-rate"
-                      type="number"
-                      step="0.1"
-                      min="1"
-                      value={settings.overtime?.defaultRate ?? 1.5}
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value);
-                        if (value >= 1) {
-                          saveSettings({
-                            ...settings,
-                            overtime: {
-                              ...settings.overtime,
-                              defaultRate: value
-                            }
-                          });
-                        }
-                      }}
-                      className="h-7"
-                    />
-                    <p className="text-xs text-muted-foreground">Base pay multiplier for overtime hours</p>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="weekend-rate" className="text-xs">Weekend Rate (×)</Label>
-                    <Input
-                      id="weekend-rate"
-                      type="number"
-                      step="0.1"
-                      min="1"
-                      value={settings.overtime?.specialRates?.weekend ?? 2}
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value);
-                        if (value >= 1) {
-                          saveSettings({
-                            ...settings,
-                            overtime: {
-                              ...settings.overtime,
-                              specialRates: {
-                                ...settings.overtime?.specialRates,
-                                weekend: value
-                              }
-                            }
-                          });
-                        }
-                      }}
-                      className="h-7"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="holiday-rate" className="text-xs">Holiday Rate (×)</Label>
-                    <Input
-                      id="holiday-rate"
-                      type="number"
-                      step="0.1"
-                      min="1"
-                      value={settings.overtime?.specialRates?.holiday ?? 2.5}
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value);
-                        if (value >= 1) {
-                          saveSettings({
-                            ...settings,
-                            overtime: {
-                              ...settings.overtime,
-                              specialRates: {
-                                ...settings.overtime?.specialRates,
-                                holiday: value
-                              }
-                            }
-                          });
-                        }
-                      }}
-                      className="h-7"
-                    />
-                  </div>
-
-                  <div className="space-y-4 border-t pt-4 mt-4">
-                    <Label className="text-xs">Recurring Overtime Schedule</Label>
-                    
-                    <Select
-                      value={settings.overtime.schedule?.type || 'none'}
-                      onValueChange={(value: 'none' | 'weekly' | 'fortnightly' | 'monthly') => {
-                        saveSettings({
-                          ...settings,
-                          overtime: {
-                            ...settings.overtime,
-                            schedule: {
-                              ...settings.overtime.schedule,
-                              type: value,
-                              hours: settings.overtime.schedule?.hours || 0
-                            }
-                          }
-                        });
-                      }}
-                    >
-                      <SelectTrigger className="h-7">
-                        <SelectValue placeholder="Select schedule type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">No recurring overtime</SelectItem>
-                        <SelectItem value="weekly">Weekly</SelectItem>
-                        <SelectItem value="fortnightly">Fortnightly</SelectItem>
-                        <SelectItem value="monthly">Monthly</SelectItem>
-                      </SelectContent>
-                    </Select>
-
-                    {(settings.overtime.schedule?.type !== 'none' && settings.overtime.schedule?.type) && (
-                      <>
-                        <div className="space-y-1.5">
-                          <Label htmlFor="overtime-hours" className="text-xs">Hours of Overtime</Label>
-                          <Input
-                            id="overtime-hours"
-                            type="number"
-                            min="0"
-                            step="0.5"
-                            value={settings.overtime.schedule?.hours || 0}
-                            onChange={(e) => {
-                              const value = parseFloat(e.target.value);
-                              if (value >= 0) {
-                                saveSettings({
-                                  ...settings,
-                                  overtime: {
-                                    ...settings.overtime,
-                                    schedule: {
-                                      ...settings.overtime.schedule,
-                                      hours: value
-                                    }
-                                  }
-                                });
-                              }
-                            }}
-                            className="h-7"
-                          />
-                        </div>
-
-                        {(settings.overtime.schedule?.type === 'weekly' || settings.overtime.schedule?.type === 'fortnightly') && (
-                          <div className="space-y-1.5">
-                            <Label htmlFor="overtime-day" className="text-xs">Day of Week</Label>
-                            <Select
-                              value={settings.overtime.schedule?.dayOfWeek?.toString() || "1"}
-                              onValueChange={(value) => {
-                                saveSettings({
-                                  ...settings,
-                                  overtime: {
-                                    ...settings.overtime,
-                                    schedule: {
-                                      ...settings.overtime.schedule,
-                                      dayOfWeek: parseInt(value)
-                                    }
-                                  }
-                                });
-                              }}
-                            >
-                              <SelectTrigger id="overtime-day" className="h-7">
-                                <SelectValue placeholder="Select day" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="1">Monday</SelectItem>
-                                <SelectItem value="2">Tuesday</SelectItem>
-                                <SelectItem value="3">Wednesday</SelectItem>
-                                <SelectItem value="4">Thursday</SelectItem>
-                                <SelectItem value="5">Friday</SelectItem>
-                                <SelectItem value="6">Saturday</SelectItem>
-                                <SelectItem value="7">Sunday</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        )}
-
-                        {settings.overtime.schedule?.type === 'monthly' && (
-                          <>
-                            <div className="space-y-1.5">
-                              <Label htmlFor="overtime-week" className="text-xs">Week of Month</Label>
-                              <Select
-                                value={settings.overtime.schedule?.weekNumber?.toString() || "1"}
-                                onValueChange={(value) => {
-                                  saveSettings({
-                                    ...settings,
-                                    overtime: {
-                                      ...settings.overtime,
-                                      schedule: {
-                                        ...settings.overtime.schedule,
-                                        weekNumber: parseInt(value)
-                                      }
-                                    }
-                                  });
-                                }}
-                              >
-                                <SelectTrigger id="overtime-week" className="h-7">
-                                  <SelectValue placeholder="Select week" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="1">First Week</SelectItem>
-                                  <SelectItem value="2">Second Week</SelectItem>
-                                  <SelectItem value="3">Third Week</SelectItem>
-                                  <SelectItem value="4">Fourth Week</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div className="space-y-1.5">
-                              <Label htmlFor="overtime-day-of-week" className="text-xs">Day of Week</Label>
-                              <Select
-                                value={settings.overtime.schedule?.dayOfWeek?.toString() || "1"}
-                                onValueChange={(value) => {
-                                  saveSettings({
-                                    ...settings,
-                                    overtime: {
-                                      ...settings.overtime,
-                                      schedule: {
-                                        ...settings.overtime.schedule,
-                                        dayOfWeek: parseInt(value)
-                                      }
-                                    }
-                                  });
-                                }}
-                              >
-                                <SelectTrigger id="overtime-day-of-week" className="h-7">
-                                  <SelectValue placeholder="Select day" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="1">Monday</SelectItem>
-                                  <SelectItem value="2">Tuesday</SelectItem>
-                                  <SelectItem value="3">Wednesday</SelectItem>
-                                  <SelectItem value="4">Thursday</SelectItem>
-                                  <SelectItem value="5">Friday</SelectItem>
-                                  <SelectItem value="6">Saturday</SelectItem>
-                                  <SelectItem value="7">Sunday</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </>
-              )}
+            <CollapsibleContent>
+              <OvertimeSettings settings={settings} onSave={saveSettings} />
             </CollapsibleContent>
           </Collapsible>
         </div>
@@ -780,29 +213,4 @@ const Settings = () => {
               <p>Middle-click on a shift to set an alarm. A bell icon will appear when an alarm is set.</p>
             </div>
             <div className="space-y-2">
-              <h4 className="font-medium">📝 Adding Notes</h4>
-              <p>Right-click on any day to add notes or manage shift swaps.</p>
-            </div>
-            <div className="space-y-2">
-              <h4 className="font-medium">🔄 Shift Patterns</h4>
-              <p>Use the "Set Pattern" button to quickly add recurring shifts.</p>
-            </div>
-            <div className="space-y-2">
-              <h4 className="font-medium">💡 Pro Tips</h4>
-              <ul className="list-disc pl-4 space-y-1">
-                <li>Click and drag to add multiple shifts at once</li>
-                <li>Use the search bar to find specific notes or swaps</li>
-                <li>Click the gear icon to customize the app's appearance</li>
-              </ul>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setShowTutorial(false)}>Got it, thanks!</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
-
-export default Settings;
+              <h4 className="font-medium
