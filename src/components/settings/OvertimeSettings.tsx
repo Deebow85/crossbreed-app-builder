@@ -1,4 +1,3 @@
-
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -118,7 +117,7 @@ export function OvertimeSettings({ settings, onSave }: OvertimeSettingsProps) {
             
             <Select
               value={settings.overtime.schedule?.type || 'none'}
-              onValueChange={(value: 'none' | 'weekly' | 'fortnightly' | 'monthly') => {
+              onValueChange={(value: 'none' | 'weekly' | 'fortnightly' | 'monthly' | 'monthly-day') => {
                 onSave({
                   ...settings,
                   overtime: {
@@ -139,15 +138,14 @@ export function OvertimeSettings({ settings, onSave }: OvertimeSettingsProps) {
                 <SelectItem value="none">No recurring overtime</SelectItem>
                 <SelectItem value="weekly">Weekly</SelectItem>
                 <SelectItem value="fortnightly">Fortnightly</SelectItem>
-                <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="monthly">Monthly (specific week)</SelectItem>
+                <SelectItem value="monthly-day">Monthly (specific day)</SelectItem>
               </SelectContent>
             </Select>
 
             {(settings.overtime.schedule?.type !== 'none' && settings.overtime.schedule?.type) && (
               <>
-                <div className="space
-
--y-1.5">
+                <div className="space-y-1.5">
                   <Label htmlFor="overtime-hours" className="text-xs">Hours of Overtime</Label>
                   <Input
                     id="overtime-hours"
@@ -271,6 +269,36 @@ export function OvertimeSettings({ settings, onSave }: OvertimeSettingsProps) {
                       </Select>
                     </div>
                   </>
+                )}
+
+                {settings.overtime.schedule?.type === 'monthly-day' && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="overtime-day-of-month" className="text-xs">Day of Month</Label>
+                    <Input
+                      id="overtime-day-of-month"
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={settings.overtime.schedule?.dayOfMonth || 1}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value);
+                        if (value >= 1 && value <= 31) {
+                          onSave({
+                            ...settings,
+                            overtime: {
+                              ...settings.overtime,
+                              schedule: {
+                                ...settings.overtime.schedule,
+                                dayOfMonth: value
+                              }
+                            }
+                          });
+                        }
+                      }}
+                      className="h-7"
+                    />
+                    <p className="text-xs text-muted-foreground">Enter a day between 1 and 31</p>
+                  </div>
                 )}
               </>
             )}

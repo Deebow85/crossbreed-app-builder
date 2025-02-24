@@ -17,7 +17,7 @@ export interface AppSettings {
       holiday: number;
     };
     schedule: {
-      type: 'none' | 'weekly' | 'fortnightly' | 'monthly';
+      type: 'none' | 'weekly' | 'fortnightly' | 'monthly' | 'monthly-day';
       hours: number;
       dayOfWeek?: number;
       dayOfMonth?: number;
