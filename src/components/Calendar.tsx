@@ -285,8 +285,8 @@ const Calendar = () => {
   const getSettingValue = <T,>(key: string, defaultValue: T): T => {
     return parsedSettings[key] !== undefined ? parsedSettings[key] : defaultValue;
   };
-  
-  const settings = {
+
+  const calendarSettings = {
     paydayEnabled: getSettingValue('paydayEnabled', true),
     overtime: getSettingValue('overtime', { enabled: false }),
     paydayType: getSettingValue('paydayType', 'monthly'),
@@ -299,7 +299,7 @@ const Calendar = () => {
   const totalOvertimeHours = shifts.reduce((total, shift) => {
     if (!shift.otHours) return total;
     
-    if (!settings?.overtime?.enabled) return 0;
+    if (!calendarSettings.overtime?.enabled) return 0;
     
     const date = new Date(shift.date);
     const currentMonthStart = startOfMonth(currentDate);
@@ -339,21 +339,21 @@ const Calendar = () => {
             </div>
             <div className="flex flex-col items-center">
               <div className="flex flex-col items-center">
-                {settings?.paydayEnabled && (
+                {calendarSettings.paydayEnabled && (
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
                         <Banknote className="h-4 w-4" />
                         <span>
-                          {differenceInDays(getNextPayday(settings) || new Date(), new Date()) + 1} days until payday
+                          {differenceInDays(getNextPayday(calendarSettings) || new Date(), new Date()) + 1} days until payday
                         </span>
                       </TooltipTrigger>
-                      <TooltipContent>Next payday: {format(getNextPayday(settings) || new Date(), 'MMM do')}</TooltipContent>
+                      <TooltipContent>Next payday: {format(getNextPayday(calendarSettings) || new Date(), 'MMM do')}</TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 )}
 
-                {settings?.overtime?.enabled && (
+                {calendarSettings.overtime?.enabled && (
                   <div className="-mt-4">
                     <TooltipProvider>
                       <Tooltip>
@@ -402,41 +402,28 @@ const Calendar = () => {
             const firstDayOfMonth = startOfMonth(currentDate);
             const lastDayOfMonth = endOfMonth(currentDate);
             
-            const savedSettings = localStorage.getItem('appSettings');
-            const settings = savedSettings ? JSON.parse(savedSettings) : { 
-              paydayType: 'monthly',
-              paydayDate: 15,
-              calendarNumberLayout: 'centre',
-              calendarNumberLayout: 'centre',
-              paydayColor: '#F97316',
-              showOverlappingDates: true
-            };
-
             let daysToDisplay: Date[];
             
-            if (settings.showOverlappingDates) {
+            if (calendarSettings.showOverlappingDates) {
               const startWeek = startOfWeek(firstDayOfMonth, { weekStartsOn: 1 });
               const endWeek = endOfWeek(lastDayOfMonth, { weekStartsOn: 1 });
               daysToDisplay = eachDayOfInterval({ start: startWeek, end: endWeek });
             } else {
               daysToDisplay = eachDayOfInterval({ start: firstDayOfMonth, end: lastDayOfMonth });
               
-              // Add empty cells for days before the first of the month
               const emptyDaysBefore = firstDayOfMonth.getDay() === 0 ? 6 : firstDayOfMonth.getDay() - 1;
               for (let i = 0; i < emptyDaysBefore; i++) {
-                daysToDisplay.unshift(new Date(0)); // Use epoch date to represent empty cell
+                daysToDisplay.unshift(new Date(0));
               }
               
-              // Add empty cells for days after the last of the month
               const lastDayOfWeek = lastDayOfMonth.getDay() === 0 ? 7 : lastDayOfMonth.getDay();
               const emptyDaysAfter = 7 - lastDayOfWeek;
               for (let i = 0; i < emptyDaysAfter; i++) {
-                daysToDisplay.push(new Date(0)); // Use epoch date to represent empty cell
+                daysToDisplay.push(new Date(0));
               }
             }
 
             return daysToDisplay.map((date) => {
-              // Return empty div for epoch dates (empty cells)
               if (date.getTime() === 0) {
                 return <div key={Math.random()} className="h-10 sm:h-12" />;
               }
@@ -447,13 +434,13 @@ const Calendar = () => {
                   date={date}
                   currentDate={currentDate}
                   shift={getShiftForDate(date)}
-                  isPay={isPayday(date, settings)}
+                  isPay={isPayday(date, calendarSettings)}
                   note={getNote(date)}
                   alarm={alarms.find(a => a.date === date.toISOString())}
                   paydaySymbol={paydaySettings.symbol}
-                  paydayColor={settings.paydayColor}
+                  paydayColor={calendarSettings.paydayColor}
                   calendarSize={calendarSize}
-                  numberLayout={settings.calendarNumberLayout}
+                  numberLayout={calendarSettings.calendarNumberLayout}
                   onDayClick={handleDayClick}
                   onLongPress={handleLongPress}
                   onContextMenu={(e, date) => {
@@ -461,7 +448,7 @@ const Calendar = () => {
                     addOrEditNote(date);
                   }}
                   isSelected={selectedDatesForShift.some(d => d.getTime() === date.getTime())}
-                  showPayday={settings?.paydayEnabled}
+                  showPayday={calendarSettings.paydayEnabled}
                 />
               );
             });
@@ -481,7 +468,7 @@ const Calendar = () => {
         selectedDates={selectedDatesForShift}
         shiftTypes={shiftTypes}
         onShiftSelect={handleShiftSelection}
-        showOvertimeInput={settings?.overtime?.enabled}
+        showOvertimeInput={calendarSettings.overtime?.enabled}
         initialShiftType={selectedDatesForShift.length === 1 
           ? getShiftForDate(selectedDatesForShift[0])?.shiftType 
           : undefined}
@@ -491,6 +478,35 @@ const Calendar = () => {
             : undefined
           : undefined}
       />
+
+      {isSelectingMultiple && (
+        <div className="fixed bottom-24 left-0 right-0 bg-background border-t py-2 px-4 flex items-center justify-between animate-in slide-in-from-bottom z-40">
+          <div className="text-sm">
+            {selectedDatesForShift.length} dates selected
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setIsSelectingMultiple(false);
+                setSelectedDatesForShift([]);
+              }}
+            >
+              Cancel
+            </Button>
+            {selectedDatesForShift.length > 0 && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setShowShiftDialog(true)}
+              >
+                Set Shifts
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t py-4 z-50">
         <div className="container max-w-md mx-auto px-4">
@@ -538,35 +554,6 @@ const Calendar = () => {
           </div>
         </div>
       </div>
-
-      {isSelectingMultiple && (
-        <div className="fixed bottom-24 left-0 right-0 bg-background border-t py-2 px-4 flex items-center justify-between animate-in slide-in-from-bottom z-40">
-          <div className="text-sm">
-            {selectedDatesForShift.length} dates selected
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setIsSelectingMultiple(false);
-                setSelectedDatesForShift([]);
-              }}
-            >
-              Cancel
-            </Button>
-            {selectedDatesForShift.length > 0 && (
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => setShowShiftDialog(true)}
-              >
-                Set Shifts
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
