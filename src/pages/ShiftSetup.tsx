@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -393,9 +394,9 @@ const ShiftSetup = () => {
 
       <Card className="flex-1 overflow-auto mb-20">
         <div className="p-2 sm:p-4 space-y-3">
-          <div className="flex justify-between items-center gap-1">
+          <div className="flex flex-wrap justify-between items-center gap-2">
             <h2 className="text-lg font-semibold">Shift Types</h2>
-            <div className="flex gap-1">
+            <div className="flex flex-wrap gap-1">
               <Button 
                 variant="outline" 
                 size="sm"
@@ -450,33 +451,35 @@ const ShiftSetup = () => {
             {shiftTypes.map((type, index) => (
               <div 
                 key={index} 
-                className={`flex items-center gap-2 p-1.5 border rounded-lg ${
+                className={`flex flex-col sm:flex-row items-start sm:items-center gap-2 p-1.5 border rounded-lg ${
                   type.isOvertime ? 'border-orange-500 bg-orange-50/50' : ''
                 }`}
               >
                 {!type.isNew && !isEditing ? (
                   <>
-                    <div className="flex-1 flex items-center gap-2">
-                      <span className="text-base">{type.name} ({type.symbol})</span>
+                    <div className="flex-1 flex items-center gap-2 min-w-0">
+                      <span className="text-base truncate">{type.name} ({type.symbol})</span>
                       {type.isOvertime && (
-                        <span className="text-xs text-orange-600 font-medium">Overtime</span>
+                        <span className="text-xs text-orange-600 font-medium whitespace-nowrap">Overtime</span>
                       )}
                     </div>
-                    <Input
-                      value={type.symbol}
-                      readOnly
-                      className="h-9 w-16 text-center text-lg font-semibold mx-auto"
-                    />
-                    <div 
-                      className="w-32 h-9 rounded border flex-1"
-                      style={{ background: type.gradient }}
-                      role="button"
-                      aria-label="Shift color"
-                    />
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <Input
+                        value={type.symbol}
+                        readOnly
+                        className="h-9 w-16 text-center text-lg font-semibold"
+                      />
+                      <div 
+                        className="flex-1 sm:w-32 h-9 rounded border"
+                        style={{ background: type.gradient }}
+                        role="button"
+                        aria-label="Shift color"
+                      />
+                    </div>
                   </>
                 ) : (
                   <>
-                    <div className="flex-1 space-y-1">
+                    <div className="flex-1 space-y-1 min-w-0 w-full sm:w-auto">
                       <Input
                         value={type.name}
                         onChange={(e) => updateShiftType(index, 'name', e.target.value)}
@@ -498,15 +501,15 @@ const ShiftSetup = () => {
                         <Label className="text-xs text-muted-foreground">Overtime</Label>
                       </div>
                     </div>
-                    <Input
-                      value={type.symbol}
-                      onChange={(e) => {
-                        updateShiftType(index, 'symbol', e.target.value.toUpperCase());
-                      }}
-                      className="h-9 w-16 text-center text-lg font-semibold uppercase mx-auto"
-                      placeholder=""
-                    />
-                    <div className="flex items-center gap-2 flex-1">
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <Input
+                        value={type.symbol}
+                        onChange={(e) => {
+                          updateShiftType(index, 'symbol', e.target.value.toUpperCase());
+                        }}
+                        className="h-9 w-16 text-center text-lg font-semibold uppercase"
+                        placeholder=""
+                      />
                       <div 
                         className="w-32 h-9 rounded border"
                         style={{ background: type.gradient }}
@@ -552,7 +555,7 @@ const ShiftSetup = () => {
                 {existingPatterns.map((patternData, index) => (
                   <div 
                     key={index}
-                    className="flex items-center justify-between p-3 border rounded-lg bg-background/50"
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 border rounded-lg bg-background/50 gap-2"
                   >
                     <div className="space-y-1">
                       <div className="font-medium">{patternData.patternName}</div>
@@ -561,7 +564,7 @@ const ShiftSetup = () => {
                         Generates for {patternData.years} year{patternData.years !== 1 ? 's' : ''}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                       <Button
                         variant="ghost"
                         size="icon"
