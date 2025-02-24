@@ -4,11 +4,12 @@ import { PaydaySettings } from "@/types/calendar";
 
 export const getNextPayday = (settings: any): Date => {
   if (!settings || !settings.paydayType) {
-    // Return current date if settings are invalid
     return new Date();
   }
 
   const today = new Date();
+  // Set time to start of day to ensure consistent comparison
+  today.setHours(0, 0, 0, 0);
   let nextPayday: Date;
 
   try {
@@ -41,30 +42,40 @@ export const getNextPayday = (settings: any): Date => {
       case 'monthly':
       case 'set-day':
         nextPayday = new Date(today.getFullYear(), today.getMonth(), settings.paydayDate || 15);
-        if (today.getDate() > (settings.paydayDate || 15)) {
+        nextPayday.setHours(0, 0, 0, 0);
+        
+        // If today is payday or we've passed the payday for this month, get next month's payday
+        if (today.getDate() >= (settings.paydayDate || 15)) {
           nextPayday = new Date(today.getFullYear(), today.getMonth() + 1, settings.paydayDate || 15);
+          nextPayday.setHours(0, 0, 0, 0);
         }
         break;
 
       case 'first-day':
         nextPayday = new Date(today.getFullYear(), today.getMonth(), 1);
-        if (today.getDate() > 1) {
+        nextPayday.setHours(0, 0, 0, 0);
+        if (today.getDate() >= 1) {
           nextPayday = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+          nextPayday.setHours(0, 0, 0, 0);
         }
         break;
 
       case 'last-day':
         nextPayday = lastDayOfMonth(today);
-        if (today.getDate() === lastDayOfMonth(today).getDate()) {
+        nextPayday.setHours(0, 0, 0, 0);
+        if (today.getDate() >= lastDayOfMonth(today).getDate()) {
           nextPayday = lastDayOfMonth(addMonths(today, 1));
+          nextPayday.setHours(0, 0, 0, 0);
         }
         break;
 
       case 'custom':
       default:
         nextPayday = new Date(today.getFullYear(), today.getMonth(), settings.paydayDate || 15);
-        if (today.getDate() > (settings.paydayDate || 15)) {
+        nextPayday.setHours(0, 0, 0, 0);
+        if (today.getDate() >= (settings.paydayDate || 15)) {
           nextPayday = new Date(today.getFullYear(), today.getMonth() + 1, settings.paydayDate || 15);
+          nextPayday.setHours(0, 0, 0, 0);
         }
         break;
     }
@@ -72,7 +83,7 @@ export const getNextPayday = (settings: any): Date => {
     return nextPayday;
   } catch (error) {
     console.error('Error calculating next payday:', error);
-    return new Date(); // Return current date as fallback
+    return new Date();
   }
 };
 
