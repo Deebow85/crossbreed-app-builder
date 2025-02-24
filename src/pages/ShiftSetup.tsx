@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -816,7 +815,7 @@ const ShiftSetup = () => {
                     min="1"
                     value={repeatTimes}
                     onChange={(e) => setRepeatTimes(parseInt(e.target.value))}
-                    readOnly={currentPattern.length === 2 && currentPattern[0].days === 5 && currentPattern[1].days === 2}
+                    readOnly={currentPattern.length === 2 && currentPattern[0]?.days === 5 && currentPattern[1]?.days === 2}
                   />
                   <span className="text-sm text-muted-foreground">times</span>
                 </div>
