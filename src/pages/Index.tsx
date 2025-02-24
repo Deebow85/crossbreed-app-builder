@@ -40,7 +40,7 @@ const Index = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="hover:bg-accent"
+            className="hover:bg-accent w-10 h-10"
           >
             <CalendarDays className="h-8 w-8" />
           </Button>
@@ -59,7 +59,7 @@ const Index = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="hover:bg-accent"
+              className="hover:bg-accent w-10 h-10"
             >
               <Notebook className="h-8 w-8" />
             </Button>
@@ -68,7 +68,7 @@ const Index = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="hover:bg-accent"
+            className="hover:bg-accent w-10 h-10"
             onClick={() => navigate("/settings")}
           >
             <Settings className="h-8 w-8" />
