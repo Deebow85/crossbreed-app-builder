@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Banknote, CalendarDays, Settings, CheckSquare, Clock } from "lucide-react";
+import { Banknote, CalendarDays, Settings, CheckSquare, Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import { 
   format, 
   addMonths, 
@@ -13,11 +13,16 @@ import {
   startOfWeek, 
   endOfWeek,
   isSameMonth,
-  differenceInDays 
+  differenceInDays,
+  addYears,
+  subYears,
+  setMonth,
+  setYear
 } from "date-fns";
 import { cn } from "@/lib/utils";
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useTheme } from "@/lib/theme";
 import CalendarDay from "./CalendarDay";
 import ShiftSelectionDialog from "./ShiftSelectionDialog";
@@ -48,6 +53,16 @@ const Calendar = () => {
   const [showShiftDialog, setShowShiftDialog] = useState(false);
   const [selectedDatesForShift, setSelectedDatesForShift] = useState<Date[]>([]);
   const [isSelectingMultiple, setIsSelectingMultiple] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const currentYear = currentDate.getFullYear();
+  const currentMonthIndex = currentDate.getMonth();
+  
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const years = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
 
   useEffect(() => {
     localStorage.setItem('calendarShifts', JSON.stringify(shifts));
@@ -333,10 +348,63 @@ const Calendar = () => {
 
           <div className="text-center flex-1 mx-4">
             <div className="flex items-center justify-center mb-2">
-              <h2 className="text-lg sm:text-xl font-bold">
-                {format(currentDate, 'MMMM yyyy')}
-              </h2>
+              <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
+                <PopoverTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="text-lg sm:text-xl font-bold hover:bg-accent"
+                  >
+                    {format(currentDate, 'MMMM yyyy')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-2" align="center">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <Button 
+                        variant="outline" 
+                        size="icon"
+                        onClick={() => handleYearSelect(currentYear - 1)}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <span className="font-semibold">{currentYear}</span>
+                      <Button 
+                        variant="outline" 
+                        size="icon"
+                        onClick={() => handleYearSelect(currentYear + 1)}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {months.map((month, index) => (
+                        <Button
+                          key={month}
+                          variant={index === currentMonthIndex ? "default" : "outline"}
+                          className="w-full text-sm"
+                          onClick={() => handleMonthSelect(index)}
+                        >
+                          {month.slice(0, 3)}
+                        </Button>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-5 gap-2">
+                      {years.map(year => (
+                        <Button
+                          key={year}
+                          variant={year === currentYear ? "default" : "outline"}
+                          className="w-full text-sm"
+                          onClick={() => handleYearSelect(year)}
+                        >
+                          {year}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
+
             <div className="flex flex-col items-center">
               <div className="flex flex-col items-center">
                 {calendarSettings.paydayEnabled && (
