@@ -596,6 +596,49 @@ const ShiftSetup = () => {
         </div>
       </Card>
 
+      <Dialog open={isRemoveDialogOpen} onOpenChange={setIsRemoveDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remove Shift Types</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-2 py-4">
+            {shiftTypes.map((type, index) => (
+              <div 
+                key={index} 
+                className={`flex items-center justify-between p-2 border rounded-lg cursor-pointer ${
+                  selectedToRemove.includes(index) ? 'border-destructive bg-destructive/10' : ''
+                }`}
+                onClick={() => toggleShiftToRemove(index)}
+              >
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-8 h-8 rounded border flex items-center justify-center font-semibold"
+                    style={{ background: type.gradient }}
+                  >
+                    {type.symbol}
+                  </div>
+                  <span>{type.name}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {selectedToRemove.includes(index) && (
+                    <Check className="h-4 w-4 text-destructive" />
+                  )}
+                </div>
+              </div>
+            ))}
+            {selectedToRemove.length > 0 && (
+              <Button
+                variant="destructive"
+                onClick={removeSelectedShiftTypes}
+                className="mt-2"
+              >
+                Remove Selected ({selectedToRemove.length})
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog 
         open={showSetDaysDialog} 
         onOpenChange={(open) => {
@@ -882,50 +925,4 @@ const ShiftSetup = () => {
                 <Input
                   type="color"
                   value={startColor}
-                  onChange={(e) => setStartColor(e.target.value)}
-                  className="w-full h-10"
-                />
-              </div>
-              
-              {colorMode === 'gradient' && (
-                <div className="space-y-2">
-                  <Label>End Colour</Label>
-                  <Input
-                    type="color"
-                    value={endColor}
-                    onChange={(e) => setEndColor(e.target.value)}
-                    className="w-full h-10"
-                  />
-                </div>
-              )}
-
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={selectedIndex !== null ? shiftTypes[selectedIndex].isOvertime : false}
-                  onCheckedChange={(checked) => {
-                    if (selectedIndex !== null) {
-                      const newShiftTypes = [...shiftTypes];
-                      newShiftTypes[selectedIndex] = {
-                        ...newShiftTypes[selectedIndex],
-                        isOvertime: checked
-                      };
-                      saveShiftTypes(newShiftTypes);
-                    }
-                  }}
-                />
-                <Label>Calculate as Overtime</Label>
-              </div>
-              
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setColorMode(null)}>Back</Button>
-                <Button onClick={handleColorConfirm}>Confirm</Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isRemoveDialogOpen} onOpenChange={setIsRemoveDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Remove Shift Types</DialogTitle>
+                  onChange={(e) => setStartColor(e.
