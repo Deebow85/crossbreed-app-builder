@@ -2,6 +2,7 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AppSettings } from "@/types/settings";
 
@@ -55,113 +56,133 @@ export function PaydaySettings({ settings, onSave }: PaydaySettingsProps) {
 
   return (
     <div className="p-2 space-y-4">
-      <div className="space-y-1">
-        <Label htmlFor="currency-symbol" className="text-xs">Currency</Label>
-        <Select
-          value={settings.currency.symbol}
-          onValueChange={updateCurrency}
-        >
-          <SelectTrigger id="currency-symbol" className="h-7">
-            <SelectValue placeholder="Select currency" />
-          </SelectTrigger>
-          <SelectContent>
-            {currencySymbols.map(({ symbol, name }) => (
-              <SelectItem key={symbol} value={symbol}>
-                {name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label className="text-xs">Payday Schedule</Label>
-        <div className="grid grid-cols-2 gap-2">
-          <Button
-            size="sm"
-            className="h-8"
-            variant={settings.paydayType === 'weekly' ? 'default' : 'outline'}
-            onClick={() => updatePaydaySettings('weekly')}
-          >
-            Weekly
-          </Button>
-          <Button
-            size="sm"
-            className="h-8"
-            variant={settings.paydayType === 'fortnightly' ? 'default' : 'outline'}
-            onClick={() => updatePaydaySettings('fortnightly')}
-          >
-            Fortnightly
-          </Button>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label className="text-xs">Monthly Options</Label>
-        <div className="grid grid-cols-3 gap-2">
-          <Button
-            size="sm"
-            className="h-8"
-            variant={settings.paydayType === 'set-day' ? 'default' : 'outline'}
-            onClick={() => updatePaydaySettings('set-day')}
-          >
-            Set Day
-          </Button>
-          <Button
-            size="sm"
-            className="h-8"
-            variant={settings.paydayType === 'first-day' ? 'default' : 'outline'}
-            onClick={() => updatePaydaySettings('first-day', 1)}
-          >
-            First Day
-          </Button>
-          <Button
-            size="sm"
-            className="h-8"
-            variant={settings.paydayType === 'last-day' ? 'default' : 'outline'}
-            onClick={() => updatePaydaySettings('last-day', 31)}
-          >
-            Last Day
-          </Button>
-        </div>
-      </div>
-
-      {settings.paydayType === 'set-day' && (
-        <div>
-          <Label htmlFor="payday-date" className="text-xs mb-1">Day of Month</Label>
-          <Input
-            id="payday-date"
-            type="number"
-            min={1}
-            max={31}
-            value={settings.paydayDate}
-            onChange={(e) => updatePaydayDate(parseInt(e.target.value))}
-            className="h-7"
+      <div className="space-y-1.5">
+        <Label className="text-xs">Enable Payday Tracking</Label>
+        <div className="flex items-center space-x-2">
+          <Switch
+            checked={settings.paydayEnabled ?? true}
+            onCheckedChange={(checked) => {
+              onSave({
+                ...settings,
+                paydayEnabled: checked
+              });
+            }}
           />
+          <Label className="text-sm">Track payday schedule</Label>
         </div>
-      )}
+      </div>
 
-      {(settings.paydayType === 'weekly' || settings.paydayType === 'fortnightly') && (
-        <div>
-          <Label htmlFor="payday-weekday" className="text-xs mb-1">Day of Week</Label>
-          <Select
-            value={settings.paydayDate.toString()}
-            onValueChange={(value) => updatePaydayDate(parseInt(value))}
-          >
-            <SelectTrigger id="payday-weekday" className="h-7">
-              <SelectValue placeholder="Select day" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1">Monday</SelectItem>
-              <SelectItem value="2">Tuesday</SelectItem>
-              <SelectItem value="3">Wednesday</SelectItem>
-              <SelectItem value="4">Thursday</SelectItem>
-              <SelectItem value="5">Friday</SelectItem>
-              <SelectItem value="6">Saturday</SelectItem>
-              <SelectItem value="7">Sunday</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      {settings.paydayEnabled && (
+        <>
+          <div className="space-y-1">
+            <Label htmlFor="currency-symbol" className="text-xs">Currency</Label>
+            <Select
+              value={settings.currency.symbol}
+              onValueChange={updateCurrency}
+            >
+              <SelectTrigger id="currency-symbol" className="h-7">
+                <SelectValue placeholder="Select currency" />
+              </SelectTrigger>
+              <SelectContent>
+                {currencySymbols.map(({ symbol, name }) => (
+                  <SelectItem key={symbol} value={symbol}>
+                    {name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs">Payday Schedule</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                size="sm"
+                className="h-8"
+                variant={settings.paydayType === 'weekly' ? 'default' : 'outline'}
+                onClick={() => updatePaydaySettings('weekly')}
+              >
+                Weekly
+              </Button>
+              <Button
+                size="sm"
+                className="h-8"
+                variant={settings.paydayType === 'fortnightly' ? 'default' : 'outline'}
+                onClick={() => updatePaydaySettings('fortnightly')}
+              >
+                Fortnightly
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs">Monthly Options</Label>
+            <div className="grid grid-cols-3 gap-2">
+              <Button
+                size="sm"
+                className="h-8"
+                variant={settings.paydayType === 'set-day' ? 'default' : 'outline'}
+                onClick={() => updatePaydaySettings('set-day')}
+              >
+                Set Day
+              </Button>
+              <Button
+                size="sm"
+                className="h-8"
+                variant={settings.paydayType === 'first-day' ? 'default' : 'outline'}
+                onClick={() => updatePaydaySettings('first-day', 1)}
+              >
+                First Day
+              </Button>
+              <Button
+                size="sm"
+                className="h-8"
+                variant={settings.paydayType === 'last-day' ? 'default' : 'outline'}
+                onClick={() => updatePaydaySettings('last-day', 31)}
+              >
+                Last Day
+              </Button>
+            </div>
+          </div>
+
+          {settings.paydayType === 'set-day' && (
+            <div>
+              <Label htmlFor="payday-date" className="text-xs mb-1">Day of Month</Label>
+              <Input
+                id="payday-date"
+                type="number"
+                min={1}
+                max={31}
+                value={settings.paydayDate}
+                onChange={(e) => updatePaydayDate(parseInt(e.target.value))}
+                className="h-7"
+              />
+            </div>
+          )}
+
+          {(settings.paydayType === 'weekly' || settings.paydayType === 'fortnightly') && (
+            <div>
+              <Label htmlFor="payday-weekday" className="text-xs mb-1">Day of Week</Label>
+              <Select
+                value={settings.paydayDate.toString()}
+                onValueChange={(value) => updatePaydayDate(parseInt(value))}
+              >
+                <SelectTrigger id="payday-weekday" className="h-7">
+                  <SelectValue placeholder="Select day" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">Monday</SelectItem>
+                  <SelectItem value="2">Tuesday</SelectItem>
+                  <SelectItem value="3">Wednesday</SelectItem>
+                  <SelectItem value="4">Thursday</SelectItem>
+                  <SelectItem value="5">Friday</SelectItem>
+                  <SelectItem value="6">Saturday</SelectItem>
+                  <SelectItem value="7">Sunday</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

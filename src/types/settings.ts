@@ -4,6 +4,7 @@ export interface AppSettings {
     symbol: string;
     position: 'before' | 'after';
   };
+  paydayEnabled: boolean;
   paydayDate: number;
   paydayType: 'weekly' | 'fortnightly' | 'set-day' | 'first-day' | 'last-day';
   calendarSize: 'small' | 'large';
@@ -31,6 +32,7 @@ export const defaultSettings: AppSettings = {
     symbol: '£',
     position: 'before'
   },
+  paydayEnabled: true,
   paydayDate: 25,
   paydayType: 'set-day',
   calendarSize: 'small',
