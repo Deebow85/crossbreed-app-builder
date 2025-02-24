@@ -284,7 +284,9 @@ const Calendar = () => {
   const settings = savedSettings ? JSON.parse(savedSettings) : { 
     paydayType: 'monthly',
     paydayDate: 15,
-    calendarNumberLayout: 'centre'
+    calendarNumberLayout: 'centre',
+    paydayColor: '#F97316',
+    showOverlappingDates: true
   };
   const numberLayout = settings.calendarNumberLayout || 'centre';
 
