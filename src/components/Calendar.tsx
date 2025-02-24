@@ -280,20 +280,19 @@ const Calendar = () => {
 
   const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-  const savedSettings = localStorage.getItem('appSettings');
-  const settings = savedSettings ? JSON.parse(savedSettings) : { 
-    paydayType: 'monthly',
+  const defaultSettings = { 
+    paydayType: 'monthly' as const,
     paydayDate: 15,
     paydayColor: '#F97316',
-    calendarNumberLayout: 'centre',
+    calendarNumberLayout: 'centre' as const,
     showOverlappingDates: true
   };
   
+  const savedSettings = localStorage.getItem('appSettings');
+  const settings = savedSettings ? { ...defaultSettings, ...JSON.parse(savedSettings) } : defaultSettings;
+  
   const totalOvertimeHours = shifts.reduce((total, shift) => {
     if (!shift.otHours) return total;
-    
-    const savedSettings = localStorage.getItem('appSettings');
-    const settings = savedSettings ? JSON.parse(savedSettings) : null;
     
     if (!settings?.overtime?.enabled) return 0;
     
@@ -301,14 +300,7 @@ const Calendar = () => {
     const currentMonthStart = startOfMonth(currentDate);
     const currentMonthEnd = endOfMonth(currentDate);
 
-    // Only count overtime if the shift is within the current displayed month
     if (date >= currentMonthStart && date <= currentMonthEnd) {
-      const dayOfWeek = date.getDay();
-      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-      
-      // TODO: Add holiday check when holiday system is implemented
-      const isHoliday = false;
-      
       return total + shift.otHours;
     }
     
