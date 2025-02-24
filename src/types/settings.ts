@@ -7,6 +7,7 @@ export interface AppSettings {
   paydayEnabled: boolean;
   paydayDate: number;
   paydayType: 'weekly' | 'fortnightly' | 'set-day' | 'first-day' | 'last-day';
+  paydayColor: string;
   calendarSize: 'small' | 'large';
   calendarNumberLayout: 'centre' | 'top-left' | 'top-right';
   longPressEnabled: boolean;
@@ -35,6 +36,7 @@ export const defaultSettings: AppSettings = {
   paydayEnabled: true,
   paydayDate: 25,
   paydayType: 'set-day',
+  paydayColor: '#F97316',
   calendarSize: 'small',
   calendarNumberLayout: 'centre',
   longPressEnabled: true,

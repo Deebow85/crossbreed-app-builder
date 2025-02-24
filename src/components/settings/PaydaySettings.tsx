@@ -26,6 +26,16 @@ const currencySymbols = [
   { symbol: 'CHF', name: 'Swiss Franc (CHF)' },
 ];
 
+const predefinedColors = [
+  { name: 'Orange', value: '#F97316' },
+  { name: 'Purple', value: '#8B5CF6' },
+  { name: 'Pink', value: '#D946EF' },
+  { name: 'Blue', value: '#0EA5E9' },
+  { name: 'Primary Purple', value: '#9b87f5' },
+  { name: 'Secondary Purple', value: '#7E69AB' },
+  { name: 'Tertiary Purple', value: '#6E59A5' },
+];
+
 export function PaydaySettings({ settings, onSave }: PaydaySettingsProps) {
   const updateCurrency = (symbol: string) => {
     onSave({
@@ -51,6 +61,13 @@ export function PaydaySettings({ settings, onSave }: PaydaySettingsProps) {
       ...settings,
       paydayType: type,
       paydayDate: date ?? settings.paydayDate
+    });
+  };
+
+  const updatePaydayColor = (color: string) => {
+    onSave({
+      ...settings,
+      paydayColor: color
     });
   };
 
@@ -91,6 +108,30 @@ export function PaydaySettings({ settings, onSave }: PaydaySettingsProps) {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="payday-color" className="text-xs">Payday Symbol Color</Label>
+            <div className="grid grid-cols-4 gap-2">
+              {predefinedColors.map(({ name, value }) => (
+                <Button
+                  key={value}
+                  type="button"
+                  variant="outline"
+                  className={`h-8 w-full relative ${settings.paydayColor === value ? 'ring-2 ring-primary' : ''}`}
+                  style={{ backgroundColor: value }}
+                  onClick={() => updatePaydayColor(value)}
+                  title={name}
+                />
+              ))}
+              <Input
+                id="payday-color"
+                type="color"
+                value={settings.paydayColor}
+                onChange={(e) => updatePaydayColor(e.target.value)}
+                className="h-8 p-0 cursor-pointer"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">

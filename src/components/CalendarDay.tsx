@@ -15,6 +15,7 @@ type CalendarDayProps = {
   note?: Note;
   alarm?: Alarm;
   paydaySymbol: string;
+  paydayColor?: string;
   calendarSize: 'default' | 'large' | 'small';
   numberLayout: string;
   onDayClick: (date: Date) => void;
@@ -32,6 +33,7 @@ const CalendarDay = ({
   note,
   alarm,
   paydaySymbol,
+  paydayColor = '#F97316',
   calendarSize,
   numberLayout,
   onDayClick,
@@ -110,7 +112,7 @@ const CalendarDay = ({
             "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-bold",
             calendarSize === 'large' ? "text-2xl sm:text-3xl" : "text-base sm:text-lg"
           )}
-          style={{ color: shift ? 'white' : theme === 'dark' ? '#F97316' : '#F97316' }}
+          style={{ color: shift ? 'white' : paydayColor }}
         >
           {paydaySymbol}
         </span>
@@ -121,7 +123,7 @@ const CalendarDay = ({
             "absolute bottom-0.5 left-0.5",
             calendarSize === 'large' ? "h-5 w-5 sm:h-6 sm:w-6" : "h-2.5 w-2.5 sm:h-3 sm:w-3"
           )}
-          style={{ color: shift ? 'white' : theme === 'dark' ? '#F97316' : '#F97316' }}
+          style={{ color: shift ? 'white' : paydayColor }}
         />
       )}
       {alarm && (
@@ -130,7 +132,7 @@ const CalendarDay = ({
             "absolute bottom-0.5 right-0.5",
             calendarSize === 'large' ? "h-5 w-5 sm:h-6 sm:w-6" : "h-2.5 w-2.5 sm:h-3 sm:w-3"
           )}
-          style={{ color: shift ? 'white' : theme === 'dark' ? '#F97316' : '#F97316' }}
+          style={{ color: shift ? 'white' : paydayColor }}
         />
       )}
       {shift && (
