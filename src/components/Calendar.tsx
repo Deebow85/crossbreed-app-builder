@@ -309,7 +309,9 @@ const Calendar = () => {
                   <Tooltip>
                     <TooltipTrigger className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
                       <Banknote className="h-4 w-4" />
-                      <span>{differenceInDays(getNextPayday(settings) || new Date(), new Date())} days until payday</span>
+                      <span>
+                        {differenceInDays(getNextPayday(settings) || new Date(), new Date()) + 1} days until payday
+                      </span>
                     </TooltipTrigger>
                     <TooltipContent>Next payday: {format(getNextPayday(settings) || new Date(), 'MMM do')}</TooltipContent>
                   </Tooltip>
