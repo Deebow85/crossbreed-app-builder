@@ -284,12 +284,11 @@ const Calendar = () => {
   const settings = savedSettings ? JSON.parse(savedSettings) : { 
     paydayType: 'monthly',
     paydayDate: 15,
-    calendarNumberLayout: 'centre',
     paydayColor: '#F97316',
+    calendarNumberLayout: 'centre',
     showOverlappingDates: true
   };
-  const numberLayout = settings.calendarNumberLayout || 'centre';
-
+  
   const totalOvertimeHours = shifts.reduce((total, shift) => {
     if (!shift.otHours) return total;
     
