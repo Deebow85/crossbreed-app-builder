@@ -1,4 +1,4 @@
-<lov-code>
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -166,27 +166,6 @@ const ShiftSetup = () => {
       isOvertime: false
     };
     saveShiftTypes([...shiftTypes, newShiftType]);
-  };
-
-  const removeShiftType = (index: number) => {
-    const newShiftTypes = shiftTypes.filter((_, i) => i !== index);
-    saveShiftTypes(newShiftTypes);
-    setIsRemoveDialogOpen(false);
-  };
-
-  const toggleShiftToRemove = (index: number) => {
-    setSelectedToRemove(prev => 
-      prev.includes(index) 
-        ? prev.filter(i => i !== index)
-        : [...prev, index]
-    );
-  };
-
-  const removeSelectedShiftTypes = () => {
-    const newShiftTypes = shiftTypes.filter((_, index) => !selectedToRemove.includes(index));
-    saveShiftTypes(newShiftTypes);
-    setIsRemoveDialogOpen(false);
-    setSelectedToRemove([]);
   };
 
   const handleRemoveDialogOpen = () => {
@@ -569,12 +548,9 @@ const ShiftSetup = () => {
         </div>
       </Card>
 
-      <Dialog 
-        open={showSetDaysDialog} 
-        onOpenChange={(open) => {
-          if (!open) setShowSetDaysDialog(false);
-        }}
-      >
+      <Dialog open={showSetDaysDialog} onOpenChange={(open) => {
+        if (!open) setShowSetDaysDialog(false);
+      }}>
         <DialogContent className="flex h-[85vh] flex-col overflow-hidden">
           <DialogHeader className="flex-none p-4 pb-2">
             <DialogTitle>Set Working Days Pattern</DialogTitle>
@@ -692,152 +668,6 @@ const ShiftSetup = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog 
-        open={showPatternDialog} 
-        onOpenChange={(open) => {
-          if (!open) closePatternDialog();
-        }}
-      >
-        <DialogContent className="flex h-[85vh] flex-col overflow-hidden">
-          <DialogHeader className="flex-none p-4 pb-2">
-            <DialogTitle>
-              {editingPattern ? 'Edit Shift Pattern' : 'Generate Custom Pattern'}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="flex-1 overflow-y-auto">
-            <div className="p-4 space-y-4">
-              <div className="space-y-2">
-                <Label>Pattern Name</Label>
-                <Input
-                  type="text"
-                  value={patternName}
-                  onChange={(e) => setPatternName(e.target.value)}
-                  placeholder="Enter pattern name"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Start Date</Label>
-                <Input
-                  type="date"
-                  value={patternStartDate}
-                  onChange={(e) => setPatternStartDate(e.target.value)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label>Pattern Sequence</Label>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={addToPattern}
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Add Step
-                  </Button>
-                </div>
-                
-                {currentPattern.map((step, index) => (
-                  <div key={index} className="flex items-center gap-2 p-2 border rounded">
-                    <select
-                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      value={step.isOff ? "off" : (step.shiftType?.name || "")}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        if (value === "off") {
-                          updatePattern(index, 'shiftType', null);
-                        } else {
-                          const selectedType = shiftTypes.find(t => t.name === value);
-                          updatePattern(index, 'shiftType', selectedType || null);
-                        }
-                      }}
-                    >
-                      <option value="off">Days Off</option>
-                      {shiftTypes.map((type) => (
-                        <option key={type.name} value={type.name}>
-                          {type.name}
-                        </option>
-                      ))}
-                    </select>
-                    
-                    <Input
-                      type="number"
-                      min="1"
-                      value={step.days}
-                      onChange={(e) => updatePattern(index, 'days', parseInt(e.target.value))}
-                      className="w-20"
-                    />
-                    <span className="text-sm text-muted-foreground">days</span>
-                    
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeFromPattern(index)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Repeat Pattern</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    value={repeatTimes}
-                    onChange={(e) => setRepeatTimes(parseInt(e.target.value))}
-                    readOnly={currentPattern.length === 2 && currentPattern[0].days === 5 && currentPattern[1].days === 2}
-                  />
-                  <span className="text-sm text-muted-foreground">times</span>
-                </div>
-                
-                {currentPattern.length !== 2 || currentPattern[0]?.days !== 5 || currentPattern[1]?.days !== 2 ? (
-                  <div className="space-y-2">
-                    <Label>Days Off After Cycle</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={daysOffAfter}
-                      onChange={(e) => setDaysOffAfter(parseInt(e.target.value))}
-                    />
-                    <span className="text-sm text-muted-foreground">days</span>
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="space-y-2">
-                <Label>Generate Pattern For</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="10"
-                  value={yearsToGenerate}
-                  onChange={(e) => {
-                    const years = Math.min(Math.max(parseInt(e.target.value) || 0, 0), 10);
-                    setYearsToGenerate(years);
-                    // If this is a set days pattern (5-2), update repeat times automatically
-                    if (currentPattern.length === 2 && currentPattern[0]?.days === 5 && currentPattern[1]?.days === 2) {
-                      setRepeatTimes(years * 52);
-                    }
-                  }}
-                />
-                <span className="text-sm text-muted-foreground">years (0-10)</span>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="flex-none p-4 bg-background border-t mt-auto">
-            <Button onClick={generateShifts} className="w-full">
-              {editingPattern ? 'Update Pattern' : 'Generate Pattern'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -872,28 +702,28 @@ const ShiftSetup = () => {
                 </div>
               )}
 
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={selectedIndex !== null ? shiftTypes[selectedIndex].isOvertime : false}
-                onCheckedChange={(checked) => {
-                  if (selectedIndex !== null) {
-                    const newShiftTypes = [...shiftTypes];
-                    newShiftTypes[selectedIndex] = {
-                      ...newShiftTypes[selectedIndex],
-                      isOvertime: checked
-                    };
-                    saveShiftTypes(newShiftTypes);
-                  }
-                }}
-              />
-              <Label>Calculate as Overtime</Label>
-            </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={selectedIndex !== null ? shiftTypes[selectedIndex].isOvertime : false}
+                  onCheckedChange={(checked) => {
+                    if (selectedIndex !== null) {
+                      const newShiftTypes = [...shiftTypes];
+                      newShiftTypes[selectedIndex] = {
+                        ...newShiftTypes[selectedIndex],
+                        isOvertime: checked
+                      };
+                      saveShiftTypes(newShiftTypes);
+                    }
+                  }}
+                />
+                <Label>Calculate as Overtime</Label>
+              </div>
             
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setColorMode(null)}>Back</Button>
-              <Button onClick={handleColorConfirm}>Confirm</Button>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setColorMode(null)}>Back</Button>
+                <Button onClick={handleColorConfirm}>Confirm</Button>
+              </div>
             </div>
-          </div>
           )}
         </DialogContent>
       </Dialog>
@@ -931,7 +761,12 @@ const ShiftSetup = () => {
             {selectedToRemove.length > 0 && (
               <Button
                 variant="destructive"
-                onClick={removeSelectedShiftTypes}
+                onClick={() => {
+                  const newShiftTypes = shiftTypes.filter((_, i) => !selectedToRemove.includes(i));
+                  saveShiftTypes(newShiftTypes);
+                  setIsRemoveDialogOpen(false);
+                  setSelectedToRemove([]);
+                }}
                 className="mt-2"
               >
                 Remove Selected ({selectedToRemove.length})
@@ -940,5 +775,8 @@ const ShiftSetup = () => {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+};
 
-      <div className="fixed bottom-0 left-0 right
+export default ShiftSetup;
