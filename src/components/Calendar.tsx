@@ -118,7 +118,7 @@ const Calendar = () => {
     setSelectedDatesForShift([date]);
   };
 
-  const handleShiftSelection = (selectedType: ShiftType | null) => {
+  const handleShiftSelection = (selectedType: ShiftType | null, overtimeHours?: { [date: string]: number }) => {
     if (selectedDatesForShift.length === 0) return;
     
     setShifts(prevShifts => {
@@ -128,10 +128,16 @@ const Calendar = () => {
         const existingIndex = newShifts.findIndex(s => s.date === dateStr);
         
         if (selectedType) {
+          const shiftData = {
+            date: dateStr,
+            shiftType: selectedType,
+            otHours: overtimeHours?.[dateStr]
+          };
+          
           if (existingIndex >= 0) {
-            newShifts[existingIndex] = { date: dateStr, shiftType: selectedType };
+            newShifts[existingIndex] = shiftData;
           } else {
-            newShifts.push({ date: dateStr, shiftType: selectedType });
+            newShifts.push(shiftData);
           }
         } else {
           if (existingIndex >= 0) {
@@ -275,7 +281,28 @@ const Calendar = () => {
   const numberLayout = settings.calendarNumberLayout || 'centre';
 
   const totalOvertimeHours = shifts.reduce((total, shift) => {
-    return total + (shift.otHours || 0);
+    if (!shift.otHours) return total;
+    
+    const savedSettings = localStorage.getItem('appSettings');
+    const settings = savedSettings ? JSON.parse(savedSettings) : null;
+    
+    if (!settings?.overtime) return total + shift.otHours;
+    
+    const date = new Date(shift.date);
+    const dayOfWeek = date.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    
+    // TODO: Add holiday check when holiday system is implemented
+    const isHoliday = false;
+    
+    let rate = settings.overtime.defaultRate;
+    if (isHoliday) {
+      rate = settings.overtime.specialRates.holiday;
+    } else if (isWeekend) {
+      rate = settings.overtime.specialRates.weekend;
+    }
+    
+    return total + (shift.otHours * rate);
   }, 0);
 
   return (
