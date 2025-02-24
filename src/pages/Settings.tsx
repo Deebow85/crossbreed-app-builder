@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/lib/theme";
-import { Paintbrush, Sun, Moon, CreditCard, CalendarDays, Settings as SettingsIcon, HelpCircle, ChevronDown } from "lucide-react";
+import { Paintbrush, Sun, Moon, CreditCard, CalendarDays, Settings as SettingsIcon, HelpCircle, ChevronDown, Clock } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -40,6 +40,14 @@ interface AppSettings {
   calendarSize: 'small' | 'large';
   calendarNumberLayout: 'centre' | 'top-left' | 'top-right';
   longPressEnabled: boolean;
+  overtime: {
+    enabled: boolean;
+    defaultRate: number;
+    specialRates: {
+      weekend: number;
+      holiday: number;
+    };
+  };
 }
 
 const defaultSettings: AppSettings = {
@@ -51,7 +59,15 @@ const defaultSettings: AppSettings = {
   paydayType: 'set-day',
   calendarSize: 'small',
   calendarNumberLayout: 'centre',
-  longPressEnabled: true
+  longPressEnabled: true,
+  overtime: {
+    enabled: true,
+    defaultRate: 1.5,
+    specialRates: {
+      weekend: 2,
+      holiday: 2.5
+    }
+  }
 };
 
 const currencySymbols = [
@@ -75,7 +91,8 @@ const Settings = () => {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     calendar: false,
     theme: false,
-    payment: false
+    payment: false,
+    overtime: false
   });
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
@@ -405,6 +422,124 @@ const Settings = () => {
                     </SelectContent>
                   </Select>
                 </div>
+              )}
+            </CollapsibleContent>
+          </Collapsible>
+
+          <Collapsible open={openSections.overtime ?? false} onOpenChange={() => toggleSection('overtime')}>
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex items-center justify-between w-full p-2"
+              >
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  <span className="font-semibold">Overtime Settings</span>
+                </div>
+                <ChevronDown className={cn("h-4 w-4 transition-transform", openSections.overtime && "transform rotate-180")} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="p-2 space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Enable Overtime Tracking</Label>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={settings.overtime?.enabled ?? true}
+                    onCheckedChange={(checked) => {
+                      saveSettings({
+                        ...settings,
+                        overtime: {
+                          ...settings.overtime,
+                          enabled: checked
+                        }
+                      });
+                    }}
+                  />
+                  <Label className="text-sm">Track overtime hours and rates</Label>
+                </div>
+              </div>
+
+              {settings.overtime?.enabled && (
+                <>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="default-rate" className="text-xs">Default Overtime Rate (×)</Label>
+                    <Input
+                      id="default-rate"
+                      type="number"
+                      step="0.1"
+                      min="1"
+                      value={settings.overtime?.defaultRate ?? 1.5}
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value);
+                        if (value >= 1) {
+                          saveSettings({
+                            ...settings,
+                            overtime: {
+                              ...settings.overtime,
+                              defaultRate: value
+                            }
+                          });
+                        }
+                      }}
+                      className="h-7"
+                    />
+                    <p className="text-xs text-muted-foreground">Base pay multiplier for overtime hours</p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="weekend-rate" className="text-xs">Weekend Rate (×)</Label>
+                    <Input
+                      id="weekend-rate"
+                      type="number"
+                      step="0.1"
+                      min="1"
+                      value={settings.overtime?.specialRates?.weekend ?? 2}
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value);
+                        if (value >= 1) {
+                          saveSettings({
+                            ...settings,
+                            overtime: {
+                              ...settings.overtime,
+                              specialRates: {
+                                ...settings.overtime?.specialRates,
+                                weekend: value
+                              }
+                            }
+                          });
+                        }
+                      }}
+                      className="h-7"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="holiday-rate" className="text-xs">Holiday Rate (×)</Label>
+                    <Input
+                      id="holiday-rate"
+                      type="number"
+                      step="0.1"
+                      min="1"
+                      value={settings.overtime?.specialRates?.holiday ?? 2.5}
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value);
+                        if (value >= 1) {
+                          saveSettings({
+                            ...settings,
+                            overtime: {
+                              ...settings.overtime,
+                              specialRates: {
+                                ...settings.overtime?.specialRates,
+                                holiday: value
+                              }
+                            }
+                          });
+                        }
+                      }}
+                      className="h-7"
+                    />
+                  </div>
+                </>
               )}
             </CollapsibleContent>
           </Collapsible>
