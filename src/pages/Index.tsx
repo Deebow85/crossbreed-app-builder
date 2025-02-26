@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Calendar from "@/components/Calendar";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Settings, ClipboardList, Bell, Home } from "lucide-react";
+import { CalendarDays, Settings, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Dialog,
@@ -72,6 +72,7 @@ const Index = () => {
             variant="ghost" 
             size="icon" 
             className="flex items-center justify-center hover:bg-accent w-12 h-12"
+            onClick={() => console.log("N button clicked")}
           >
             <div className="h-8 w-8 border-2 border-foreground rounded-md flex items-center justify-center">
               <span className="font-semibold text-foreground">N</span>
