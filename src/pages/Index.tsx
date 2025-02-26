@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Calendar from "@/components/Calendar";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Settings, Home } from "lucide-react";
+import { CalendarDays, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Dialog,
@@ -36,15 +36,7 @@ const Index = () => {
       </div>
 
       <nav className="fixed bottom-0 left-0 right-0 bg-background border-t py-2 z-50">
-        <div className="container max-w-md mx-auto grid grid-cols-5 gap-1">
-          <Button 
-            variant="ghost" 
-            className="flex flex-col items-center justify-center h-16 rounded-none"
-          >
-            <Home className="h-6 w-6 mb-1" />
-            <span className="text-xs">Home</span>
-          </Button>
-          
+        <div className="container max-w-md mx-auto grid grid-cols-4 gap-1">
           <Button 
             variant="ghost" 
             className="flex flex-col items-center justify-center h-16 rounded-none"
