@@ -174,6 +174,7 @@ const ShiftSetup = () => {
       isSwapOwed: false
     };
     saveShiftTypes([...shiftTypes, newShiftType]);
+    setIsEditing(true); // Automatically enter edit mode when adding a new shift
   };
 
   const removeShiftType = (index: number) => {
@@ -228,6 +229,14 @@ const ShiftSetup = () => {
   };
 
   const toggleEditing = () => {
+    // If we're finishing editing mode, mark all shifts as not new
+    if (isEditing) {
+      const updatedShiftTypes = shiftTypes.map(type => ({
+        ...type,
+        isNew: false
+      }));
+      saveShiftTypes(updatedShiftTypes);
+    }
     setIsEditing(!isEditing);
   };
 
@@ -421,6 +430,11 @@ const ShiftSetup = () => {
     saveShiftTypes(newShiftTypes);
   };
 
+  // Determine if a shift is "new" or actively being edited
+  const isShiftBeingEdited = (shiftType: ShiftTypeSettings) => {
+    return isEditing || shiftType.isNew === true;
+  };
+
   return (
     <div className="h-dvh flex flex-col p-2 sm:p-4">
       <div className="flex justify-between items-center mb-2">
@@ -504,7 +518,7 @@ const ShiftSetup = () => {
                   type.isSwapOwed ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/20' : ''
                 }`}
               >
-                {!type.isNew && !isEditing ? (
+                {!isShiftBeingEdited(type) ? (
                   <>
                     <div className="flex-1 flex items-center gap-2">
                       <span className="text-base">{type.name} ({type.symbol})</span>
