@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Calendar from "@/components/Calendar";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Settings, FileText } from "lucide-react";
+import { CalendarDays, Settings, ClipboardList } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Dialog,
@@ -61,7 +61,7 @@ const Index = () => {
             size="icon" 
             className="flex items-center justify-center hover:bg-accent w-12 h-12"
           >
-            <FileText className="h-6 w-6" />
+            <ClipboardList className="h-6 w-6" />
           </Button>
           
           <Button 
