@@ -61,7 +61,9 @@ const Index = () => {
             size="icon" 
             className="flex items-center justify-center hover:bg-accent w-12 h-12"
           >
-            <ClipboardList className="h-6 w-6" />
+            <div className="h-8 w-8 border-2 border-foreground rounded flex items-center justify-center">
+              <span className="font-semibold text-foreground">N</span>
+            </div>
           </Button>
           
           <Button 
