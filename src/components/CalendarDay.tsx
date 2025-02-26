@@ -80,6 +80,12 @@ const CalendarDay = ({
   // Set text color for shift name and labels based on shift type
   const textColor = 'white';
 
+  // Determine the proper styling for special types
+  const isSpecialShift = shift?.shiftType.isOvertime || 
+                          shift?.shiftType.isTOIL || 
+                          shift?.shiftType.isSwapDone || 
+                          shift?.shiftType.isSwapOwed;
+
   return (
     <Button
       key={date.toISOString()}
@@ -145,6 +151,14 @@ const CalendarDay = ({
           "text-white"
         )}>
           {shift.shiftType.name}
+          {isSpecialShift && (
+            <span className="ml-1 text-[0.7em] opacity-80">
+              {shift.shiftType.isOvertime ? "OT" : 
+               shift.shiftType.isTOIL ? "T" : 
+               shift.shiftType.isSwapDone ? "SD" : 
+               shift.shiftType.isSwapOwed ? "SO" : ""}
+            </span>
+          )}
         </span>
       )}
     </Button>
