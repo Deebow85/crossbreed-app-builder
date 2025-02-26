@@ -22,7 +22,6 @@ export interface AppSettings {
   overtime: {
     enabled: boolean;
     defaultRate: number;
-    onlyTrackOvertimeType?: boolean;
     specialRates: {
       weekend: number;
       holiday: number;
@@ -60,7 +59,6 @@ export const defaultSettings: AppSettings = {
   overtime: {
     enabled: true,
     defaultRate: 1.5,
-    onlyTrackOvertimeType: true,
     specialRates: {
       weekend: 2,
       holiday: 2.5

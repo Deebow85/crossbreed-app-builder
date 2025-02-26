@@ -23,8 +23,7 @@ export function OvertimeSettings({ settings, onSave }: OvertimeSettingsProps) {
                 ...settings,
                 overtime: {
                   ...settings.overtime,
-                  enabled: checked,
-                  onlyTrackOvertimeType: settings.overtime?.onlyTrackOvertimeType ?? true // Default to true for new settings
+                  enabled: checked
                 }
               });
             }}
@@ -35,29 +34,6 @@ export function OvertimeSettings({ settings, onSave }: OvertimeSettingsProps) {
 
       {settings.overtime?.enabled && (
         <div className="space-y-4 border-t pt-4 mt-4">
-          <div className="space-y-1.5">
-            <Label className="text-xs">Overtime Tracking</Label>
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={settings.overtime?.onlyTrackOvertimeType ?? true}
-                onCheckedChange={(checked) => {
-                  onSave({
-                    ...settings,
-                    overtime: {
-                      ...settings.overtime,
-                      onlyTrackOvertimeType: checked
-                    }
-                  });
-                }}
-              />
-              <Label className="text-sm">Only count shifts marked as "Overtime" type</Label>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              When enabled, only shifts specifically marked as the "Overtime" type will be counted for overtime calculations.
-              When disabled, all shifts (including TOIL and Swaps) will be counted.
-            </p>
-          </div>
-          
           <Label className="text-xs">Recurring Overtime Schedule</Label>
           
           <Select
