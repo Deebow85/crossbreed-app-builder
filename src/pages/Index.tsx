@@ -59,15 +59,18 @@ const Index = () => {
             </Button>
           </div>
           
-          <Button
-            variant="ghost"
-            className="flex items-center justify-center h-16 w-16 rounded-none absolute left-1/2 -translate-x-1/2"
-            onClick={() => navigate("/shift-setup")}
-          >
-            <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg">
-              <span className="text-primary-foreground font-semibold text-xl">S</span>
-            </div>
-          </Button>
+          <div className="absolute left-1/2 -translate-x-1/2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="flex items-center justify-center h-16 w-16 rounded-none p-0"
+              onClick={() => navigate("/shift-setup")}
+            >
+              <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg">
+                <span className="text-primary-foreground font-semibold text-xl">S</span>
+              </div>
+            </Button>
+          </div>
           
           <div className="flex gap-2">
             <Button 
