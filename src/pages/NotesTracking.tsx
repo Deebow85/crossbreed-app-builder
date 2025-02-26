@@ -24,11 +24,11 @@ const NotesTracking = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({
-    "swap-done": false,
-    "swap-owed": false,
-    "toil": false,
-    "notes": false,
-    "calendar-notes": false
+    "swap-done": true,
+    "swap-owed": true,
+    "toil": true,
+    "notes": true,
+    "calendar-notes": true
   });
   
   // Load notes and swaps from localStorage on component mount
@@ -177,6 +177,49 @@ const NotesTracking = () => {
     }
   };
 
+  // Add some dummy data if there are no notes or swaps yet
+  useEffect(() => {
+    // Check if there's already data
+    if (notes.length === 0 && swaps.length === 0) {
+      const dummyNotes: Note[] = [
+        {
+          date: format(new Date(), "yyyy-MM-dd"),
+          text: "Regular note with some important information",
+        },
+        {
+          date: format(new Date(Date.now() - 86400000), "yyyy-MM-dd"),
+          text: "TOIL hours accumulated: 4 hours on project X",
+        },
+        {
+          date: format(new Date(Date.now() - 172800000), "yyyy-MM-dd"),
+          text: "Meeting notes from team standup",
+        }
+      ];
+      
+      const dummySwaps: ShiftSwap[] = [
+        {
+          date: format(new Date(), "yyyy-MM-dd"),
+          workerName: "John Smith",
+          type: "payback",
+          hours: 4,
+        },
+        {
+          date: format(new Date(Date.now() - 86400000), "yyyy-MM-dd"),
+          workerName: "Sarah Jones",
+          type: "owed",
+          hours: 3,
+        }
+      ];
+      
+      setNotes(dummyNotes);
+      setSwaps(dummySwaps);
+      
+      // Store in localStorage
+      localStorage.setItem("notes", JSON.stringify(dummyNotes));
+      localStorage.setItem("swaps", JSON.stringify(dummySwaps));
+    }
+  }, [notes.length, swaps.length]);
+
   return (
     <div className="container max-w-md mx-auto p-4 pb-20">
       <h1 className="text-2xl font-bold mb-4">Notes & Tracking</h1>
@@ -250,64 +293,48 @@ const NotesTracking = () => {
             </CardContent>
           </Card>
           
-          {Object.entries(categorizedItems).filter(([_, items]) => items.length > 0).length > 0 ? (
-            <div className="space-y-3">
-              <h3 className="font-medium">Your Notes</h3>
-              
-              {Object.entries(categorizedItems).map(([key, items]) => 
-                items.length > 0 ? (
-                  <Collapsible 
-                    key={key} 
-                    open={openFolders[key]} 
-                    onOpenChange={() => toggleFolder(key)}
-                    className="border rounded-md overflow-hidden"
-                  >
-                    <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
-                      <div className="flex items-center">
-                        <FolderOpen className="mr-2 h-5 w-5 text-muted-foreground" />
-                        <span className="font-medium">{getFolderName(key)}</span>
-                      </div>
-                      <span className="text-sm text-muted-foreground">{items.length} item{items.length !== 1 ? 's' : ''}</span>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="border-t">
-                      <div className="p-1 space-y-1">
-                        {items.map((item, idx) => (
+          <div className="space-y-3">
+            <h3 className="font-medium">Your Notes</h3>
+            
+            {/* Always show all folders, even if empty */}
+            {Object.entries(categorizedItems)
+              .filter(([key]) => key === "notes" || key === "toil" || key === "calendar-notes")
+              .map(([key, items]) => (
+                <Collapsible 
+                  key={key} 
+                  open={openFolders[key]} 
+                  onOpenChange={() => toggleFolder(key)}
+                  className="border rounded-md overflow-hidden"
+                >
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
+                    <div className="flex items-center">
+                      <FolderOpen className="mr-2 h-5 w-5 text-muted-foreground" />
+                      <span className="font-medium">{getFolderName(key)}</span>
+                    </div>
+                    <span className="text-sm text-muted-foreground">{items.length} item{items.length !== 1 ? 's' : ''}</span>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="border-t">
+                    <div className="p-1 space-y-1">
+                      {items.length > 0 ? (
+                        items.map((item, idx) => (
                           <Card key={idx} className="shadow-none border">
                             <CardContent className="p-3">
                               <div className="flex items-center text-sm text-muted-foreground mb-2">
                                 <CalendarDays className="mr-2 h-4 w-4" />
                                 {format(new Date(item.date), "MMMM d, yyyy")}
                               </div>
-                              {"text" in item ? (
-                                <p className="whitespace-pre-line">{item.text}</p>
-                              ) : (
-                                <div>
-                                  <div className="flex items-center mt-2">
-                                    <ArrowLeftRight className="mr-2 h-4 w-4" />
-                                    <span className="font-medium">{item.workerName}</span>
-                                  </div>
-                                  <div className="flex items-center mt-1">
-                                    <Clock className="mr-2 h-4 w-4" />
-                                    <span>{item.hours} hour{item.hours !== 1 ? "s" : ""}</span>
-                                  </div>
-                                </div>
-                              )}
+                              <p className="whitespace-pre-line">{item.text}</p>
                             </CardContent>
                           </Card>
-                        ))}
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                ) : null
-              )}
-            </div>
-          ) : (
-            searchTerm ? (
-              <p className="text-center text-muted-foreground py-8">No notes found</p>
-            ) : (
-              <p className="text-center text-muted-foreground py-8">You don't have any notes yet</p>
-            )
-          )}
+                        ))
+                      ) : (
+                        <p className="text-center text-muted-foreground py-4">No items in this folder</p>
+                      )}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              ))}
+          </div>
         </TabsContent>
         
         <TabsContent value="tracking" className="space-y-4 mt-4">
@@ -371,111 +398,66 @@ const NotesTracking = () => {
             </CardContent>
           </Card>
           
-          {filteredSwaps.length > 0 ? (
-            <div className="space-y-2">
-              <h3 className="font-medium">Shift Swaps</h3>
-              
-              <Collapsible 
-                open={openFolders["swap-done"]} 
-                onOpenChange={() => toggleFolder("swap-done")}
-                className="border rounded-md overflow-hidden mb-2"
-              >
-                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
-                  <div className="flex items-center">
-                    <FolderOpen className="mr-2 h-5 w-5 text-muted-foreground" />
-                    <span className="font-medium">Shift Swap (Done)</span>
-                  </div>
-                  <span className="text-sm text-muted-foreground">
-                    {categorizedItems["swap-done"].length} item{categorizedItems["swap-done"].length !== 1 ? 's' : ''}
-                  </span>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="border-t">
-                  <div className="p-1 space-y-1">
-                    {categorizedItems["swap-done"].length > 0 ? (
-                      categorizedItems["swap-done"].map((swap, index) => (
-                        <Card key={index} className="shadow-none border">
-                          <CardContent className="p-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center text-sm text-muted-foreground mb-2">
-                                <CalendarDays className="mr-2 h-4 w-4" />
-                                {format(new Date(swap.date), "MMMM d, yyyy")}
+          <div className="space-y-2">
+            <h3 className="font-medium">Shift Swaps</h3>
+            
+            {/* Always show swap folders, even if empty */}
+            {Object.entries(categorizedItems)
+              .filter(([key]) => key === "swap-done" || key === "swap-owed")
+              .map(([key, items]) => (
+                <Collapsible 
+                  key={key} 
+                  open={openFolders[key]} 
+                  onOpenChange={() => toggleFolder(key)}
+                  className="border rounded-md overflow-hidden mb-2"
+                >
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
+                    <div className="flex items-center">
+                      <FolderOpen className="mr-2 h-5 w-5 text-muted-foreground" />
+                      <span className="font-medium">{getFolderName(key)}</span>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {items.length} item{items.length !== 1 ? 's' : ''}
+                    </span>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="border-t">
+                    <div className="p-1 space-y-1">
+                      {items.length > 0 ? (
+                        items.map((swap, index) => (
+                          <Card key={index} className="shadow-none border">
+                            <CardContent className="p-3">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center text-sm text-muted-foreground mb-2">
+                                  <CalendarDays className="mr-2 h-4 w-4" />
+                                  {format(new Date(swap.date), "MMMM d, yyyy")}
+                                </div>
+                                <div className={`px-2 py-1 rounded-full text-xs ${
+                                  key === "swap-done" 
+                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                }`}>
+                                  {key === "swap-done" ? "Owed to You" : "You Owe"}
+                                </div>
                               </div>
-                              <div className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                Owed to You
+                              <div className="flex items-center mt-2">
+                                <ArrowLeftRight className="mr-2 h-4 w-4" />
+                                <span className="font-medium">{swap.workerName}</span>
                               </div>
-                            </div>
-                            <div className="flex items-center mt-2">
-                              <ArrowLeftRight className="mr-2 h-4 w-4" />
-                              <span className="font-medium">{swap.workerName}</span>
-                            </div>
-                            <div className="flex items-center mt-1">
-                              <Clock className="mr-2 h-4 w-4" />
-                              <span>{swap.hours} hour{swap.hours !== 1 ? "s" : ""}</span>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))
-                    ) : (
-                      <p className="text-center text-muted-foreground py-4">No completed shift swaps</p>
-                    )}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-              
-              <Collapsible 
-                open={openFolders["swap-owed"]} 
-                onOpenChange={() => toggleFolder("swap-owed")}
-                className="border rounded-md overflow-hidden"
-              >
-                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
-                  <div className="flex items-center">
-                    <FolderOpen className="mr-2 h-5 w-5 text-muted-foreground" />
-                    <span className="font-medium">Shift Swap (Owed)</span>
-                  </div>
-                  <span className="text-sm text-muted-foreground">
-                    {categorizedItems["swap-owed"].length} item{categorizedItems["swap-owed"].length !== 1 ? 's' : ''}
-                  </span>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="border-t">
-                  <div className="p-1 space-y-1">
-                    {categorizedItems["swap-owed"].length > 0 ? (
-                      categorizedItems["swap-owed"].map((swap, index) => (
-                        <Card key={index} className="shadow-none border">
-                          <CardContent className="p-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center text-sm text-muted-foreground mb-2">
-                                <CalendarDays className="mr-2 h-4 w-4" />
-                                {format(new Date(swap.date), "MMMM d, yyyy")}
+                              <div className="flex items-center mt-1">
+                                <Clock className="mr-2 h-4 w-4" />
+                                <span>{swap.hours} hour{swap.hours !== 1 ? "s" : ""}</span>
                               </div>
-                              <div className="px-2 py-1 rounded-full text-xs bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                                You Owe
-                              </div>
-                            </div>
-                            <div className="flex items-center mt-2">
-                              <ArrowLeftRight className="mr-2 h-4 w-4" />
-                              <span className="font-medium">{swap.workerName}</span>
-                            </div>
-                            <div className="flex items-center mt-1">
-                              <Clock className="mr-2 h-4 w-4" />
-                              <span>{swap.hours} hour{swap.hours !== 1 ? "s" : ""}</span>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))
-                    ) : (
-                      <p className="text-center text-muted-foreground py-4">No owed shift swaps</p>
-                    )}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            </div>
-          ) : (
-            searchTerm ? (
-              <p className="text-center text-muted-foreground py-8">No shift swaps found</p>
-            ) : (
-              <p className="text-center text-muted-foreground py-8">You don't have any shift swaps yet</p>
-            )
-          )}
+                            </CardContent>
+                          </Card>
+                        ))
+                      ) : (
+                        <p className="text-center text-muted-foreground py-4">No items in this folder</p>
+                      )}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              ))}
+          </div>
         </TabsContent>
       </Tabs>
     </div>
