@@ -173,8 +173,15 @@ const ShiftSetup = () => {
       isSwapDone: false,
       isSwapOwed: false
     };
-    saveShiftTypes([...shiftTypes, newShiftType]);
+    const newShiftTypes = [...shiftTypes, newShiftType];
+    saveShiftTypes(newShiftTypes);
     setIsEditing(true); // Automatically enter edit mode when adding a new shift
+    
+    // This ensures we don't open the special type dialog immediately after adding
+    setTimeout(() => {
+      const index = newShiftTypes.length - 1;
+      setSelectedIndex(index);
+    }, 100);
   };
 
   const removeShiftType = (index: number) => {
@@ -206,10 +213,10 @@ const ShiftSetup = () => {
   const handleDialogOpen = (index: number) => {
     setSelectedIndex(index);
     const currentType = shiftTypes[index];
-    setStartColor(currentType.color);
+    setStartColor(currentType.color || "#4B5563");
     
-    const endColorValue = currentType.gradient.match(/,(.*?)100%/)?.[1]?.trim() || currentType.color + "99";
-    setEndColor(endColorValue);
+    const endColorValue = currentType.gradient?.match(/,(.*?)100%/)?.[1]?.trim() || currentType.color + "99";
+    setEndColor(endColorValue || "#6B7280");
     
     // Determine the shift type option
     if (currentType.isOvertime) {

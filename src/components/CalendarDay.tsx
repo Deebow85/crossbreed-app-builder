@@ -77,6 +77,9 @@ const CalendarDay = ({
     'top-right': 'right-1'
   }[numberLayout];
 
+  // Set text color for shift name and labels based on shift type
+  const textColor = 'white';
+
   return (
     <Button
       key={date.toISOString()}
@@ -91,7 +94,7 @@ const CalendarDay = ({
       )}
       style={shift ? {
         background: shift.shiftType.gradient,
-        color: theme === 'dark' ? 'white' : 'inherit'
+        color: theme === 'dark' ? textColor : 'inherit'
       } : undefined}
       onClick={() => onDayClick(date)}
       onContextMenu={(e) => onContextMenu(e, date)}
@@ -102,7 +105,7 @@ const CalendarDay = ({
         "absolute top-0.5",
         numberPositionClasses,
         calendarSize === 'large' ? "text-base sm:text-lg" : "text-[10px] sm:text-xs",
-        theme === 'dark' && "text-foreground"
+        shift ? "text-white" : "text-foreground"
       )}>
         {format(date, 'd')}
       </span>
@@ -112,7 +115,7 @@ const CalendarDay = ({
             "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-bold",
             calendarSize === 'large' ? "text-2xl sm:text-3xl" : "text-base sm:text-lg"
           )}
-          style={{ color: shift ? 'white' : paydayColor }}
+          style={{ color: shift ? textColor : paydayColor }}
         >
           {paydaySymbol}
         </span>
@@ -123,7 +126,7 @@ const CalendarDay = ({
             "absolute bottom-0.5 left-0.5",
             calendarSize === 'large' ? "h-5 w-5 sm:h-6 sm:w-6" : "h-2.5 w-2.5 sm:h-3 sm:w-3"
           )}
-          style={{ color: shift ? 'white' : paydayColor }}
+          style={{ color: shift ? textColor : paydayColor }}
         />
       )}
       {alarm && (
@@ -132,14 +135,14 @@ const CalendarDay = ({
             "absolute bottom-0.5 right-0.5",
             calendarSize === 'large' ? "h-5 w-5 sm:h-6 sm:w-6" : "h-2.5 w-2.5 sm:h-3 sm:w-3"
           )}
-          style={{ color: shift ? 'white' : paydayColor }}
+          style={{ color: shift ? textColor : paydayColor }}
         />
       )}
       {shift && (
         <span className={cn(
           "absolute bottom-0.5 font-medium",
           calendarSize === 'large' ? "text-sm sm:text-base" : "text-[8px] sm:text-xs",
-          theme === 'dark' && "text-foreground"
+          "text-white"
         )}>
           {shift.shiftType.name}
         </span>
