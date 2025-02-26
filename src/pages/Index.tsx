@@ -31,35 +31,31 @@ const Index = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-1">
+      <div className="flex-1 overflow-auto">
         <Calendar />
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t py-4">
-        <div className="container max-w-md mx-auto flex items-center justify-around px-4">
-          {/* Home Button */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-background border-t py-2 z-50">
+        <div className="container max-w-md mx-auto grid grid-cols-5 gap-1">
           <Button 
             variant="ghost" 
-            size="icon" 
-            className="flex items-center justify-center hover:bg-accent w-12 h-12"
+            className="flex flex-col items-center justify-center h-16 rounded-none"
           >
-            <Home className="h-6 w-6" />
+            <Home className="h-6 w-6 mb-1" />
+            <span className="text-xs">Home</span>
           </Button>
           
-          {/* Calendar Button */}
           <Button 
             variant="ghost" 
-            size="icon" 
-            className="flex items-center justify-center hover:bg-accent w-12 h-12"
+            className="flex flex-col items-center justify-center h-16 rounded-none"
           >
-            <CalendarDays className="h-6 w-6" />
+            <CalendarDays className="h-6 w-6 mb-1" />
+            <span className="text-xs">Calendar</span>
           </Button>
           
-          {/* S Button */}
           <Button
             variant="ghost"
-            size="icon"
-            className="relative p-0"
+            className="flex items-center justify-center h-16 rounded-none relative"
             onClick={() => navigate("/shift-setup")}
           >
             <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg">
@@ -67,29 +63,27 @@ const Index = () => {
             </div>
           </Button>
           
-          {/* N Button */}
           <Button 
             variant="ghost" 
-            size="icon" 
-            className="flex items-center justify-center hover:bg-accent w-12 h-12"
+            className="flex flex-col items-center justify-center h-16 rounded-none"
             onClick={() => console.log("N button clicked")}
           >
-            <div className="h-8 w-8 border-2 border-foreground rounded-md flex items-center justify-center">
+            <div className="h-8 w-8 border-2 border-foreground rounded-md flex items-center justify-center mb-1">
               <span className="font-semibold text-foreground">N</span>
             </div>
+            <span className="text-xs">Notes</span>
           </Button>
           
-          {/* Settings Button */}
           <Button 
             variant="ghost" 
-            size="icon" 
-            className="flex items-center justify-center hover:bg-accent w-12 h-12"
+            className="flex flex-col items-center justify-center h-16 rounded-none"
             onClick={() => navigate("/settings")}
           >
-            <Settings className="h-6 w-6" />
+            <Settings className="h-6 w-6 mb-1" />
+            <span className="text-xs">Settings</span>
           </Button>
         </div>
-      </div>
+      </nav>
 
       <Dialog open={showTutorial} onOpenChange={setShowTutorial}>
         <DialogContent className="sm:max-w-[425px]">
