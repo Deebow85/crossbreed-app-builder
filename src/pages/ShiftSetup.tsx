@@ -22,6 +22,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { format } from "date-fns";
+import { toast } from "@/components/ui/use-toast";
 
 interface ShiftTypeSettings {
   name: string;
@@ -89,6 +90,18 @@ const ShiftSetup = () => {
   const [editingPattern, setEditingPattern] = useState<EditingPattern | null>(null);
   const [showSetDaysDialog, setShowSetDaysDialog] = useState(false);
   const [shiftTypeOption, setShiftTypeOption] = useState<"regular" | "overtime" | "toil" | "swap-done" | "swap-owed">("regular");
+  const [showNewShiftDialog, setShowNewShiftDialog] = useState(false);
+  const [newShift, setNewShift] = useState<ShiftTypeSettings>({
+    name: "New Shift",
+    symbol: "",
+    color: DEFAULT_COLOR,
+    gradient: DEFAULT_GRADIENT,
+    isNew: true,
+    isOvertime: false,
+    isTOIL: false,
+    isSwapDone: false,
+    isSwapOwed: false
+  });
 
   useEffect(() => {
     const savedSettings = localStorage.getItem('appSettings');
@@ -145,11 +158,21 @@ const ShiftSetup = () => {
     saveShiftTypes(newShiftTypes);
   };
 
+  const updateNewShift = (field: keyof ShiftTypeSettings, value: string) => {
+    setNewShift({
+      ...newShift,
+      [field]: value
+    });
+  };
+
   const handleSolidColor = () => {
     setColorMode('solid');
     if (selectedIndex !== null) {
       const color = shiftTypes[selectedIndex].color || DEFAULT_COLOR;
       setStartColor(color);
+    } else {
+      // For new shift
+      setStartColor(newShift.color || DEFAULT_COLOR);
     }
   };
 
@@ -167,41 +190,69 @@ const ShiftSetup = () => {
       }
       
       setEndColor(endColorValue || "#6B7280");
+    } else {
+      // For new shift
+      const color = newShift.color || DEFAULT_COLOR;
+      setStartColor(color);
+      
+      let endColorValue;
+      try {
+        endColorValue = newShift.gradient?.match(/,(.*?)100%/)?.[1]?.trim() || `${color}99`;
+      } catch (e) {
+        endColorValue = `${color}99`;
+      }
+      
+      setEndColor(endColorValue || "#6B7280");
     }
   };
 
   const handleColorConfirm = () => {
-    if (selectedIndex === null) return;
-    
-    const newShiftTypes = [...shiftTypes];
-    if (colorMode === 'solid') {
-      newShiftTypes[selectedIndex] = {
-        ...newShiftTypes[selectedIndex],
-        color: startColor,
-        gradient: `linear-gradient(135deg, ${startColor} 0%, ${startColor} 100%)`,
-        isNew: false
-      };
-    } else if (colorMode === 'gradient') {
-      newShiftTypes[selectedIndex] = {
-        ...newShiftTypes[selectedIndex],
-        color: startColor,
-        gradient: `linear-gradient(135deg, ${startColor} 0%, ${endColor} 100%)`,
-        isNew: false
-      };
-    }
-    
-    // Apply special type if selected
     if (selectedIndex !== null) {
+      const newShiftTypes = [...shiftTypes];
+      if (colorMode === 'solid') {
+        newShiftTypes[selectedIndex] = {
+          ...newShiftTypes[selectedIndex],
+          color: startColor,
+          gradient: `linear-gradient(135deg, ${startColor} 0%, ${startColor} 100%)`,
+          isNew: false
+        };
+      } else if (colorMode === 'gradient') {
+        newShiftTypes[selectedIndex] = {
+          ...newShiftTypes[selectedIndex],
+          color: startColor,
+          gradient: `linear-gradient(135deg, ${startColor} 0%, ${endColor} 100%)`,
+          isNew: false
+        };
+      }
+      
+      // Apply special type if selected
       updateShiftTypeSpecial(selectedIndex, shiftTypeOption, newShiftTypes);
+      
+      saveShiftTypes(newShiftTypes);
+    } else {
+      // For new shift
+      if (colorMode === 'solid') {
+        setNewShift({
+          ...newShift,
+          color: startColor,
+          gradient: `linear-gradient(135deg, ${startColor} 0%, ${startColor} 100%)`,
+        });
+      } else if (colorMode === 'gradient') {
+        setNewShift({
+          ...newShift,
+          color: startColor,
+          gradient: `linear-gradient(135deg, ${startColor} 0%, ${endColor} 100%)`,
+        });
+      }
     }
     
-    saveShiftTypes(newShiftTypes);
     setIsDialogOpen(false);
     setColorMode(null);
   };
 
   const addShiftType = () => {
-    const newShiftType: ShiftTypeSettings = {
+    // Reset the new shift to default values
+    setNewShift({
       name: "New Shift",
       symbol: "",
       color: DEFAULT_COLOR,
@@ -211,16 +262,21 @@ const ShiftSetup = () => {
       isTOIL: false,
       isSwapDone: false,
       isSwapOwed: false
-    };
-    const newShiftTypes = [...shiftTypes, newShiftType];
-    saveShiftTypes(newShiftTypes);
-    setIsEditing(true); // Automatically enter edit mode when adding a new shift
+    });
     
-    // This ensures we don't open the special type dialog immediately after adding
-    setTimeout(() => {
-      const index = newShiftTypes.length - 1;
-      setSelectedIndex(index);
-    }, 100);
+    // Show the new shift dialog
+    setShowNewShiftDialog(true);
+    setIsEditing(true); // Enter edit mode
+  };
+
+  const confirmAddShift = () => {
+    const newShiftTypes = [...shiftTypes, newShift];
+    saveShiftTypes(newShiftTypes);
+    setShowNewShiftDialog(false);
+    toast({
+      title: "New shift added",
+      description: `${newShift.name} has been added to your shift types.`,
+    });
   };
 
   const removeShiftType = (index: number) => {
@@ -249,31 +305,59 @@ const ShiftSetup = () => {
     setIsRemoveDialogOpen(true);
   };
 
-  const handleDialogOpen = (index: number) => {
+  const handleDialogOpen = (index: number | null = null) => {
     setSelectedIndex(index);
-    const currentType = shiftTypes[index];
-    setStartColor(currentType.color || DEFAULT_COLOR);
     
-    let endColorValue;
-    try {
-      endColorValue = currentType.gradient?.match(/,(.*?)100%/)?.[1]?.trim() || `${currentType.color}99`;
-    } catch (e) {
-      endColorValue = `${currentType.color || DEFAULT_COLOR}99`;
-    }
-    
-    setEndColor(endColorValue || "#6B7280");
-    
-    // Determine the shift type option
-    if (currentType.isOvertime) {
-      setShiftTypeOption("overtime");
-    } else if (currentType.isTOIL) {
-      setShiftTypeOption("toil");
-    } else if (currentType.isSwapDone) {
-      setShiftTypeOption("swap-done");
-    } else if (currentType.isSwapOwed) {
-      setShiftTypeOption("swap-owed");
+    if (index !== null) {
+      const currentType = shiftTypes[index];
+      setStartColor(currentType.color || DEFAULT_COLOR);
+      
+      let endColorValue;
+      try {
+        endColorValue = currentType.gradient?.match(/,(.*?)100%/)?.[1]?.trim() || `${currentType.color}99`;
+      } catch (e) {
+        endColorValue = `${currentType.color || DEFAULT_COLOR}99`;
+      }
+      
+      setEndColor(endColorValue || "#6B7280");
+      
+      // Determine the shift type option
+      if (currentType.isOvertime) {
+        setShiftTypeOption("overtime");
+      } else if (currentType.isTOIL) {
+        setShiftTypeOption("toil");
+      } else if (currentType.isSwapDone) {
+        setShiftTypeOption("swap-done");
+      } else if (currentType.isSwapOwed) {
+        setShiftTypeOption("swap-owed");
+      } else {
+        setShiftTypeOption("regular");
+      }
     } else {
-      setShiftTypeOption("regular");
+      // For new shift
+      setStartColor(newShift.color || DEFAULT_COLOR);
+      
+      let endColorValue;
+      try {
+        endColorValue = newShift.gradient?.match(/,(.*?)100%/)?.[1]?.trim() || `${newShift.color}99`;
+      } catch (e) {
+        endColorValue = `${newShift.color || DEFAULT_COLOR}99`;
+      }
+      
+      setEndColor(endColorValue || "#6B7280");
+      
+      // Determine the shift type option
+      if (newShift.isOvertime) {
+        setShiftTypeOption("overtime");
+      } else if (newShift.isTOIL) {
+        setShiftTypeOption("toil");
+      } else if (newShift.isSwapDone) {
+        setShiftTypeOption("swap-done");
+      } else if (newShift.isSwapOwed) {
+        setShiftTypeOption("swap-owed");
+      } else {
+        setShiftTypeOption("regular");
+      }
     }
     
     setIsDialogOpen(true);
@@ -484,6 +568,28 @@ const ShiftSetup = () => {
     
     if (shiftTypesToUpdate !== shiftTypes) {
       saveShiftTypes(shiftTypesToUpdate);
+    }
+  };
+
+  const updateNewShiftSpecial = (specialType: "regular" | "overtime" | "toil" | "swap-done" | "swap-owed") => {
+    // First, reset all special flags
+    setNewShift({
+      ...newShift,
+      isOvertime: false,
+      isTOIL: false,
+      isSwapDone: false,
+      isSwapOwed: false
+    });
+    
+    // Then set the appropriate flag based on the selection
+    if (specialType === "overtime") {
+      setNewShift(prev => ({ ...prev, isOvertime: true }));
+    } else if (specialType === "toil") {
+      setNewShift(prev => ({ ...prev, isTOIL: true }));
+    } else if (specialType === "swap-done") {
+      setNewShift(prev => ({ ...prev, isSwapDone: true }));
+    } else if (specialType === "swap-owed") {
+      setNewShift(prev => ({ ...prev, isSwapOwed: true }));
     }
   };
 
@@ -778,6 +884,130 @@ const ShiftSetup = () => {
           )}
         </div>
       </Card>
+
+      {/* New Shift Dialog */}
+      <Dialog 
+        open={showNewShiftDialog} 
+        onOpenChange={(open) => {
+          if (!open) setShowNewShiftDialog(false);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Shift</DialogTitle>
+            <DialogDescription>
+              Configure your new shift type and click Save when done
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-shift-name">Shift Name</Label>
+              <Input
+                id="new-shift-name"
+                value={newShift.name}
+                onChange={(e) => updateNewShift('name', e.target.value)}
+                placeholder="e.g., Morning Shift"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="new-shift-symbol">Symbol</Label>
+              <Input
+                id="new-shift-symbol"
+                value={newShift.symbol}
+                onChange={(e) => updateNewShift('symbol', e.target.value.toUpperCase())}
+                placeholder="e.g., M"
+                className="uppercase"
+                maxLength={2}
+              />
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <div
+                className="w-16 h-16 rounded-md border"
+                style={{ background: newShift.gradient || DEFAULT_GRADIENT }}
+              />
+              <Button 
+                variant="outline" 
+                onClick={() => handleDialogOpen(null)}
+              >
+                Select Color
+              </Button>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="new-special-type-switch"
+                  checked={newShift.isOvertime || newShift.isTOIL || newShift.isSwapDone || newShift.isSwapOwed || false}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setNewShift({
+                        ...newShift,
+                        isOvertime: true,
+                        isTOIL: false,
+                        isSwapDone: false,
+                        isSwapOwed: false
+                      });
+                    } else {
+                      setNewShift({
+                        ...newShift,
+                        isOvertime: false,
+                        isTOIL: false,
+                        isSwapDone: false,
+                        isSwapOwed: false
+                      });
+                    }
+                  }}
+                />
+                <Label htmlFor="new-special-type-switch">Special Type</Label>
+              </div>
+              
+              {(newShift.isOvertime || newShift.isTOIL || newShift.isSwapDone || newShift.isSwapOwed) && (
+                <RadioGroup
+                  value={
+                    newShift.isOvertime ? "overtime" : 
+                    newShift.isTOIL ? "toil" : 
+                    newShift.isSwapDone ? "swap-done" : 
+                    newShift.isSwapOwed ? "swap-owed" : "regular"
+                  }
+                  onValueChange={(value: "regular" | "overtime" | "toil" | "swap-done" | "swap-owed") => {
+                    updateNewShiftSpecial(value);
+                  }}
+                  className="grid grid-cols-2 gap-2 mt-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="overtime" id="new-overtime" />
+                    <Label htmlFor="new-overtime">Overtime</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="toil" id="new-toil" />
+                    <Label htmlFor="new-toil">TOIL</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="swap-done" id="new-swap-done" />
+                    <Label htmlFor="new-swap-done">Swap (Done)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="swap-owed" id="new-swap-owed" />
+                    <Label htmlFor="new-swap-owed">Swap (Owed)</Label>
+                  </div>
+                </RadioGroup>
+              )}
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowNewShiftDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={confirmAddShift}>
+              Save Shift
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog 
         open={showSetDaysDialog} 
@@ -1116,9 +1346,9 @@ const ShiftSetup = () => {
               
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setColorMode(null)}>Back</Button>
-                <Button onClick={() => {
-                  handleColorConfirm();
-                }}>Confirm</Button>
+                <Button onClick={handleColorConfirm}>
+                  Confirm
+                </Button>
               </div>
             </div>
           )}
