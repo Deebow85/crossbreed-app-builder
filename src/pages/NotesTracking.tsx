@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
-import { Search, Plus, Clock, ArrowLeftRight, CalendarDays, ChevronLeft, ChevronRight, FolderOpen } from "lucide-react";
+import { Search, Plus, Clock, ArrowLeftRight, CalendarDays, FolderOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Note, ShiftSwap, SwapType } from "@/types/calendar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -22,7 +22,7 @@ const NotesTracking = () => {
   const [swapHours, setSwapHours] = useState("");
   const [swapType, setSwapType] = useState<SwapType>("owed");
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate] = useState(new Date());
   const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({
     "swap-done": true,
     "swap-owed": true,
@@ -152,19 +152,6 @@ const NotesTracking = () => {
     }));
   };
 
-  // Navigate to previous or next month
-  const navigateMonth = (direction: 'prev' | 'next') => {
-    setCurrentDate(prevDate => {
-      const newDate = new Date(prevDate);
-      if (direction === 'prev') {
-        newDate.setMonth(prevDate.getMonth() - 1);
-      } else {
-        newDate.setMonth(prevDate.getMonth() + 1);
-      }
-      return newDate;
-    });
-  };
-
   // Get folder name for display
   const getFolderName = (key: string): string => {
     switch (key) {
@@ -237,30 +224,6 @@ const NotesTracking = () => {
         </div>
       </div>
       
-      <div className="flex items-center justify-between mb-4">
-        <Button variant="outline" size="sm" onClick={() => navigateMonth('prev')}>
-          <ChevronLeft className="h-4 w-4 mr-1" />
-          Prev
-        </Button>
-        <h2 className="text-lg font-medium">
-          {format(currentDate, "MMMM yyyy")}
-        </h2>
-        <Button variant="outline" size="sm" onClick={() => navigateMonth('next')}>
-          Next
-          <ChevronRight className="h-4 w-4 ml-1" />
-        </Button>
-      </div>
-      
-      <Card className="mb-4">
-        <CardContent className="p-3">
-          <div className="text-center">
-            <p className="text-muted-foreground text-sm">Currently adding for:</p>
-            <p className="text-lg font-medium">{format(currentDate, "MMMM d, yyyy")}</p>
-            <p className="text-sm text-muted-foreground mt-2">Go to the main calendar to change date</p>
-          </div>
-        </CardContent>
-      </Card>
-      
       <Tabs defaultValue="notes" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="notes">Notes</TabsTrigger>
@@ -272,7 +235,7 @@ const NotesTracking = () => {
             <CardHeader>
               <CardTitle className="text-lg">Add Note</CardTitle>
               <CardDescription>
-                Create a note for {format(currentDate, "MMM d, yyyy")}
+                Create a note for today
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -342,7 +305,7 @@ const NotesTracking = () => {
             <CardHeader>
               <CardTitle className="text-lg">Record Shift Swap</CardTitle>
               <CardDescription>
-                Track shift swaps for {format(currentDate, "MMM d, yyyy")}
+                Track shift swaps
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
