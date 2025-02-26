@@ -81,10 +81,10 @@ const Layout = () => {
             </Button>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex">
             <Button 
               variant="ghost" 
-              className="flex flex-col items-center justify-center h-16 w-16 rounded-none"
+              className="flex flex-col items-center justify-center h-16 w-16 rounded-none ml-2 mr-1"
               onClick={() => console.log("N button clicked")}
             >
               <div className="h-8 w-8 border-2 border-foreground rounded-md flex items-center justify-center">
