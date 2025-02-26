@@ -36,17 +36,18 @@ const Index = () => {
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t py-4">
-        <div className="container max-w-md mx-auto flex items-center justify-between px-4">
+        <div className="container max-w-md mx-auto flex items-center justify-around px-4">
           <Button 
             variant="ghost" 
             size="icon" 
-            className="hover:bg-accent w-10 h-10"
+            className="flex items-center justify-center hover:bg-accent w-12 h-12"
           >
-            <CalendarDays className="h-8 w-8" />
+            <CalendarDays className="h-6 w-6" />
           </Button>
           
           <Button
             variant="ghost"
+            size="icon"
             className="relative p-0"
             onClick={() => navigate("/shift-setup")}
           >
@@ -58,18 +59,18 @@ const Index = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="hover:bg-accent w-10 h-10"
+            className="flex items-center justify-center hover:bg-accent w-12 h-12"
           >
-            <FileText className="h-8 w-8" />
+            <FileText className="h-6 w-6" />
           </Button>
           
           <Button 
             variant="ghost" 
             size="icon" 
-            className="hover:bg-accent w-10 h-10"
+            className="flex items-center justify-center hover:bg-accent w-12 h-12"
             onClick={() => navigate("/settings")}
           >
-            <Settings className="h-8 w-8" />
+            <Settings className="h-6 w-6" />
           </Button>
         </div>
       </div>
