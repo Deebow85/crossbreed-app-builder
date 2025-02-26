@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -326,7 +327,13 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
   const totalOvertimeHours = shifts.reduce((total, shift) => {
     if (!shift.otHours) return total;
     
-    if (!calendarSettings.overtime?.enabled) return 0;
+    if (!calendarSettings.overtime?.enabled) return total;
+
+    // Check if we should only count shifts marked specifically as "Overtime" type
+    const onlyTrackOvertimeType = parsedSettings.overtime?.onlyTrackOvertimeType !== false; // Default to true if not specified
+    if (onlyTrackOvertimeType && !shift.shiftType.isOvertime) {
+      return total;
+    }
     
     const date = new Date(shift.date);
     const currentMonthStart = startOfMonth(currentDate);
