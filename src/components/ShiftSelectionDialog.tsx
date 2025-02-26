@@ -1,5 +1,5 @@
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
@@ -31,9 +31,9 @@ export default function ShiftSelectionDialog({
   const [selectedType, setSelectedType] = useState<ShiftType | null>(initialShiftType || null);
 
   useEffect(() => {
-    if (open && initialShiftType && initialOvertimeHours) {
+    if (open && initialShiftType) {
       setSelectedType(initialShiftType);
-      setOvertimeHours(initialOvertimeHours);
+      setOvertimeHours(initialOvertimeHours || {});
     }
   }, [open, initialShiftType, initialOvertimeHours]);
 
@@ -76,6 +76,9 @@ export default function ShiftSelectionDialog({
               ? format(selectedDates[0], 'MMM do, yyyy')
               : `${selectedDates.length} selected dates`}
           </DialogTitle>
+          <DialogDescription>
+            Select a shift type{selectedType?.isOvertime ? " and enter overtime hours" : ""}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
