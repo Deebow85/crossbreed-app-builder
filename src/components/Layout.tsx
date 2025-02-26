@@ -88,9 +88,9 @@ const Layout = () => {
               onClick={() => console.log("N button clicked")}
             >
               <div className="h-8 w-8 border-2 border-foreground rounded-md flex items-center justify-center">
-                <span className="font-semibold text-foreground">N</span>
+                <span className="font-semibold text-foreground text-xs">N/T</span>
               </div>
-              {settings.showIconTitles && <span className="text-xs mt-1">Notes</span>}
+              {settings.showIconTitles && <span className="text-xs mt-1">Notes / Tracking</span>}
             </Button>
             
             <Button 
