@@ -81,7 +81,7 @@ const Layout = () => {
             </Button>
           </div>
           
-          <div className="flex justify-between" style={{ width: '140px' }}>
+          <div className="flex justify-between" style={{ width: '150px', marginLeft: '10px' }}>
             <Button 
               variant="ghost" 
               className="flex flex-col items-center justify-center h-16 w-16 rounded-none"
