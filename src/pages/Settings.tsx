@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, CreditCard, HelpCircle, Settings as SettingsIcon, Paintbrush, Clock, ChevronDown } from "lucide-react";
+import { CalendarDays, CreditCard, HelpCircle, Settings as SettingsIcon, Paintbrush, Clock, ChevronDown, Bell } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,7 @@ import { CalendarSettings } from "@/components/settings/CalendarSettings";
 import { ThemeSettings } from "@/components/settings/ThemeSettings";
 import { PaydaySettings } from "@/components/settings/PaydaySettings";
 import { OvertimeSettings } from "@/components/settings/OvertimeSettings";
+import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { AppSettings, defaultSettings } from "@/types/settings";
 
 const Settings = () => {
@@ -32,7 +33,8 @@ const Settings = () => {
     calendar: false,
     theme: false,
     payment: false,
-    overtime: false
+    overtime: false,
+    notifications: false
   });
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -51,6 +53,10 @@ const Settings = () => {
             ...defaultSettings.overtime.schedule,
             ...(parsed.overtime?.schedule || {})
           }
+        },
+        notifications: {
+          ...defaultSettings.notifications,
+          ...parsed.notifications
         }
       };
       setSettings(settings);
@@ -123,6 +129,24 @@ const Settings = () => {
             </CollapsibleTrigger>
             <CollapsibleContent>
               <ThemeSettings />
+            </CollapsibleContent>
+          </Collapsible>
+
+          <Collapsible open={openSections.notifications} onOpenChange={() => toggleSection('notifications')}>
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex items-center justify-between w-full p-2"
+              >
+                <div className="flex items-center gap-2">
+                  <Bell className="h-4 w-4" />
+                  <span className="font-semibold">Notifications & Alarms</span>
+                </div>
+                <ChevronDown className={cn("h-4 w-4 transition-transform", openSections.notifications && "transform rotate-180")} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <NotificationSettings settings={settings} onSave={saveSettings} />
             </CollapsibleContent>
           </Collapsible>
 

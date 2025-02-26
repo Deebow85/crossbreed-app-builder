@@ -13,6 +13,12 @@ export interface AppSettings {
   longPressEnabled: boolean;
   showOverlappingDates: boolean;
   showIconTitles: boolean;
+  notifications?: {
+    enabled: boolean;
+    defaultReminderTime: string;
+    sound: boolean;
+    vibration: boolean;
+  };
   overtime: {
     enabled: boolean;
     defaultRate: number;
@@ -44,6 +50,12 @@ export const defaultSettings: AppSettings = {
   longPressEnabled: true,
   showOverlappingDates: true,
   showIconTitles: true,
+  notifications: {
+    enabled: true,
+    defaultReminderTime: "01:00",
+    sound: true,
+    vibration: true
+  },
   overtime: {
     enabled: true,
     defaultRate: 1.5,
