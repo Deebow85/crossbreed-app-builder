@@ -12,16 +12,39 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { AppSettings, defaultSettings } from "@/types/settings";
 
 const Index = () => {
   const navigate = useNavigate();
   const [showTutorial, setShowTutorial] = useState(false);
   const [isSelectingMultiple, setIsSelectingMultiple] = useState(false);
-
+  const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+  
   useEffect(() => {
     const hasSeenTutorial = localStorage.getItem("hasSeenTutorial");
     if (!hasSeenTutorial) {
       setShowTutorial(true);
+    }
+    
+    const savedSettings = localStorage.getItem('appSettings');
+    if (savedSettings) {
+      try {
+        const parsedSettings = JSON.parse(savedSettings);
+        setSettings({
+          ...defaultSettings,
+          ...parsedSettings,
+          overtime: {
+            ...defaultSettings.overtime,
+            ...parsedSettings.overtime,
+            schedule: {
+              ...defaultSettings.overtime.schedule,
+              ...(parsedSettings.overtime?.schedule || {})
+            }
+          }
+        });
+      } catch (e) {
+        console.error("Error parsing settings:", e);
+      }
     }
   }, []);
 
@@ -45,7 +68,7 @@ const Index = () => {
               className="flex flex-col items-center justify-center h-16 w-16 rounded-none"
             >
               <CalendarDays className="h-6 w-6" />
-              <span className="text-xs mt-1">Calendar</span>
+              {settings.showIconTitles && <span className="text-xs mt-1">Calendar</span>}
             </Button>
             
             <Button
@@ -55,7 +78,7 @@ const Index = () => {
               className="flex flex-col items-center justify-center h-16 w-16 rounded-none"
             >
               <CheckSquare className="h-6 w-6" />
-              <span className="text-xs mt-1">Multi</span>
+              {settings.showIconTitles && <span className="text-xs mt-1">Multi</span>}
             </Button>
           </div>
           
@@ -81,7 +104,7 @@ const Index = () => {
               <div className="h-8 w-8 border-2 border-foreground rounded-md flex items-center justify-center">
                 <span className="font-semibold text-foreground">N</span>
               </div>
-              <span className="text-xs mt-1">Notes</span>
+              {settings.showIconTitles && <span className="text-xs mt-1">Notes</span>}
             </Button>
             
             <Button 
@@ -90,7 +113,7 @@ const Index = () => {
               onClick={() => navigate("/settings")}
             >
               <Settings className="h-6 w-6" />
-              <span className="text-xs mt-1">Settings</span>
+              {settings.showIconTitles && <span className="text-xs mt-1">Settings</span>}
             </Button>
           </div>
         </div>

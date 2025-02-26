@@ -109,6 +109,22 @@ export function CalendarSettings({ settings, onSave }: CalendarSettingsProps) {
           <Label className="text-sm">Show dates from previous/next month</Label>
         </div>
       </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs">Show Icon Titles</Label>
+        <div className="flex items-center space-x-2">
+          <Switch
+            checked={settings.showIconTitles}
+            onCheckedChange={(checked) => {
+              onSave({
+                ...settings,
+                showIconTitles: checked
+              });
+            }}
+          />
+          <Label className="text-sm">Show titles underneath icons in navigation</Label>
+        </div>
+      </div>
     </div>
   );
 }
