@@ -1,10 +1,12 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { CalendarDays, Settings, Plus, Trash2, PencilIcon, Check, Wand2, ChevronDown, RefreshCcw } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { CalendarDays, Settings, Plus, Trash2, PencilIcon, Check, Wand2, ChevronDown, RefreshCcw, Clock, ArrowLeftRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Dialog,
@@ -28,6 +30,9 @@ interface ShiftTypeSettings {
   gradient: string;
   isNew?: boolean;
   isOvertime?: boolean;
+  isTOIL?: boolean;
+  isSwapDone?: boolean;
+  isSwapOwed?: boolean;
 }
 
 interface ShiftPattern {
@@ -80,6 +85,7 @@ const ShiftSetup = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [editingPattern, setEditingPattern] = useState<EditingPattern | null>(null);
   const [showSetDaysDialog, setShowSetDaysDialog] = useState(false);
+  const [shiftTypeOption, setShiftTypeOption] = useState<"regular" | "overtime" | "toil" | "swap-done" | "swap-owed">("regular");
 
   useEffect(() => {
     const savedSettings = localStorage.getItem('appSettings');
@@ -162,7 +168,10 @@ const ShiftSetup = () => {
       color: "#4B5563",
       gradient: "linear-gradient(135deg, #4B5563 0%, #6B7280 100%)",
       isNew: true,
-      isOvertime: false
+      isOvertime: false,
+      isTOIL: false,
+      isSwapDone: false,
+      isSwapOwed: false
     };
     saveShiftTypes([...shiftTypes, newShiftType]);
   };
@@ -200,6 +209,19 @@ const ShiftSetup = () => {
     
     const endColorValue = currentType.gradient.match(/,(.*?)100%/)?.[1]?.trim() || currentType.color + "99";
     setEndColor(endColorValue);
+    
+    // Determine the shift type option
+    if (currentType.isOvertime) {
+      setShiftTypeOption("overtime");
+    } else if (currentType.isTOIL) {
+      setShiftTypeOption("toil");
+    } else if (currentType.isSwapDone) {
+      setShiftTypeOption("swap-done");
+    } else if (currentType.isSwapOwed) {
+      setShiftTypeOption("swap-owed");
+    } else {
+      setShiftTypeOption("regular");
+    }
     
     setIsDialogOpen(true);
     setColorMode(null);
@@ -451,7 +473,10 @@ const ShiftSetup = () => {
               <div 
                 key={index} 
                 className={`flex items-center gap-2 p-1.5 border rounded-lg ${
-                  type.isOvertime ? 'border-orange-500 bg-orange-50/50' : ''
+                  type.isOvertime ? 'border-orange-500 bg-orange-50/50' : 
+                  type.isTOIL ? 'border-purple-500 bg-purple-50/50' : 
+                  type.isSwapDone ? 'border-green-500 bg-green-50/50' : 
+                  type.isSwapOwed ? 'border-blue-500 bg-blue-50/50' : ''
                 }`}
               >
                 {!type.isNew && !isEditing ? (
@@ -460,6 +485,24 @@ const ShiftSetup = () => {
                       <span className="text-base">{type.name} ({type.symbol})</span>
                       {type.isOvertime && (
                         <span className="text-xs text-orange-600 font-medium">Overtime</span>
+                      )}
+                      {type.isTOIL && (
+                        <span className="text-xs text-purple-600 font-medium flex items-center">
+                          <Clock className="h-3 w-3 mr-1" />
+                          TOIL
+                        </span>
+                      )}
+                      {type.isSwapDone && (
+                        <span className="text-xs text-green-600 font-medium flex items-center">
+                          <ArrowLeftRight className="h-3 w-3 mr-1" />
+                          Swap (Done)
+                        </span>
+                      )}
+                      {type.isSwapOwed && (
+                        <span className="text-xs text-blue-600 font-medium flex items-center">
+                          <ArrowLeftRight className="h-3 w-3 mr-1" />
+                          Swap (Owed)
+                        </span>
                       )}
                     </div>
                     <Input
@@ -485,18 +528,73 @@ const ShiftSetup = () => {
                       />
                       <div className="flex items-center space-x-2">
                         <Switch
-                          checked={type.isOvertime}
+                          checked={type.isOvertime || type.isTOIL || type.isSwapDone || type.isSwapOwed || false}
                           onCheckedChange={(checked) => {
                             const newShiftTypes = [...shiftTypes];
-                            newShiftTypes[index] = {
-                              ...newShiftTypes[index],
-                              isOvertime: checked
-                            };
+                            if (checked) {
+                              // Default to overtime when first checked
+                              newShiftTypes[index] = {
+                                ...newShiftTypes[index],
+                                isOvertime: true,
+                                isTOIL: false,
+                                isSwapDone: false,
+                                isSwapOwed: false
+                              };
+                            } else {
+                              // Clear all special types
+                              newShiftTypes[index] = {
+                                ...newShiftTypes[index],
+                                isOvertime: false,
+                                isTOIL: false,
+                                isSwapDone: false,
+                                isSwapOwed: false
+                              };
+                            }
                             saveShiftTypes(newShiftTypes);
                           }}
                         />
-                        <Label className="text-xs text-muted-foreground">Overtime</Label>
+                        <Label className="text-xs text-muted-foreground">Special Type</Label>
                       </div>
+                      
+                      {(type.isOvertime || type.isTOIL || type.isSwapDone || type.isSwapOwed) && (
+                        <RadioGroup
+                          value={
+                            type.isOvertime ? "overtime" : 
+                            type.isTOIL ? "toil" : 
+                            type.isSwapDone ? "swap-done" : 
+                            type.isSwapOwed ? "swap-owed" : "regular"
+                          }
+                          onValueChange={(value: "regular" | "overtime" | "toil" | "swap-done" | "swap-owed") => {
+                            const newShiftTypes = [...shiftTypes];
+                            newShiftTypes[index] = {
+                              ...newShiftTypes[index],
+                              isOvertime: value === "overtime",
+                              isTOIL: value === "toil",
+                              isSwapDone: value === "swap-done",
+                              isSwapOwed: value === "swap-owed"
+                            };
+                            saveShiftTypes(newShiftTypes);
+                          }}
+                          className="flex flex-wrap gap-1"
+                        >
+                          <div className="flex items-center space-x-1">
+                            <RadioGroupItem value="overtime" id={`overtime-${index}`} />
+                            <Label htmlFor={`overtime-${index}`} className="text-xs">Overtime</Label>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <RadioGroupItem value="toil" id={`toil-${index}`} />
+                            <Label htmlFor={`toil-${index}`} className="text-xs">TOIL</Label>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <RadioGroupItem value="swap-done" id={`swap-done-${index}`} />
+                            <Label htmlFor={`swap-done-${index}`} className="text-xs">Swap (Done)</Label>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <RadioGroupItem value="swap-owed" id={`swap-owed-${index}`} />
+                            <Label htmlFor={`swap-owed-${index}`} className="text-xs">Swap (Owed)</Label>
+                          </div>
+                        </RadioGroup>
+                      )}
                     </div>
                     <Input
                       value={type.symbol}
@@ -895,26 +993,54 @@ const ShiftSetup = () => {
                 </div>
               )}
 
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={selectedIndex !== null ? shiftTypes[selectedIndex].isOvertime : false}
-                  onCheckedChange={(checked) => {
-                    if (selectedIndex !== null) {
-                      const newShiftTypes = [...shiftTypes];
-                      newShiftTypes[selectedIndex] = {
-                        ...newShiftTypes[selectedIndex],
-                        isOvertime: checked
-                      };
-                      saveShiftTypes(newShiftTypes);
-                    }
+              <div className="space-y-4">
+                <Label className="block mb-2">Shift Type</Label>
+                <RadioGroup
+                  value={shiftTypeOption}
+                  onValueChange={(value: "regular" | "overtime" | "toil" | "swap-done" | "swap-owed") => {
+                    setShiftTypeOption(value);
                   }}
-                />
-                <Label>Calculate as Overtime</Label>
+                  className="grid grid-cols-2 gap-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="regular" id="r1" />
+                    <Label htmlFor="r1">Regular</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="overtime" id="r2" />
+                    <Label htmlFor="r2">Overtime</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="toil" id="r3" />
+                    <Label htmlFor="r3">TOIL</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="swap-done" id="r4" />
+                    <Label htmlFor="r4">Swap (Done)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="swap-owed" id="r5" />
+                    <Label htmlFor="r5">Swap (Owed)</Label>
+                  </div>
+                </RadioGroup>
               </div>
               
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setColorMode(null)}>Back</Button>
-                <Button onClick={handleColorConfirm}>Confirm</Button>
+                <Button onClick={() => {
+                  handleColorConfirm();
+                  if (selectedIndex !== null) {
+                    const newShiftTypes = [...shiftTypes];
+                    newShiftTypes[selectedIndex] = {
+                      ...newShiftTypes[selectedIndex],
+                      isOvertime: shiftTypeOption === "overtime",
+                      isTOIL: shiftTypeOption === "toil",
+                      isSwapDone: shiftTypeOption === "swap-done",
+                      isSwapOwed: shiftTypeOption === "swap-owed"
+                    };
+                    saveShiftTypes(newShiftTypes);
+                  }
+                }}>Confirm</Button>
               </div>
             </div>
           )}

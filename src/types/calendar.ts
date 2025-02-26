@@ -4,6 +4,9 @@ export type ShiftType = {
   color: string;
   gradient: string;
   isOvertime?: boolean;
+  isTOIL?: boolean;
+  isSwapDone?: boolean;
+  isSwapOwed?: boolean;
 };
 
 export type ShiftAssignment = {

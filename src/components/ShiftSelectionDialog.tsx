@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { ShiftType } from "@/types/calendar";
 import { useState, useEffect } from "react";
+import { Clock, ArrowLeftRight } from "lucide-react";
 
 interface ShiftSelectionDialogProps {
   open: boolean;
@@ -40,8 +41,8 @@ export default function ShiftSelectionDialog({
   const handleShiftSelect = (shiftType: ShiftType | null) => {
     setSelectedType(shiftType);
     
-    // If the shift type doesn't have overtime, or clearing the shift, submit immediately
-    if (!shiftType?.isOvertime) {
+    // If the shift type doesn't have overtime/TOIL/swap, or clearing the shift, submit immediately
+    if (!shiftType?.isOvertime && !shiftType?.isTOIL && !shiftType?.isSwapDone && !shiftType?.isSwapOwed) {
       onShiftSelect(shiftType, undefined);
       setOvertimeHours({});
       setSelectedType(null);
@@ -56,7 +57,9 @@ export default function ShiftSelectionDialog({
     }
   };
 
-  const showOTInput = selectedType?.isOvertime && showOvertimeInput;
+  const needsHoursInput = selectedType?.isOvertime || selectedType?.isTOIL || 
+                          selectedType?.isSwapDone || selectedType?.isSwapOwed;
+  const showHoursInput = needsHoursInput && showOvertimeInput;
 
   return (
     <Dialog 
@@ -72,12 +75,19 @@ export default function ShiftSelectionDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {selectedType?.isOvertime ? "Edit overtime hours" : "Set shift"} for {selectedDates.length === 1 
+            {selectedType?.isOvertime ? "Edit overtime hours" : 
+             selectedType?.isTOIL ? "Edit TOIL hours" : 
+             selectedType?.isSwapDone || selectedType?.isSwapOwed ? "Edit swap hours" : 
+             "Set shift"} for {selectedDates.length === 1 
               ? format(selectedDates[0], 'MMM do, yyyy')
               : `${selectedDates.length} selected dates`}
           </DialogTitle>
           <DialogDescription>
-            Select a shift type{selectedType?.isOvertime ? " and enter overtime hours" : ""}
+            Select a shift type
+            {selectedType?.isOvertime && " and enter overtime hours"}
+            {selectedType?.isTOIL && " and enter TOIL hours"}
+            {selectedType?.isSwapDone && " and enter swap hours (done)"}
+            {selectedType?.isSwapOwed && " and enter swap hours (owed)"}
           </DialogDescription>
         </DialogHeader>
 
@@ -91,16 +101,41 @@ export default function ShiftSelectionDialog({
                 }}
                 variant={selectedType?.name === type.name ? "default" : "secondary"}
                 onClick={() => handleShiftSelect(type)}
+                className="relative"
               >
                 {type.name}
+                {type.isOvertime && (
+                  <span className="absolute top-0 right-0 bg-orange-500 text-white text-[8px] rounded-full px-1">OT</span>
+                )}
+                {type.isTOIL && (
+                  <span className="absolute top-0 right-0 flex items-center bg-purple-500 text-white text-[8px] rounded-full px-1">
+                    <Clock className="h-2 w-2 mr-0.5" />
+                    TOIL
+                  </span>
+                )}
+                {type.isSwapDone && (
+                  <span className="absolute top-0 right-0 flex items-center bg-green-500 text-white text-[8px] rounded-full px-1">
+                    <ArrowLeftRight className="h-2 w-2 mr-0.5" />
+                    Done
+                  </span>
+                )}
+                {type.isSwapOwed && (
+                  <span className="absolute top-0 right-0 flex items-center bg-blue-500 text-white text-[8px] rounded-full px-1">
+                    <ArrowLeftRight className="h-2 w-2 mr-0.5" />
+                    Owed
+                  </span>
+                )}
               </Button>
             ))}
           </div>
 
-          {showOTInput && selectedDates.map(date => (
+          {showHoursInput && selectedDates.map(date => (
             <div key={date.toISOString()} className="space-y-2">
               <label className="text-sm">
-                Overtime hours for {format(date, 'MMM do')}:
+                {selectedType?.isOvertime ? "Overtime" : 
+                 selectedType?.isTOIL ? "TOIL" : 
+                 selectedType?.isSwapDone ? "Swap (Done)" : 
+                 selectedType?.isSwapOwed ? "Swap (Owed)" : ""} hours for {format(date, 'MMM do')}:
               </label>
               <Input
                 type="number"
@@ -118,9 +153,9 @@ export default function ShiftSelectionDialog({
             </div>
           ))}
 
-          {showOTInput && (
+          {showHoursInput && (
             <Button onClick={handleSubmit} className="mt-2">
-              {initialOvertimeHours ? "Update" : "Set"} Overtime Hours
+              {initialOvertimeHours ? "Update" : "Set"} Hours
             </Button>
           )}
 
