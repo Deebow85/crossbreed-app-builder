@@ -58,6 +58,9 @@ interface EditingPattern {
   };
 }
 
+const DEFAULT_COLOR = "#4B5563";
+const DEFAULT_GRADIENT = `linear-gradient(135deg, #4B5563 0%, #6B7280 100%)`;
+
 const ShiftSetup = () => {
   const navigate = useNavigate();
   const [shiftTypes, setShiftTypes] = useState<ShiftTypeSettings[]>([]);
@@ -65,7 +68,7 @@ const ShiftSetup = () => {
   const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [colorMode, setColorMode] = useState<'solid' | 'gradient' | null>(null);
-  const [startColor, setStartColor] = useState("#4B5563");
+  const [startColor, setStartColor] = useState(DEFAULT_COLOR);
   const [endColor, setEndColor] = useState("#6B7280");
   const [isEditing, setIsEditing] = useState(false);
   const [selectedToRemove, setSelectedToRemove] = useState<number[]>([]);
@@ -103,12 +106,34 @@ const ShiftSetup = () => {
   }, []);
 
   const saveShiftTypes = (newShiftTypes: ShiftTypeSettings[]) => {
-    const typesToSave = newShiftTypes.map(({ isNew, ...rest }) => rest);
+    // Ensure all shift types have valid color and gradient properties
+    const validatedShiftTypes = newShiftTypes.map(type => {
+      const updatedType = { ...type };
+      
+      // Make sure we have a valid color
+      if (!updatedType.color || updatedType.color === "") {
+        updatedType.color = DEFAULT_COLOR;
+      }
+      
+      // Make sure we have a valid gradient
+      if (!updatedType.gradient || updatedType.gradient === "") {
+        updatedType.gradient = `linear-gradient(135deg, ${updatedType.color} 0%, ${updatedType.color} 100%)`;
+      }
+      
+      // Remove isNew flag for storage
+      const { isNew, ...rest } = updatedType;
+      return rest;
+    });
+    
     setShiftTypes(newShiftTypes);
+    
     const savedSettings = localStorage.getItem('appSettings');
     const settings = savedSettings ? JSON.parse(savedSettings) : {};
-    settings.shiftTypes = typesToSave;
+    settings.shiftTypes = validatedShiftTypes;
     localStorage.setItem('appSettings', JSON.stringify(settings));
+    
+    // Log for debugging
+    console.log("Saved shift types:", validatedShiftTypes);
   };
 
   const updateShiftType = (index: number, field: keyof ShiftTypeSettings, value: string) => {
@@ -123,16 +148,25 @@ const ShiftSetup = () => {
   const handleSolidColor = () => {
     setColorMode('solid');
     if (selectedIndex !== null) {
-      setStartColor(shiftTypes[selectedIndex].color);
+      const color = shiftTypes[selectedIndex].color || DEFAULT_COLOR;
+      setStartColor(color);
     }
   };
 
   const handleGradient = () => {
     setColorMode('gradient');
     if (selectedIndex !== null) {
-      setStartColor(shiftTypes[selectedIndex].color);
-      const endColorValue = shiftTypes[selectedIndex].gradient.match(/,(.*?)100%/)?.[1]?.trim() || shiftTypes[selectedIndex].color + "99";
-      setEndColor(endColorValue);
+      const color = shiftTypes[selectedIndex].color || DEFAULT_COLOR;
+      setStartColor(color);
+      
+      let endColorValue;
+      try {
+        endColorValue = shiftTypes[selectedIndex].gradient?.match(/,(.*?)100%/)?.[1]?.trim() || `${color}99`;
+      } catch (e) {
+        endColorValue = `${color}99`;
+      }
+      
+      setEndColor(endColorValue || "#6B7280");
     }
   };
 
@@ -156,6 +190,11 @@ const ShiftSetup = () => {
       };
     }
     
+    // Apply special type if selected
+    if (selectedIndex !== null) {
+      updateShiftTypeSpecial(selectedIndex, shiftTypeOption, newShiftTypes);
+    }
+    
     saveShiftTypes(newShiftTypes);
     setIsDialogOpen(false);
     setColorMode(null);
@@ -165,8 +204,8 @@ const ShiftSetup = () => {
     const newShiftType: ShiftTypeSettings = {
       name: "New Shift",
       symbol: "",
-      color: "#4B5563",
-      gradient: "linear-gradient(135deg, #4B5563 0%, #6B7280 100%)",
+      color: DEFAULT_COLOR,
+      gradient: DEFAULT_GRADIENT,
       isNew: true,
       isOvertime: false,
       isTOIL: false,
@@ -213,9 +252,15 @@ const ShiftSetup = () => {
   const handleDialogOpen = (index: number) => {
     setSelectedIndex(index);
     const currentType = shiftTypes[index];
-    setStartColor(currentType.color || "#4B5563");
+    setStartColor(currentType.color || DEFAULT_COLOR);
     
-    const endColorValue = currentType.gradient?.match(/,(.*?)100%/)?.[1]?.trim() || currentType.color + "99";
+    let endColorValue;
+    try {
+      endColorValue = currentType.gradient?.match(/,(.*?)100%/)?.[1]?.trim() || `${currentType.color}99`;
+    } catch (e) {
+      endColorValue = `${currentType.color || DEFAULT_COLOR}99`;
+    }
+    
     setEndColor(endColorValue || "#6B7280");
     
     // Determine the shift type option
@@ -412,11 +457,14 @@ const ShiftSetup = () => {
     navigate('/');
   };
 
-  const updateShiftTypeSpecial = (index: number, specialType: "regular" | "overtime" | "toil" | "swap-done" | "swap-owed") => {
-    const newShiftTypes = [...shiftTypes];
+  const updateShiftTypeSpecial = (
+    index: number, 
+    specialType: "regular" | "overtime" | "toil" | "swap-done" | "swap-owed",
+    shiftTypesToUpdate = [...shiftTypes]
+  ) => {
     // First, reset all special flags
-    newShiftTypes[index] = {
-      ...newShiftTypes[index],
+    shiftTypesToUpdate[index] = {
+      ...shiftTypesToUpdate[index],
       isOvertime: false,
       isTOIL: false,
       isSwapDone: false,
@@ -425,16 +473,18 @@ const ShiftSetup = () => {
     
     // Then set the appropriate flag based on the selection
     if (specialType === "overtime") {
-      newShiftTypes[index].isOvertime = true;
+      shiftTypesToUpdate[index].isOvertime = true;
     } else if (specialType === "toil") {
-      newShiftTypes[index].isTOIL = true;
+      shiftTypesToUpdate[index].isTOIL = true;
     } else if (specialType === "swap-done") {
-      newShiftTypes[index].isSwapDone = true;
+      shiftTypesToUpdate[index].isSwapDone = true;
     } else if (specialType === "swap-owed") {
-      newShiftTypes[index].isSwapOwed = true;
+      shiftTypesToUpdate[index].isSwapOwed = true;
     }
     
-    saveShiftTypes(newShiftTypes);
+    if (shiftTypesToUpdate !== shiftTypes) {
+      saveShiftTypes(shiftTypesToUpdate);
+    }
   };
 
   // Determine if a shift is "new" or actively being edited
@@ -558,7 +608,7 @@ const ShiftSetup = () => {
                     />
                     <div 
                       className="w-32 h-9 rounded border flex-1"
-                      style={{ background: type.gradient }}
+                      style={{ background: type.gradient || DEFAULT_GRADIENT }}
                       role="button"
                       aria-label="Shift color"
                     />
@@ -646,7 +696,7 @@ const ShiftSetup = () => {
                     <div className="flex items-center gap-2 flex-1">
                       <div 
                         className="w-32 h-9 rounded border"
-                        style={{ background: type.gradient }}
+                        style={{ background: type.gradient || DEFAULT_GRADIENT }}
                         onClick={() => isEditing && handleDialogOpen(index)}
                         role="button"
                         aria-label="Select color"
@@ -1068,9 +1118,6 @@ const ShiftSetup = () => {
                 <Button variant="outline" onClick={() => setColorMode(null)}>Back</Button>
                 <Button onClick={() => {
                   handleColorConfirm();
-                  if (selectedIndex !== null) {
-                    updateShiftTypeSpecial(selectedIndex, shiftTypeOption);
-                  }
                 }}>Confirm</Button>
               </div>
             </div>
@@ -1095,7 +1142,7 @@ const ShiftSetup = () => {
                 <div className="flex items-center gap-2">
                   <div 
                     className="w-8 h-8 rounded border flex items-center justify-center font-semibold"
-                    style={{ background: type.gradient }}
+                    style={{ background: type.gradient || DEFAULT_GRADIENT }}
                   >
                     {type.symbol}
                   </div>
