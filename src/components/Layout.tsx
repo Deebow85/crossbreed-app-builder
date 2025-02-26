@@ -47,6 +47,7 @@ const Layout = () => {
   }, [location]); // Add location as dependency to refresh on navigation
   
   const isIndexPage = location.pathname === "/";
+  const isNotesTrackingPage = location.pathname === "/notes-tracking";
 
   return (
     <div className="h-full flex flex-col">
@@ -97,8 +98,8 @@ const Layout = () => {
             <div className="flex-1 flex justify-end">
               <Button 
                 variant="ghost" 
-                className="flex flex-col items-center justify-center h-16 w-16 rounded-none"
-                onClick={() => console.log("N button clicked")}
+                className={`flex flex-col items-center justify-center h-16 w-16 rounded-none ${isNotesTrackingPage ? "bg-accent" : ""}`}
+                onClick={() => navigate("/notes-tracking")}
               >
                 <div className="h-8 w-8 border-2 border-foreground rounded-md flex items-center justify-center">
                   <span className="font-semibold text-foreground text-xs">N/T</span>

@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/lib/theme";
 import Index from "./pages/Index";
 import Settings from "./pages/Settings";
 import ShiftSetup from "./pages/ShiftSetup";
+import NotesTracking from "./pages/NotesTracking";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
 
@@ -25,6 +26,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/shift-setup" element={<ShiftSetup />} />
+              <Route path="/notes-tracking" element={<NotesTracking />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
