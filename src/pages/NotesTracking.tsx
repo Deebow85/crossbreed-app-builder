@@ -147,7 +147,7 @@ const NotesTracking = () => {
     });
   };
 
-  // Handle Delete Item
+  // Handle Delete Item - now with immediate deletion
   const handleDeleteClick = (type: 'note' | 'swap', index: number) => {
     setSelectedItem({ type, index });
     setDeleteDialogOpen(true);
@@ -155,6 +155,9 @@ const NotesTracking = () => {
 
   const confirmDelete = () => {
     if (!selectedItem) return;
+    
+    // Close dialog first for immediate visual feedback
+    setDeleteDialogOpen(false);
     
     if (selectedItem.type === 'note') {
       const updatedNotes = [...notes];
@@ -178,7 +181,6 @@ const NotesTracking = () => {
       });
     }
     
-    setDeleteDialogOpen(false);
     setSelectedItem(null);
   };
 
@@ -200,6 +202,9 @@ const NotesTracking = () => {
 
   const confirmEdit = () => {
     if (!selectedItem) return;
+    
+    // Close dialog first for immediate visual feedback
+    setEditDialogOpen(false);
     
     if (selectedItem.type === 'note') {
       if (!editNoteText.trim()) {
@@ -260,7 +265,6 @@ const NotesTracking = () => {
       });
     }
     
-    setEditDialogOpen(false);
     setSelectedItem(null);
   };
 
