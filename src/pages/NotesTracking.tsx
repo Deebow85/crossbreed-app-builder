@@ -1,21 +1,19 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import { Search, Plus, Clock, ArrowLeftRight, CalendarDays } from "lucide-react";
+import { format, parse } from "date-fns";
+import { Search, Plus, Clock, ArrowLeftRight, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Note, ShiftSwap, SwapType } from "@/types/calendar";
 
 const NotesTracking = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("notes");
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [noteText, setNoteText] = useState("");
   const [notes, setNotes] = useState<Note[]>([]);
   const [swaps, setSwaps] = useState<ShiftSwap[]>([]);
@@ -23,9 +21,10 @@ const NotesTracking = () => {
   const [swapHours, setSwapHours] = useState("");
   const [swapType, setSwapType] = useState<SwapType>("owed");
   const [searchTerm, setSearchTerm] = useState("");
-
-  // Load notes and swaps from localStorage
-  useState(() => {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  
+  // Load notes and swaps from localStorage on component mount
+  useEffect(() => {
     const savedNotes = localStorage.getItem("notes");
     if (savedNotes) {
       try {
@@ -43,18 +42,9 @@ const NotesTracking = () => {
         console.error("Error loading swaps:", e);
       }
     }
-  });
+  }, []);
 
   const saveNote = () => {
-    if (!selectedDate) {
-      toast({
-        title: "No date selected",
-        description: "Please select a date for your note",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (!noteText.trim()) {
       toast({
         title: "Empty note",
@@ -64,7 +54,7 @@ const NotesTracking = () => {
       return;
     }
 
-    const dateString = format(selectedDate, "yyyy-MM-dd");
+    const dateString = format(currentDate, "yyyy-MM-dd");
     const newNote: Note = {
       date: dateString,
       text: noteText,
@@ -78,20 +68,11 @@ const NotesTracking = () => {
     
     toast({
       title: "Note saved",
-      description: `Note added for ${format(selectedDate, "MMM d, yyyy")}`,
+      description: `Note added for ${format(currentDate, "MMM d, yyyy")}`,
     });
   };
 
   const saveSwap = () => {
-    if (!selectedDate) {
-      toast({
-        title: "No date selected",
-        description: "Please select a date for this shift swap",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (!swapWorkerName.trim()) {
       toast({
         title: "No name provided",
@@ -110,7 +91,7 @@ const NotesTracking = () => {
       return;
     }
 
-    const dateString = format(selectedDate, "yyyy-MM-dd");
+    const dateString = format(currentDate, "yyyy-MM-dd");
     const newSwap: ShiftSwap = {
       date: dateString,
       workerName: swapWorkerName,
@@ -141,6 +122,19 @@ const NotesTracking = () => {
     swap.date.includes(searchTerm)
   );
 
+  // Navigate to previous or next month
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    setCurrentDate(prevDate => {
+      const newDate = new Date(prevDate);
+      if (direction === 'prev') {
+        newDate.setMonth(prevDate.getMonth() - 1);
+      } else {
+        newDate.setMonth(prevDate.getMonth() + 1);
+      }
+      return newDate;
+    });
+  };
+
   return (
     <div className="container max-w-md mx-auto p-4 pb-20">
       <h1 className="text-2xl font-bold mb-4">Notes & Tracking</h1>
@@ -158,6 +152,30 @@ const NotesTracking = () => {
         </div>
       </div>
       
+      <div className="flex items-center justify-between mb-4">
+        <Button variant="outline" size="sm" onClick={() => navigateMonth('prev')}>
+          <ChevronLeft className="h-4 w-4 mr-1" />
+          Prev
+        </Button>
+        <h2 className="text-lg font-medium">
+          {format(currentDate, "MMMM yyyy")}
+        </h2>
+        <Button variant="outline" size="sm" onClick={() => navigateMonth('next')}>
+          Next
+          <ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
+      
+      <Card className="mb-4">
+        <CardContent className="p-3">
+          <div className="text-center">
+            <p className="text-muted-foreground text-sm">Currently adding for:</p>
+            <p className="text-lg font-medium">{format(currentDate, "MMMM d, yyyy")}</p>
+            <p className="text-sm text-muted-foreground mt-2">Go to the main calendar to change date</p>
+          </div>
+        </CardContent>
+      </Card>
+      
       <Tabs defaultValue="notes" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="notes">Notes</TabsTrigger>
@@ -169,22 +187,10 @@ const NotesTracking = () => {
             <CardHeader>
               <CardTitle className="text-lg">Add Note</CardTitle>
               <CardDescription>
-                Create a note for a specific date
+                Create a note for {format(currentDate, "MMM d, yyyy")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="note-date">Date</Label>
-                <div className="border rounded-md p-2">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    className="mx-auto"
-                  />
-                </div>
-              </div>
-              
               <div className="space-y-2">
                 <Label htmlFor="note-text">Note</Label>
                 <Textarea
@@ -231,22 +237,10 @@ const NotesTracking = () => {
             <CardHeader>
               <CardTitle className="text-lg">Record Shift Swap</CardTitle>
               <CardDescription>
-                Track shift swaps with your colleagues
+                Track shift swaps for {format(currentDate, "MMM d, yyyy")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="swap-date">Date</Label>
-                <div className="border rounded-md p-2">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    className="mx-auto"
-                  />
-                </div>
-              </div>
-              
               <div className="space-y-2">
                 <Label htmlFor="swap-type">Swap Type</Label>
                 <div className="flex rounded-md overflow-hidden">
