@@ -10,7 +10,6 @@ import {
   type ToastProps,
   type ToastActionElement,
 } from "@/components/ui/toast"
-import { useToast as useToaster } from "@radix-ui/react-toast"
 
 export type ToasterToast = ToastProps & {
   id: string
@@ -97,23 +96,6 @@ export function ToasterProvider({
   return (
     <toaster.Provider value={value}>
       {children}
-      <ToastProvider>
-        {toasts.map(function ({ id, title, description, action, ...props }) {
-          return (
-            <Toast key={id} {...props}>
-              <div className="grid gap-1">
-                {title && <ToastTitle>{title}</ToastTitle>}
-                {description && (
-                  <ToastDescription>{description}</ToastDescription>
-                )}
-              </div>
-              {action}
-              <ToastClose />
-            </Toast>
-          )
-        })}
-        <ToastViewport />
-      </ToastProvider>
     </toaster.Provider>
   )
 }
@@ -122,14 +104,16 @@ export const useToast = () => {
   const { toasts, addToast, removeToast, removeAllToasts } = useToaster()
 
   const toast = React.useCallback(
-    ({ ...props }: ToastProps) => {
+    (props: ToastProps) => {
       const id = crypto.randomUUID()
-      addToast({ id, ...props })
+      const toastProps = { id, ...props } as ToasterToast
+      addToast(toastProps)
+      
       return {
         id,
         dismiss: () => removeToast(id),
         update: (props: ToastProps) => {
-          addToast({ id, ...props })
+          addToast({ id, ...props } as ToasterToast)
         },
       }
     },
