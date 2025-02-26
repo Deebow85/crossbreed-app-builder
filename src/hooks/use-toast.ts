@@ -25,7 +25,7 @@ type ToasterState = {
   toasts: ToasterToast[]
 }
 
-const toaster = React.createContext<{
+const ToasterContext = React.createContext<{
   toasts: ToasterToast[]
   addToast: (toast: ToasterToast) => void
   removeToast: (id: string) => void
@@ -38,7 +38,7 @@ const toaster = React.createContext<{
 })
 
 function useToaster() {
-  const context = React.useContext(toaster)
+  const context = React.useContext(ToasterContext)
   if (!context) {
     throw new Error("useToaster must be used within a ToasterProvider")
   }
@@ -94,9 +94,9 @@ export function ToasterProvider({
   )
 
   return (
-    <toaster.Provider value={value}>
+    <ToasterContext.Provider value={value}>
       {children}
-    </toaster.Provider>
+    </ToasterContext.Provider>
   )
 }
 
@@ -128,4 +128,4 @@ export const useToast = () => {
   }
 }
 
-export { toast } from "./toast"
+export { toast } from "../hooks/toast"
