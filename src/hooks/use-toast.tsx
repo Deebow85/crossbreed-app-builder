@@ -128,4 +128,4 @@ export const useToast = () => {
   }
 }
 
-export { toast } from "../hooks/toast"
+export { toast } from "./toast"
