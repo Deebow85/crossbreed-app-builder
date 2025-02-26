@@ -11,28 +11,40 @@ const Layout = () => {
   const [isSelectingMultiple, setIsSelectingMultiple] = useState(false);
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   
+  // Add dependency on location to refresh settings when navigating
   useEffect(() => {
-    const savedSettings = localStorage.getItem('appSettings');
-    if (savedSettings) {
-      try {
-        const parsedSettings = JSON.parse(savedSettings);
-        setSettings({
-          ...defaultSettings,
-          ...parsedSettings,
-          overtime: {
-            ...defaultSettings.overtime,
-            ...parsedSettings.overtime,
-            schedule: {
-              ...defaultSettings.overtime.schedule,
-              ...(parsedSettings.overtime?.schedule || {})
+    const loadSettings = () => {
+      const savedSettings = localStorage.getItem('appSettings');
+      if (savedSettings) {
+        try {
+          const parsedSettings = JSON.parse(savedSettings);
+          setSettings({
+            ...defaultSettings,
+            ...parsedSettings,
+            overtime: {
+              ...defaultSettings.overtime,
+              ...parsedSettings.overtime,
+              schedule: {
+                ...defaultSettings.overtime.schedule,
+                ...(parsedSettings.overtime?.schedule || {})
+              }
             }
-          }
-        });
-      } catch (e) {
-        console.error("Error parsing settings:", e);
+          });
+        } catch (e) {
+          console.error("Error parsing settings:", e);
+        }
       }
-    }
-  }, []);
+    };
+    
+    loadSettings();
+    
+    // Add event listener to catch settings changes
+    window.addEventListener('storage', loadSettings);
+    
+    return () => {
+      window.removeEventListener('storage', loadSettings);
+    };
+  }, [location]); // Add location as dependency to refresh on navigation
   
   const isIndexPage = location.pathname === "/";
 

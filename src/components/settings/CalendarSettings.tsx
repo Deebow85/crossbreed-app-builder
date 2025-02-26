@@ -3,6 +3,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { AppSettings } from "@/types/settings"
+import { useToast } from "@/components/ui/use-toast"
 
 interface CalendarSettingsProps {
   settings: AppSettings;
@@ -10,6 +11,25 @@ interface CalendarSettingsProps {
 }
 
 export function CalendarSettings({ settings, onSave }: CalendarSettingsProps) {
+  const { toast } = useToast();
+  
+  const handleShowIconTitlesChange = (checked: boolean) => {
+    const newSettings = {
+      ...settings,
+      showIconTitles: checked
+    };
+    onSave(newSettings);
+    
+    // Dispatch storage event to notify other components
+    window.dispatchEvent(new Event('storage'));
+    
+    // Show toast
+    toast({
+      title: "Icon titles " + (checked ? "enabled" : "disabled"),
+      description: "Navigation bar has been updated",
+    });
+  };
+  
   return (
     <div className="space-y-4 p-2">
       <div className="grid gap-2">
@@ -45,12 +65,7 @@ export function CalendarSettings({ settings, onSave }: CalendarSettingsProps) {
           <Switch 
             id="show-icon-titles" 
             checked={settings.showIconTitles}
-            onCheckedChange={(checked) => {
-              onSave({
-                ...settings,
-                showIconTitles: checked
-              });
-            }}
+            onCheckedChange={handleShowIconTitlesChange}
           />
           <Label htmlFor="show-icon-titles">Show Icon Titles</Label>
         </div>
