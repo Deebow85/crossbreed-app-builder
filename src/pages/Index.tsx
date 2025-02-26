@@ -37,6 +37,7 @@ const Index = () => {
 
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t py-4">
         <div className="container max-w-md mx-auto flex items-center justify-around px-4">
+          {/* Calendar Button */}
           <Button 
             variant="ghost" 
             size="icon" 
@@ -45,6 +46,7 @@ const Index = () => {
             <CalendarDays className="h-6 w-6" />
           </Button>
           
+          {/* S Button */}
           <Button
             variant="ghost"
             size="icon"
@@ -56,6 +58,7 @@ const Index = () => {
             </div>
           </Button>
           
+          {/* N Button */}
           <Button 
             variant="ghost" 
             size="icon" 
@@ -66,6 +69,7 @@ const Index = () => {
             </div>
           </Button>
           
+          {/* Settings Button */}
           <Button 
             variant="ghost" 
             size="icon" 
