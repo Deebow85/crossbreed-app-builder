@@ -78,7 +78,7 @@ const Index = () => {
               className="flex flex-col items-center justify-center h-16 w-16 rounded-none"
             >
               <CheckSquare className="h-6 w-6" />
-              {settings.showIconTitles && <span className="text-xs mt-1">Multi</span>}
+              {settings.showIconTitles && <span className="text-xs mt-1">Multi Select</span>}
             </Button>
           </div>
           
