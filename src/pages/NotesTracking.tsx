@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { format, parse } from "date-fns";
-import { Search, Plus, Clock, ArrowLeftRight, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { format } from "date-fns";
+import { Search, Plus, Clock, ArrowLeftRight, CalendarDays, ChevronLeft, ChevronRight, FolderOpen } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Note, ShiftSwap, SwapType } from "@/types/calendar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const NotesTracking = () => {
   const { toast } = useToast();
@@ -22,6 +23,13 @@ const NotesTracking = () => {
   const [swapType, setSwapType] = useState<SwapType>("owed");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({
+    "swap-done": false,
+    "swap-owed": false,
+    "toil": false,
+    "notes": false,
+    "calendar-notes": false
+  });
   
   // Load notes and swaps from localStorage on component mount
   useEffect(() => {
@@ -112,6 +120,7 @@ const NotesTracking = () => {
     });
   };
 
+  // Filter notes and swaps based on search term
   const filteredNotes = notes.filter(note => 
     note.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
     note.date.includes(searchTerm)
@@ -121,6 +130,27 @@ const NotesTracking = () => {
     swap.workerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     swap.date.includes(searchTerm)
   );
+
+  // Categorize notes and swaps
+  const categorizedItems = {
+    "swap-done": filteredSwaps.filter(swap => swap.type === "payback"),
+    "swap-owed": filteredSwaps.filter(swap => swap.type === "owed"),
+    "toil": filteredNotes.filter(note => note.text.toLowerCase().includes("toil")),
+    "notes": filteredNotes.filter(note => 
+      !note.text.toLowerCase().includes("toil") && 
+      !note.text.toLowerCase().includes("swap") &&
+      !note.swap
+    ),
+    "calendar-notes": filteredNotes.filter(note => note.swap)
+  };
+
+  // Toggle folder open/closed state
+  const toggleFolder = (folder: string) => {
+    setOpenFolders(prev => ({
+      ...prev,
+      [folder]: !prev[folder]
+    }));
+  };
 
   // Navigate to previous or next month
   const navigateMonth = (direction: 'prev' | 'next') => {
@@ -133,6 +163,18 @@ const NotesTracking = () => {
       }
       return newDate;
     });
+  };
+
+  // Get folder name for display
+  const getFolderName = (key: string): string => {
+    switch (key) {
+      case "swap-done": return "Shift Swap (Done)";
+      case "swap-owed": return "Shift Swap (Owed)";
+      case "toil": return "TOIL";
+      case "notes": return "Notes";
+      case "calendar-notes": return "Notes From Calendar";
+      default: return key;
+    }
   };
 
   return (
@@ -208,20 +250,56 @@ const NotesTracking = () => {
             </CardContent>
           </Card>
           
-          {filteredNotes.length > 0 ? (
-            <div className="space-y-2">
+          {Object.entries(categorizedItems).filter(([_, items]) => items.length > 0).length > 0 ? (
+            <div className="space-y-3">
               <h3 className="font-medium">Your Notes</h3>
-              {filteredNotes.map((note, index) => (
-                <Card key={index}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center text-sm text-muted-foreground mb-2">
-                      <CalendarDays className="mr-2 h-4 w-4" />
-                      {format(new Date(note.date), "MMMM d, yyyy")}
-                    </div>
-                    <p>{note.text}</p>
-                  </CardContent>
-                </Card>
-              ))}
+              
+              {Object.entries(categorizedItems).map(([key, items]) => 
+                items.length > 0 ? (
+                  <Collapsible 
+                    key={key} 
+                    open={openFolders[key]} 
+                    onOpenChange={() => toggleFolder(key)}
+                    className="border rounded-md overflow-hidden"
+                  >
+                    <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
+                      <div className="flex items-center">
+                        <FolderOpen className="mr-2 h-5 w-5 text-muted-foreground" />
+                        <span className="font-medium">{getFolderName(key)}</span>
+                      </div>
+                      <span className="text-sm text-muted-foreground">{items.length} item{items.length !== 1 ? 's' : ''}</span>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="border-t">
+                      <div className="p-1 space-y-1">
+                        {items.map((item, idx) => (
+                          <Card key={idx} className="shadow-none border">
+                            <CardContent className="p-3">
+                              <div className="flex items-center text-sm text-muted-foreground mb-2">
+                                <CalendarDays className="mr-2 h-4 w-4" />
+                                {format(new Date(item.date), "MMMM d, yyyy")}
+                              </div>
+                              {"text" in item ? (
+                                <p className="whitespace-pre-line">{item.text}</p>
+                              ) : (
+                                <div>
+                                  <div className="flex items-center mt-2">
+                                    <ArrowLeftRight className="mr-2 h-4 w-4" />
+                                    <span className="font-medium">{item.workerName}</span>
+                                  </div>
+                                  <div className="flex items-center mt-1">
+                                    <Clock className="mr-2 h-4 w-4" />
+                                    <span>{item.hours} hour{item.hours !== 1 ? "s" : ""}</span>
+                                  </div>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                ) : null
+              )}
             </div>
           ) : (
             searchTerm ? (
@@ -296,29 +374,100 @@ const NotesTracking = () => {
           {filteredSwaps.length > 0 ? (
             <div className="space-y-2">
               <h3 className="font-medium">Shift Swaps</h3>
-              {filteredSwaps.map((swap, index) => (
-                <Card key={index}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center text-sm text-muted-foreground mb-2">
-                        <CalendarDays className="mr-2 h-4 w-4" />
-                        {format(new Date(swap.date), "MMMM d, yyyy")}
-                      </div>
-                      <div className={`px-2 py-1 rounded-full text-xs ${swap.type === "owed" ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200" : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"}`}>
-                        {swap.type === "owed" ? "You Owe" : "Owed to You"}
-                      </div>
-                    </div>
-                    <div className="flex items-center mt-2">
-                      <ArrowLeftRight className="mr-2 h-4 w-4" />
-                      <span className="font-medium">{swap.workerName}</span>
-                    </div>
-                    <div className="flex items-center mt-1">
-                      <Clock className="mr-2 h-4 w-4" />
-                      <span>{swap.hours} hour{swap.hours !== 1 ? "s" : ""}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              
+              <Collapsible 
+                open={openFolders["swap-done"]} 
+                onOpenChange={() => toggleFolder("swap-done")}
+                className="border rounded-md overflow-hidden mb-2"
+              >
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
+                  <div className="flex items-center">
+                    <FolderOpen className="mr-2 h-5 w-5 text-muted-foreground" />
+                    <span className="font-medium">Shift Swap (Done)</span>
+                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    {categorizedItems["swap-done"].length} item{categorizedItems["swap-done"].length !== 1 ? 's' : ''}
+                  </span>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="border-t">
+                  <div className="p-1 space-y-1">
+                    {categorizedItems["swap-done"].length > 0 ? (
+                      categorizedItems["swap-done"].map((swap, index) => (
+                        <Card key={index} className="shadow-none border">
+                          <CardContent className="p-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center text-sm text-muted-foreground mb-2">
+                                <CalendarDays className="mr-2 h-4 w-4" />
+                                {format(new Date(swap.date), "MMMM d, yyyy")}
+                              </div>
+                              <div className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                Owed to You
+                              </div>
+                            </div>
+                            <div className="flex items-center mt-2">
+                              <ArrowLeftRight className="mr-2 h-4 w-4" />
+                              <span className="font-medium">{swap.workerName}</span>
+                            </div>
+                            <div className="flex items-center mt-1">
+                              <Clock className="mr-2 h-4 w-4" />
+                              <span>{swap.hours} hour{swap.hours !== 1 ? "s" : ""}</span>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))
+                    ) : (
+                      <p className="text-center text-muted-foreground py-4">No completed shift swaps</p>
+                    )}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+              
+              <Collapsible 
+                open={openFolders["swap-owed"]} 
+                onOpenChange={() => toggleFolder("swap-owed")}
+                className="border rounded-md overflow-hidden"
+              >
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
+                  <div className="flex items-center">
+                    <FolderOpen className="mr-2 h-5 w-5 text-muted-foreground" />
+                    <span className="font-medium">Shift Swap (Owed)</span>
+                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    {categorizedItems["swap-owed"].length} item{categorizedItems["swap-owed"].length !== 1 ? 's' : ''}
+                  </span>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="border-t">
+                  <div className="p-1 space-y-1">
+                    {categorizedItems["swap-owed"].length > 0 ? (
+                      categorizedItems["swap-owed"].map((swap, index) => (
+                        <Card key={index} className="shadow-none border">
+                          <CardContent className="p-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center text-sm text-muted-foreground mb-2">
+                                <CalendarDays className="mr-2 h-4 w-4" />
+                                {format(new Date(swap.date), "MMMM d, yyyy")}
+                              </div>
+                              <div className="px-2 py-1 rounded-full text-xs bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                You Owe
+                              </div>
+                            </div>
+                            <div className="flex items-center mt-2">
+                              <ArrowLeftRight className="mr-2 h-4 w-4" />
+                              <span className="font-medium">{swap.workerName}</span>
+                            </div>
+                            <div className="flex items-center mt-1">
+                              <Clock className="mr-2 h-4 w-4" />
+                              <span>{swap.hours} hour{swap.hours !== 1 ? "s" : ""}</span>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))
+                    ) : (
+                      <p className="text-center text-muted-foreground py-4">No owed shift swaps</p>
+                    )}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             </div>
           ) : (
             searchTerm ? (
