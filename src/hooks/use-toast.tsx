@@ -100,25 +100,24 @@ export function ToasterProvider({
   )
 }
 
+export function toast(props: ToastProps) {
+  const id = crypto.randomUUID()
+  const { addToast, removeToast } = useToaster()
+  
+  const toastProps = { id, ...props } as ToasterToast
+  addToast(toastProps)
+  
+  return {
+    id,
+    dismiss: () => removeToast(id),
+    update: (props: ToastProps) => {
+      addToast({ id, ...props } as ToasterToast)
+    },
+  }
+}
+
 export const useToast = () => {
   const { toasts, addToast, removeToast, removeAllToasts } = useToaster()
-
-  const toast = React.useCallback(
-    (props: ToastProps) => {
-      const id = crypto.randomUUID()
-      const toastProps = { id, ...props } as ToasterToast
-      addToast(toastProps)
-      
-      return {
-        id,
-        dismiss: () => removeToast(id),
-        update: (props: ToastProps) => {
-          addToast({ id, ...props } as ToasterToast)
-        },
-      }
-    },
-    [addToast, removeToast]
-  )
 
   return {
     toast,
@@ -127,5 +126,3 @@ export const useToast = () => {
     dismissAll: removeAllToasts,
   }
 }
-
-export { toast } from "./toast"
