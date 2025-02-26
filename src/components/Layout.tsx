@@ -81,26 +81,30 @@ const Layout = () => {
             </Button>
           </div>
           
-          <div className="flex justify-end" style={{ width: '150px', marginLeft: '10px' }}>
-            <Button 
-              variant="ghost" 
-              className="flex flex-col items-center justify-center h-16 w-16 rounded-none"
-              onClick={() => console.log("N button clicked")}
-            >
-              <div className="h-8 w-8 border-2 border-foreground rounded-md flex items-center justify-center">
-                <span className="font-semibold text-foreground text-xs">N/T</span>
-              </div>
-              {settings.showIconTitles && <span className="text-xs mt-1">Notes / Tracking</span>}
-            </Button>
+          <div className="flex" style={{ width: '150px', marginLeft: '10px' }}>
+            <div className="flex-1 flex justify-center">
+              <Button 
+                variant="ghost" 
+                className="flex flex-col items-center justify-center h-16 w-16 rounded-none"
+                onClick={() => console.log("N button clicked")}
+              >
+                <div className="h-8 w-8 border-2 border-foreground rounded-md flex items-center justify-center">
+                  <span className="font-semibold text-foreground text-xs">N/T</span>
+                </div>
+                {settings.showIconTitles && <span className="text-xs mt-1">Notes / Tracking</span>}
+              </Button>
+            </div>
             
-            <Button 
-              variant="ghost" 
-              className={`flex flex-col items-center justify-center h-16 w-16 rounded-none ${location.pathname === "/settings" ? "bg-accent" : ""}`}
-              onClick={() => navigate("/settings")}
-            >
-              <Settings className="h-6 w-6" />
-              {settings.showIconTitles && <span className="text-xs mt-1">Settings</span>}
-            </Button>
+            <div className="flex-1 flex justify-end">
+              <Button 
+                variant="ghost" 
+                className={`flex flex-col items-center justify-center h-16 w-16 rounded-none ${location.pathname === "/settings" ? "bg-accent" : ""}`}
+                onClick={() => navigate("/settings")}
+              >
+                <Settings className="h-6 w-6" />
+                {settings.showIconTitles && <span className="text-xs mt-1">Settings</span>}
+              </Button>
+            </div>
           </div>
         </div>
       </nav>
