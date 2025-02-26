@@ -82,7 +82,7 @@ const Layout = () => {
           </div>
           
           <div className="flex" style={{ width: '150px', marginLeft: '10px' }}>
-            <div className="flex-1 flex justify-end pr-1">
+            <div className="flex-1 flex justify-end">
               <Button 
                 variant="ghost" 
                 className="flex flex-col items-center justify-center h-16 w-16 rounded-none"
