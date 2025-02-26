@@ -42,30 +42,36 @@ const Settings = () => {
   useEffect(() => {
     const savedSettings = localStorage.getItem('appSettings');
     if (savedSettings) {
-      const parsed = JSON.parse(savedSettings);
-      const settings = {
-        ...defaultSettings,
-        ...parsed,
-        overtime: {
-          ...defaultSettings.overtime,
-          ...parsed.overtime,
-          schedule: {
-            ...defaultSettings.overtime.schedule,
-            ...(parsed.overtime?.schedule || {})
+      try {
+        const parsed = JSON.parse(savedSettings);
+        const mergedSettings = {
+          ...defaultSettings,
+          ...parsed,
+          overtime: {
+            ...defaultSettings.overtime,
+            ...parsed.overtime,
+            schedule: {
+              ...defaultSettings.overtime.schedule,
+              ...(parsed.overtime?.schedule || {})
+            }
+          },
+          notifications: {
+            ...defaultSettings.notifications,
+            ...parsed.notifications
           }
-        },
-        notifications: {
-          ...defaultSettings.notifications,
-          ...parsed.notifications
-        }
-      };
-      setSettings(settings);
+        };
+        setSettings(mergedSettings);
+        console.log("Loaded settings:", mergedSettings);
+      } catch (e) {
+        console.error("Error parsing settings:", e);
+      }
     }
   }, []);
 
   const saveSettings = (newSettings: AppSettings) => {
     setSettings(newSettings);
     localStorage.setItem('appSettings', JSON.stringify(newSettings));
+    console.log("Saving settings:", newSettings);
     toast({
       title: "Settings saved",
       description: "Your preferences have been updated.",

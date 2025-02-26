@@ -1,8 +1,8 @@
 
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
-import { AppSettings } from "@/types/settings";
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { AppSettings } from "@/types/settings"
 
 interface CalendarSettingsProps {
   settings: AppSettings;
@@ -10,94 +10,12 @@ interface CalendarSettingsProps {
 }
 
 export function CalendarSettings({ settings, onSave }: CalendarSettingsProps) {
-  const updateCalendarSize = (size: 'small' | 'large') => {
-    onSave({
-      ...settings,
-      calendarSize: size
-    });
-  };
-
-  const updateCalendarNumberLayout = (layout: 'centre' | 'top-left' | 'top-right') => {
-    onSave({
-      ...settings,
-      calendarNumberLayout: layout
-    });
-  };
-
   return (
-    <div className="p-2 space-y-4">
-      <div className="space-y-1.5">
-        <Label className="text-xs">Calendar Size</Label>
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            className="h-8"
-            variant={settings.calendarSize === 'small' ? 'default' : 'outline'}
-            onClick={() => updateCalendarSize('small')}
-          >
-            Small
-          </Button>
-          <Button
-            size="sm"
-            className="h-8"
-            variant={settings.calendarSize === 'large' ? 'default' : 'outline'}
-            onClick={() => updateCalendarSize('large')}
-          >
-            Large
-          </Button>
-        </div>
-      </div>
-
-      <div className="space-y-1.5">
-        <Label className="text-xs">Calendar Number Layout</Label>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            size="sm"
-            className="h-8"
-            variant={settings.calendarNumberLayout === 'centre' ? 'default' : 'outline'}
-            onClick={() => updateCalendarNumberLayout('centre')}
-          >
-            Centre
-          </Button>
-          <Button
-            size="sm"
-            className="h-8"
-            variant={settings.calendarNumberLayout === 'top-left' ? 'default' : 'outline'}
-            onClick={() => updateCalendarNumberLayout('top-left')}
-          >
-            Top Left
-          </Button>
-          <Button
-            size="sm"
-            className="h-8"
-            variant={settings.calendarNumberLayout === 'top-right' ? 'default' : 'outline'}
-            onClick={() => updateCalendarNumberLayout('top-right')}
-          >
-            Top Right
-          </Button>
-        </div>
-      </div>
-
-      <div className="space-y-1.5">
-        <Label className="text-xs">Long Press to Multi-select</Label>
+    <div className="space-y-4 p-2">
+      <div className="grid gap-2">
         <div className="flex items-center space-x-2">
-          <Switch
-            checked={settings.longPressEnabled}
-            onCheckedChange={(checked) => {
-              onSave({
-                ...settings,
-                longPressEnabled: checked
-              });
-            }}
-          />
-          <Label className="text-sm">Enable long press to activate multi-select</Label>
-        </div>
-      </div>
-
-      <div className="space-y-1.5">
-        <Label className="text-xs">Show Overlapping Dates</Label>
-        <div className="flex items-center space-x-2">
-          <Switch
+          <Switch 
+            id="show-overlapping-dates" 
             checked={settings.showOverlappingDates}
             onCheckedChange={(checked) => {
               onSave({
@@ -106,14 +24,26 @@ export function CalendarSettings({ settings, onSave }: CalendarSettingsProps) {
               });
             }}
           />
-          <Label className="text-sm">Show dates from previous/next month</Label>
+          <Label htmlFor="show-overlapping-dates">Show Overlapping Dates</Label>
         </div>
-      </div>
 
-      <div className="space-y-1.5">
-        <Label className="text-xs">Show Icon Titles</Label>
         <div className="flex items-center space-x-2">
-          <Switch
+          <Switch 
+            id="long-press-enabled" 
+            checked={settings.longPressEnabled}
+            onCheckedChange={(checked) => {
+              onSave({
+                ...settings,
+                longPressEnabled: checked
+              });
+            }}
+          />
+          <Label htmlFor="long-press-enabled">Long Press for Quick Actions</Label>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <Switch 
+            id="show-icon-titles" 
             checked={settings.showIconTitles}
             onCheckedChange={(checked) => {
               onSave({
@@ -122,9 +52,63 @@ export function CalendarSettings({ settings, onSave }: CalendarSettingsProps) {
               });
             }}
           />
-          <Label className="text-sm">Show titles underneath icons in navigation</Label>
+          <Label htmlFor="show-icon-titles">Show Icon Titles</Label>
         </div>
       </div>
+
+      <div className="space-y-2">
+        <h3 className="font-medium text-sm">Calendar Size</h3>
+        <RadioGroup 
+          value={settings.calendarSize} 
+          onValueChange={(value) => {
+            if (value === 'small' || value === 'large') {
+              onSave({
+                ...settings,
+                calendarSize: value
+              });
+            }
+          }}
+          className="flex space-x-1"
+        >
+          <div className="flex items-center space-x-1">
+            <RadioGroupItem value="small" id="r1" />
+            <Label htmlFor="r1">Small</Label>
+          </div>
+          <div className="flex items-center space-x-1">
+            <RadioGroupItem value="large" id="r2" />
+            <Label htmlFor="r2">Large</Label>
+          </div>
+        </RadioGroup>
+      </div>
+
+      <div className="space-y-2">
+        <h3 className="font-medium text-sm">Date Number Position</h3>
+        <RadioGroup 
+          value={settings.calendarNumberLayout} 
+          onValueChange={(value) => {
+            if (value === 'centre' || value === 'top-left' || value === 'top-right') {
+              onSave({
+                ...settings,
+                calendarNumberLayout: value
+              });
+            }
+          }}
+          className="flex flex-wrap gap-2"
+        >
+          <div className="flex items-center space-x-1">
+            <RadioGroupItem value="centre" id="n1" />
+            <Label htmlFor="n1">Center</Label>
+          </div>
+          <div className="flex items-center space-x-1">
+            <RadioGroupItem value="top-left" id="n2" />
+            <Label htmlFor="n2">Top Left</Label>
+          </div>
+          <div className="flex items-center space-x-1">
+            <RadioGroupItem value="top-right" id="n3" />
+            <Label htmlFor="n3">Top Right</Label>
+          </div>
+        </RadioGroup>
+      </div>
     </div>
-  );
+  )
 }
