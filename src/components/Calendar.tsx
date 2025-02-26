@@ -32,7 +32,11 @@ import {
   Note, ShiftSwap, Alarm, PatternCycle
 } from "@/types/calendar";
 
-const Calendar = () => {
+type CalendarProps = {
+  isSelectingMultiple?: boolean;
+};
+
+const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -52,7 +56,6 @@ const Calendar = () => {
   const [calendarSize, setCalendarSize] = useState<'default' | 'large' | 'small'>('default');
   const [showShiftDialog, setShowShiftDialog] = useState(false);
   const [selectedDatesForShift, setSelectedDatesForShift] = useState<Date[]>([]);
-  const [isSelectingMultiple, setIsSelectingMultiple] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const currentYear = currentDate.getFullYear();
   const currentMonthIndex = currentDate.getMonth();
@@ -132,8 +135,8 @@ const Calendar = () => {
 
     if (isSelectingMultiple) {
       setSelectedDatesForShift(prev => {
-        const exists = prev.some(d => d.getTime() === date.getTime());
-        if (exists) {
+        const dateExists = prev.some(d => d.getTime() === date.getTime());
+        if (dateExists) {
           return prev.filter(d => d.getTime() !== date.getTime());
         }
         return [...prev, date];
@@ -145,7 +148,7 @@ const Calendar = () => {
   };
 
   const handleLongPress = (date: Date) => {
-    setIsSelectingMultiple(true);
+    // setIsSelectingMultiple(true); // This is now handled in the Index page
     setSelectedDatesForShift([date]);
   };
 
@@ -181,7 +184,7 @@ const Calendar = () => {
     
     setShowShiftDialog(false);
     setSelectedDatesForShift([]);
-    setIsSelectingMultiple(false);
+    // setIsSelectingMultiple(false); // This is now handled in the Index page
   };
 
   const getShiftForDate = (date: Date) => {
@@ -539,7 +542,7 @@ const Calendar = () => {
           if (!open) {
             setShowShiftDialog(false);
             setSelectedDatesForShift([]);
-            setIsSelectingMultiple(false);
+            // setIsSelectingMultiple(false); // This is now handled in the Index page
           }
         }}
         selectedDates={selectedDatesForShift}
@@ -566,7 +569,7 @@ const Calendar = () => {
               variant="outline"
               size="sm"
               onClick={() => {
-                setIsSelectingMultiple(false);
+                // setIsSelectingMultiple(false); // This is now handled in the Index page
                 setSelectedDatesForShift([]);
               }}
             >
@@ -596,7 +599,7 @@ const Calendar = () => {
                 variant={isSelectingMultiple ? "secondary" : "ghost"}
                 size="icon"
                 onClick={() => {
-                  setIsSelectingMultiple(!isSelectingMultiple);
+                  // setIsSelectingMultiple(!isSelectingMultiple); // This is now handled in the Index page
                   if (isSelectingMultiple) {
                     setSelectedDatesForShift([]);
                   }
