@@ -394,7 +394,7 @@ const NotesTracking = () => {
       <Tabs defaultValue="notes" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="notes">Notes</TabsTrigger>
-          <TabsTrigger value="tracking">Shift Swaps</TabsTrigger>
+          <TabsTrigger value="tracking">Shift Swap / TOIL</TabsTrigger>
         </TabsList>
         
         <TabsContent value="notes" className="space-y-4 mt-4">
