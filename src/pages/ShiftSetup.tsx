@@ -798,6 +798,7 @@ const ShiftSetup = () => {
                       }}
                       className="h-9 w-16 text-center text-lg font-semibold uppercase mx-auto"
                       placeholder=""
+                      maxLength={5}
                     />
                     <div className="flex items-center gap-2 flex-1">
                       <div 
@@ -919,7 +920,7 @@ const ShiftSetup = () => {
                 onChange={(e) => updateNewShift('symbol', e.target.value.toUpperCase())}
                 placeholder="e.g., M"
                 className="uppercase"
-                maxLength={2}
+                maxLength={5}
               />
             </div>
             
