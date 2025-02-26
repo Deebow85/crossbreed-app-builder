@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Calendar from "@/components/Calendar";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Settings } from "lucide-react";
+import { CalendarDays, Settings, CheckSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Dialog,
@@ -16,6 +16,7 @@ import {
 const Index = () => {
   const navigate = useNavigate();
   const [showTutorial, setShowTutorial] = useState(false);
+  const [isSelectingMultiple, setIsSelectingMultiple] = useState(false);
 
   useEffect(() => {
     const hasSeenTutorial = localStorage.getItem("hasSeenTutorial");
@@ -37,28 +38,30 @@ const Index = () => {
 
       <nav className="fixed bottom-0 left-0 right-0 bg-background border-t py-2 z-50">
         <div className="container max-w-md mx-auto flex justify-between items-center px-4">
-          <Button 
-            variant="ghost" 
-            className="flex flex-col items-center justify-center h-16 w-16 rounded-none"
-          >
-            <CalendarDays className="h-6 w-6 mb-1" />
-            <span className="text-xs">Calendar</span>
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            className="flex flex-col items-center justify-center h-16 w-16 rounded-none"
-            onClick={() => console.log("N button clicked")}
-          >
-            <div className="h-8 w-8 border-2 border-foreground rounded-md flex items-center justify-center mb-1">
-              <span className="font-semibold text-foreground">N</span>
-            </div>
-            <span className="text-xs">Notes</span>
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="flex flex-col items-center justify-center h-16 w-16 rounded-none"
+            >
+              <CalendarDays className="h-6 w-6" />
+              <span className="text-xs mt-1">Calendar</span>
+            </Button>
+            
+            <Button
+              variant={isSelectingMultiple ? "secondary" : "ghost"}
+              size="icon"
+              onClick={() => setIsSelectingMultiple(!isSelectingMultiple)}
+              className="flex flex-col items-center justify-center h-16 w-16 rounded-none"
+            >
+              <CheckSquare className="h-6 w-6" />
+              <span className="text-xs mt-1">Multi</span>
+            </Button>
+          </div>
           
           <Button
             variant="ghost"
-            className="flex items-center justify-center h-16 w-16 rounded-none relative"
+            className="flex items-center justify-center h-16 w-16 rounded-none absolute left-1/2 -translate-x-1/2"
             onClick={() => navigate("/shift-setup")}
           >
             <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg">
@@ -66,14 +69,27 @@ const Index = () => {
             </div>
           </Button>
           
-          <Button 
-            variant="ghost" 
-            className="flex flex-col items-center justify-center h-16 w-16 rounded-none"
-            onClick={() => navigate("/settings")}
-          >
-            <Settings className="h-6 w-6 mb-1" />
-            <span className="text-xs">Settings</span>
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="ghost" 
+              className="flex flex-col items-center justify-center h-16 w-16 rounded-none"
+              onClick={() => console.log("N button clicked")}
+            >
+              <div className="h-8 w-8 border-2 border-foreground rounded-md flex items-center justify-center">
+                <span className="font-semibold text-foreground">N</span>
+              </div>
+              <span className="text-xs mt-1">Notes</span>
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              className="flex flex-col items-center justify-center h-16 w-16 rounded-none"
+              onClick={() => navigate("/settings")}
+            >
+              <Settings className="h-6 w-6" />
+              <span className="text-xs mt-1">Settings</span>
+            </Button>
+          </div>
         </div>
       </nav>
 
