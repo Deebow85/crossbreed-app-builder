@@ -396,6 +396,31 @@ const ShiftSetup = () => {
     navigate('/');
   };
 
+  const updateShiftTypeSpecial = (index: number, specialType: "regular" | "overtime" | "toil" | "swap-done" | "swap-owed") => {
+    const newShiftTypes = [...shiftTypes];
+    // First, reset all special flags
+    newShiftTypes[index] = {
+      ...newShiftTypes[index],
+      isOvertime: false,
+      isTOIL: false,
+      isSwapDone: false,
+      isSwapOwed: false
+    };
+    
+    // Then set the appropriate flag based on the selection
+    if (specialType === "overtime") {
+      newShiftTypes[index].isOvertime = true;
+    } else if (specialType === "toil") {
+      newShiftTypes[index].isTOIL = true;
+    } else if (specialType === "swap-done") {
+      newShiftTypes[index].isSwapDone = true;
+    } else if (specialType === "swap-owed") {
+      newShiftTypes[index].isSwapOwed = true;
+    }
+    
+    saveShiftTypes(newShiftTypes);
+  };
+
   return (
     <div className="h-dvh flex flex-col p-2 sm:p-4">
       <div className="flex justify-between items-center mb-2">
@@ -473,10 +498,10 @@ const ShiftSetup = () => {
               <div 
                 key={index} 
                 className={`flex items-center gap-2 p-1.5 border rounded-lg ${
-                  type.isOvertime ? 'border-orange-500 bg-orange-50/50' : 
-                  type.isTOIL ? 'border-purple-500 bg-purple-50/50' : 
-                  type.isSwapDone ? 'border-green-500 bg-green-50/50' : 
-                  type.isSwapOwed ? 'border-blue-500 bg-blue-50/50' : ''
+                  type.isOvertime ? 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20' : 
+                  type.isTOIL ? 'border-purple-500 bg-purple-50/50 dark:bg-purple-950/20' : 
+                  type.isSwapDone ? 'border-green-500 bg-green-50/50 dark:bg-green-950/20' : 
+                  type.isSwapOwed ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/20' : ''
                 }`}
               >
                 {!type.isNew && !isEditing ? (
@@ -484,22 +509,22 @@ const ShiftSetup = () => {
                     <div className="flex-1 flex items-center gap-2">
                       <span className="text-base">{type.name} ({type.symbol})</span>
                       {type.isOvertime && (
-                        <span className="text-xs text-orange-600 font-medium">Overtime</span>
+                        <span className="text-xs text-orange-600 font-medium dark:text-orange-400">Overtime</span>
                       )}
                       {type.isTOIL && (
-                        <span className="text-xs text-purple-600 font-medium flex items-center">
+                        <span className="text-xs text-purple-600 font-medium flex items-center dark:text-purple-400">
                           <Clock className="h-3 w-3 mr-1" />
                           TOIL
                         </span>
                       )}
                       {type.isSwapDone && (
-                        <span className="text-xs text-green-600 font-medium flex items-center">
+                        <span className="text-xs text-green-600 font-medium flex items-center dark:text-green-400">
                           <ArrowLeftRight className="h-3 w-3 mr-1" />
                           Swap (Done)
                         </span>
                       )}
                       {type.isSwapOwed && (
-                        <span className="text-xs text-blue-600 font-medium flex items-center">
+                        <span className="text-xs text-blue-600 font-medium flex items-center dark:text-blue-400">
                           <ArrowLeftRight className="h-3 w-3 mr-1" />
                           Swap (Owed)
                         </span>
@@ -528,6 +553,7 @@ const ShiftSetup = () => {
                       />
                       <div className="flex items-center space-x-2">
                         <Switch
+                          id={`special-type-switch-${index}`}
                           checked={type.isOvertime || type.isTOIL || type.isSwapDone || type.isSwapOwed || false}
                           onCheckedChange={(checked) => {
                             const newShiftTypes = [...shiftTypes];
@@ -553,7 +579,7 @@ const ShiftSetup = () => {
                             saveShiftTypes(newShiftTypes);
                           }}
                         />
-                        <Label className="text-xs text-muted-foreground">Special Type</Label>
+                        <Label htmlFor={`special-type-switch-${index}`} className="text-xs text-muted-foreground">Special Type</Label>
                       </div>
                       
                       {(type.isOvertime || type.isTOIL || type.isSwapDone || type.isSwapOwed) && (
@@ -565,15 +591,7 @@ const ShiftSetup = () => {
                             type.isSwapOwed ? "swap-owed" : "regular"
                           }
                           onValueChange={(value: "regular" | "overtime" | "toil" | "swap-done" | "swap-owed") => {
-                            const newShiftTypes = [...shiftTypes];
-                            newShiftTypes[index] = {
-                              ...newShiftTypes[index],
-                              isOvertime: value === "overtime",
-                              isTOIL: value === "toil",
-                              isSwapDone: value === "swap-done",
-                              isSwapOwed: value === "swap-owed"
-                            };
-                            saveShiftTypes(newShiftTypes);
+                            updateShiftTypeSpecial(index, value);
                           }}
                           className="flex flex-wrap gap-1"
                         >
@@ -1030,15 +1048,7 @@ const ShiftSetup = () => {
                 <Button onClick={() => {
                   handleColorConfirm();
                   if (selectedIndex !== null) {
-                    const newShiftTypes = [...shiftTypes];
-                    newShiftTypes[selectedIndex] = {
-                      ...newShiftTypes[selectedIndex],
-                      isOvertime: shiftTypeOption === "overtime",
-                      isTOIL: shiftTypeOption === "toil",
-                      isSwapDone: shiftTypeOption === "swap-done",
-                      isSwapOwed: shiftTypeOption === "swap-owed"
-                    };
-                    saveShiftTypes(newShiftTypes);
+                    updateShiftTypeSpecial(selectedIndex, shiftTypeOption);
                   }
                 }}>Confirm</Button>
               </div>
