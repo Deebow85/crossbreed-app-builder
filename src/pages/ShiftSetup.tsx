@@ -1313,37 +1313,40 @@ const ShiftSetup = () => {
                 </div>
               )}
 
-              <div className="space-y-4">
-                <Label className="block mb-2">Shift Type</Label>
-                <RadioGroup
-                  value={shiftTypeOption}
-                  onValueChange={(value: "regular" | "overtime" | "toil" | "swap-done" | "swap-owed") => {
-                    setShiftTypeOption(value);
-                  }}
-                  className="grid grid-cols-2 gap-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="regular" id="r1" />
-                    <Label htmlFor="r1">Regular</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="overtime" id="r2" />
-                    <Label htmlFor="r2">Overtime</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="toil" id="r3" />
-                    <Label htmlFor="r3">TOIL</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="swap-done" id="r4" />
-                    <Label htmlFor="r4">Swap (Done)</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="swap-owed" id="r5" />
-                    <Label htmlFor="r5">Swap (Owed)</Label>
-                  </div>
-                </RadioGroup>
-              </div>
+              {/* Only show the shift type options if this is a new shift or we're not currently editing any shifts */}
+              {!isEditing && (
+                <div className="space-y-4">
+                  <Label className="block mb-2">Shift Type</Label>
+                  <RadioGroup
+                    value={shiftTypeOption}
+                    onValueChange={(value: "regular" | "overtime" | "toil" | "swap-done" | "swap-owed") => {
+                      setShiftTypeOption(value);
+                    }}
+                    className="grid grid-cols-2 gap-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="regular" id="r1" />
+                      <Label htmlFor="r1">Regular</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="overtime" id="r2" />
+                      <Label htmlFor="r2">Overtime</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="toil" id="r3" />
+                      <Label htmlFor="r3">TOIL</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="swap-done" id="r4" />
+                      <Label htmlFor="r4">Swap (Done)</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="swap-owed" id="r5" />
+                      <Label htmlFor="r5">Swap (Owed)</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
               
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setColorMode(null)}>Back</Button>
