@@ -816,7 +816,7 @@ const NotesTracking = () => {
     return notes.findIndex(n => 
       n.date === note.date && 
       n.text === note.text && 
-      n.header === note.header &&
+      n.header === n.header &&
       JSON.stringify(n.content) === JSON.stringify(n.content) &&
       JSON.stringify(n.swap) === JSON.stringify(n.swap)
     );
@@ -1280,18 +1280,35 @@ const NotesTracking = () => {
                                       <div className="flex items-center">
                                         <ArrowLeftRight className="mr-2 h-4 w-4" />
                                         <span className="font-medium">{swap.workerName}</span>
+                                        {swap.isCompleted && (
+                                          <CheckCircle2 className="ml-2 h-4 w-4 text-green-500" />
+                                        )}
                                       </div>
                                       <div className="flex items-center mt-1">
                                         <Clock className="mr-2 h-4 w-4" />
                                         <span>{swap.hours} hour{swap.hours !== 1 ? "s" : ""}</span>
+                                        
+                                        {/* Status indicator badges */}
+                                        <div className="flex items-center ml-auto space-x-1">
+                                          {swap.images && swap.images.length > 0 && (
+                                            <div className="flex items-center text-xs text-primary">
+                                              <Image className="mr-1 h-3.5 w-3.5" />
+                                              <span>{swap.images.length}</span>
+                                            </div>
+                                          )}
+                                          
+                                          {swap.isCompleted ? (
+                                            <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 rounded-sm font-medium">
+                                              Done
+                                            </span>
+                                          ) : (
+                                            <span className="text-xs px-1.5 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 rounded-sm font-medium">
+                                              Pending
+                                            </span>
+                                          )}
+                                        </div>
                                       </div>
                                     </div>
-                                    {swap.images && swap.images.length > 0 && (
-                                      <div className="flex items-center text-xs text-primary">
-                                        <Image className="mr-1 h-3.5 w-3.5" />
-                                        <span>{swap.images.length}</span>
-                                      </div>
-                                    )}
                                   </div>
                                 </div>
                                 
