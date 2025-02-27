@@ -437,6 +437,9 @@ const NotesTracking = () => {
         if (note.text) {
           blocks.push({ type: 'text', content: note.text });
         }
+        if (note.imageUrl) {
+          blocks.push({ type: 'image', content: note.imageUrl });
+        }
         // Ensure there's at least one text block
         if (blocks.length === 0 || blocks.every(block => block.type !== 'text')) {
           blocks.push({ type: 'text', content: '' });
@@ -612,7 +615,7 @@ const NotesTracking = () => {
       s.date === swap.date && 
       s.workerName === swap.workerName && 
       s.hours === swap.hours && 
-      s.type === s.type
+      s.type === swap.type
     );
   };
 
@@ -633,8 +636,21 @@ const NotesTracking = () => {
         </div>
       ));
     } else {
-      // Legacy format - just show text
-      return <p className="whitespace-pre-line">{note.text}</p>;
+      // Legacy format
+      return (
+        <>
+          {note.imageUrl && (
+            <div className="mb-3">
+              <img 
+                src={note.imageUrl} 
+                alt="Note attachment" 
+                className="max-h-[200px] w-auto object-contain rounded-md border my-2"
+              />
+            </div>
+          )}
+          <p className="whitespace-pre-line">{note.text}</p>
+        </>
+      );
     }
   };
 
