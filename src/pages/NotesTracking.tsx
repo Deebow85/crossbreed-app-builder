@@ -142,7 +142,12 @@ const DateRangePicker = ({ date, onDateChange }: DateRangePickerProps) => {
                 }
               }}
               initialFocus
-              disabled={(date) => date < (date?.from || new Date())}
+              disabled={(selectedDate) => {
+                // Make sure we have a from date and a valid selected date
+                if (!date?.from || !selectedDate) return false;
+                // Return true to disable dates before the from date
+                return selectedDate < date.from;
+              }}
             />
           </PopoverContent>
         </Popover>
@@ -329,7 +334,7 @@ const NotesTracking = () => {
       return n.date === note.date && 
              n.text === note.text && 
              n.header === note.header &&
-             JSON.stringify(n.content) === JSON.stringify(n.content) &&
+             JSON.stringify(n.content) === JSON.stringify(note.content) &&
              JSON.stringify(n.swap) === JSON.stringify(n.swap);
     });
   };
