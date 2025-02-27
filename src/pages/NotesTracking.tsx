@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
-import { Search, Plus, Clock, ArrowLeftRight, CalendarDays, FolderOpen, Pencil, Trash2, Image, Camera, ChevronDown, CheckCircle2 } from "lucide-react";
+import { Search, Plus, Clock, ArrowLeftRight, CalendarDays, FolderOpen, Pencil, Trash2, Image, Camera, ChevronDown, CheckCircle2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Note, ShiftSwap, SwapType } from "@/types/calendar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -28,6 +28,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogClose
 } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -74,6 +75,10 @@ const NotesTracking = () => {
   const [swapFormOpen, setSwapFormOpen] = useState(false);
   const [noteFormOpen, setNoteFormOpen] = useState(false);
   
+  // For image preview modal
+  const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string>("");
+  
   // Start with all folders closed
   const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({
     "swap-done": false,
@@ -96,6 +101,12 @@ const NotesTracking = () => {
   const [editSwapType, setEditSwapType] = useState<SwapType>("owed");
   const [editSwapImages, setEditSwapImages] = useState<string[]>([]);
   const [editIsSwapCompleted, setEditIsSwapCompleted] = useState(false);
+  
+  // Open image preview
+  const handleImageClick = (imageUrl: string) => {
+    setPreviewImage(imageUrl);
+    setImagePreviewOpen(true);
+  };
   
   // Load notes and swaps from localStorage on component mount
   useEffect(() => {
@@ -795,7 +806,7 @@ const NotesTracking = () => {
       n.date === note.date && 
       n.text === note.text && 
       n.header === note.header &&
-      JSON.stringify(n.content) === JSON.stringify(note.content) &&
+      JSON.stringify(n.content) === JSON.stringify(n.content) &&
       JSON.stringify(n.swap) === JSON.stringify(n.swap)
     );
   };
@@ -819,7 +830,8 @@ const NotesTracking = () => {
             <img 
               src={block.content} 
               alt={`Note attachment ${index}`} 
-              className="max-h-[200px] w-auto object-contain rounded-md border"
+              className="max-h-[200px] w-auto object-contain rounded-md border cursor-pointer"
+              onClick={() => handleImageClick(block.content)}
             />
           ) : (
             <p className="whitespace-pre-line">{block.content}</p>
@@ -835,7 +847,8 @@ const NotesTracking = () => {
               <img 
                 src={note.imageUrl} 
                 alt="Note attachment" 
-                className="max-h-[200px] w-auto object-contain rounded-md border my-2"
+                className="max-h-[200px] w-auto object-contain rounded-md border my-2 cursor-pointer" 
+                onClick={() => handleImageClick(note.imageUrl || '')}
               />
             </div>
           )}
@@ -1245,16 +1258,31 @@ const NotesTracking = () => {
                                   
                                   {/* Display swap images if they exist */}
                                   {swap.images && swap.images.length > 0 && (
-                                    <div className="mt-2 grid grid-cols-2 gap-2">
-                                      {swap.images.map((image, i) => (
-                                        <div key={i} className="relative">
-                                          <img 
-                                            src={image} 
-                                            alt={`Swap image ${i+1}`} 
-                                            className="rounded-md w-full h-20 object-cover"
-                                          />
-                                        </div>
-                                      ))}
+                                    <div className="mt-2">
+                                      <Collapsible>
+                                        <CollapsibleTrigger className="flex items-center text-sm text-primary">
+                                          <Image className="mr-1 h-3.5 w-3.5" />
+                                          <span>{swap.images.length} image{swap.images.length !== 1 ? 's' : ''}</span>
+                                          <ChevronDown className="ml-1 h-3.5 w-3.5" />
+                                        </CollapsibleTrigger>
+                                        <CollapsibleContent className="mt-2">
+                                          <div className="grid grid-cols-3 gap-1">
+                                            {swap.images.map((image, i) => (
+                                              <div 
+                                                key={i} 
+                                                className="cursor-pointer"
+                                                onClick={() => handleImageClick(image)}
+                                              >
+                                                <img 
+                                                  src={image} 
+                                                  alt={`Swap image ${i+1}`} 
+                                                  className="rounded-md w-full h-14 object-cover border"
+                                                />
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </CollapsibleContent>
+                                      </Collapsible>
                                     </div>
                                   )}
                                   
@@ -1510,7 +1538,8 @@ const NotesTracking = () => {
                         <img 
                           src={image} 
                           alt={`Swap image ${i+1}`} 
-                          className="w-full h-24 object-cover"
+                          className="w-full h-24 object-cover cursor-pointer"
+                          onClick={() => handleImageClick(image)}
                         />
                         <Button 
                           variant="destructive" 
@@ -1576,6 +1605,22 @@ const NotesTracking = () => {
               Save Changes
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Image Preview Modal */}
+      <Dialog open={imagePreviewOpen} onOpenChange={setImagePreviewOpen}>
+        <DialogContent className="max-w-lg sm:max-w-3xl p-1 bg-background/80 backdrop-blur-sm">
+          <div className="relative w-full">
+            <DialogClose className="absolute right-2 top-2 z-10 bg-black/20 hover:bg-black/40 rounded-full p-1">
+              <X className="h-4 w-4 text-white" />
+            </DialogClose>
+            <img 
+              src={previewImage} 
+              alt="Preview" 
+              className="w-full max-h-[80vh] object-contain rounded" 
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </div>
