@@ -569,26 +569,18 @@ const NotesTracking = () => {
 
   // Filter notes and swaps based on search term
   const filteredNotes = notes.filter(note => {
-    if (!searchTerm) return true;
-    
-    const noteText = getNoteText(note).toLowerCase();
-    const searchLower = searchTerm.toLowerCase();
-    
+    const noteText = getNoteText(note);
     return (
-      noteText.includes(searchLower) ||
-      (note.header && note.header.toLowerCase().includes(searchLower)) ||
+      noteText.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (note.header && note.header.toLowerCase().includes(searchTerm.toLowerCase())) ||
       note.date.includes(searchTerm)
     );
   });
 
-  const filteredSwaps = swaps.filter(swap => {
-    if (!searchTerm) return true;
-    
-    return (
-      swap.workerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      swap.date.includes(searchTerm)
-    );
-  });
+  const filteredSwaps = swaps.filter(swap => 
+    swap.workerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    swap.date.includes(searchTerm)
+  );
 
   // Categorize notes and swaps
   const categorizedItems = {
@@ -596,28 +588,11 @@ const NotesTracking = () => {
     "swap-owed": filteredSwaps.filter(swap => swap.type === "owed"),
     "toil": filteredNotes.filter(note => getNoteText(note).toLowerCase().includes("toil")),
     "notes": filteredNotes.filter(note => {
-      const text = getNoteText(note).toLowerCase();
-      return !text.includes("toil") && !text.includes("swap") && !note.swap;
+      const text = getNoteText(note);
+      return !text.toLowerCase().includes("toil") && !text.toLowerCase().includes("swap") && !note.swap;
     }),
     "calendar-notes": filteredNotes.filter(note => note.swap)
   };
-
-  // When searching, we should open folders that have matching results
-  useEffect(() => {
-    if (searchTerm) {
-      // Create a copy of the current open folders state
-      const newOpenFolders = { ...openFolders };
-      
-      // Open folders that have matches
-      Object.entries(categorizedItems).forEach(([key, items]) => {
-        if (items.length > 0) {
-          newOpenFolders[key] = true;
-        }
-      });
-      
-      setOpenFolders(newOpenFolders);
-    }
-  }, [searchTerm]);
 
   // Toggle folder open/closed state
   const toggleFolder = (folder: string) => {
