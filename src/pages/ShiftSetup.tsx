@@ -422,13 +422,23 @@ const ShiftSetup = () => {
       return;
     }
     
+    // Calculate the total days in one complete pattern cycle (including days off after cycle)
+    const daysInCycle = currentPattern.reduce((total, step) => total + step.days, 0) + daysOffAfter;
+    
+    // Calculate how many patterns we need to fill the years specified
+    // 365.25 days per year (accounting for leap years)
+    const totalDaysNeeded = yearsToGenerate * 365.25;
+    
+    // Calculate how many complete cycles we need
+    const calculatedRepeatTimes = Math.ceil(totalDaysNeeded / daysInCycle);
+    
     const pattern: PatternCycle = {
       sequences: currentPattern.map(p => ({
         shiftType: p.shiftType,
         days: p.days,
         isOff: p.isOff
       })),
-      repeatTimes,
+      repeatTimes: calculatedRepeatTimes,
       daysOffAfter,
       patternName
     };
@@ -512,16 +522,30 @@ const ShiftSetup = () => {
     ];
 
     setCurrentPattern(defaultPattern);
-    setRepeatTimes(52);
+    
+    // Calculate 52 weeks worth of the pattern for a year
+    const daysInDefaultCycle = 7; // 5 days on + 2 days off
+    const cyclesPerYear = Math.ceil(365.25 / daysInDefaultCycle);
+    
+    setRepeatTimes(cyclesPerYear);
     setDaysOffAfter(0);
     setYearsToGenerate(1);
     setShowSetDaysDialog(true);
   };
 
   const generateSetDays = () => {
+    // Calculate the total days in one complete pattern cycle
+    const daysInCycle = currentPattern.reduce((total, step) => total + step.days, 0);
+    
+    // Calculate how many patterns we need to fill the years specified
+    const totalDaysNeeded = yearsToGenerate * 365.25;
+    
+    // Calculate how many complete cycles we need
+    const calculatedRepeatTimes = Math.ceil(totalDaysNeeded / daysInCycle);
+    
     const pattern: PatternCycle = {
       sequences: currentPattern,
-      repeatTimes: yearsToGenerate * 52,
+      repeatTimes: calculatedRepeatTimes,
       daysOffAfter: 0,
       patternName
     };
