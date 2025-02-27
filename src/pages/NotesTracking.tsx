@@ -64,6 +64,7 @@ const NotesTracking = () => {
   const [selectedSwapDate, setSelectedSwapDate] = useState<Date>(new Date());
   const [swapFormOpen, setSwapFormOpen] = useState(false);
   const [noteFormOpen, setNoteFormOpen] = useState(false);
+  const [spellCheck, setSpellCheck] = useState(true);
   
   // Start with all folders closed
   const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({
@@ -123,7 +124,18 @@ const NotesTracking = () => {
         console.error("Error loading swaps:", e);
       }
     }
+    
+    // Load spell check preference from localStorage
+    const savedSpellCheck = localStorage.getItem("spellCheck");
+    if (savedSpellCheck !== null) {
+      setSpellCheck(JSON.parse(savedSpellCheck));
+    }
   }, []);
+  
+  // Save spell check preference when it changes
+  useEffect(() => {
+    localStorage.setItem("spellCheck", JSON.stringify(spellCheck));
+  }, [spellCheck]);
 
   // Handle image upload
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -719,6 +731,16 @@ const NotesTracking = () => {
         </TabsList>
         
         <TabsContent value="notes" className="space-y-4 mt-4">
+          {/* Spell Check Toggle */}
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-medium">Spell Check</span>
+            <Switch 
+              checked={spellCheck}
+              onCheckedChange={setSpellCheck}
+              aria-label="Toggle spell check"
+            />
+          </div>
+          
           {/* Collapsible Note Form */}
           <Collapsible 
             open={noteFormOpen} 
@@ -741,6 +763,7 @@ const NotesTracking = () => {
                     placeholder="Enter note header..."
                     value={noteHeader}
                     onChange={(e) => setNoteHeader(e.target.value)}
+                    autoCorrect={spellCheck}
                   />
                 </div>
                 
@@ -756,6 +779,7 @@ const NotesTracking = () => {
                               value={block.content}
                               onChange={(e) => updateNoteTextContent(index, e.target.value)}
                               className="min-h-[100px]"
+                              autoCorrect={spellCheck}
                             />
                             <div className="flex gap-2">
                               <input
@@ -910,6 +934,7 @@ const NotesTracking = () => {
                     placeholder="Enter colleague name"
                     value={swapWorkerName}
                     onChange={(e) => setSwapWorkerName(e.target.value)}
+                    autoCorrect={spellCheck}
                   />
                 </div>
                 
@@ -1143,6 +1168,7 @@ const NotesTracking = () => {
                   placeholder="Enter note header..."
                   value={editNoteHeader}
                   onChange={(e) => setEditNoteHeader(e.target.value)}
+                  autoCorrect={spellCheck}
                 />
               </div>
               
@@ -1158,6 +1184,7 @@ const NotesTracking = () => {
                             value={block.content}
                             onChange={(e) => updateEditNoteTextContent(index, e.target.value)}
                             className="min-h-[100px]"
+                            autoCorrect={spellCheck}
                           />
                           <div className="flex gap-2">
                             <input
@@ -1219,6 +1246,7 @@ const NotesTracking = () => {
                   placeholder="Enter colleague name"
                   value={editSwapWorkerName}
                   onChange={(e) => setEditSwapWorkerName(e.target.value)}
+                  autoCorrect={spellCheck}
                 />
               </div>
               
