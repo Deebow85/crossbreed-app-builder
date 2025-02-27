@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -139,8 +140,7 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
       let currentDay = new Date(startDateObj);
       let totalDays = 0;
       
-      // Process all the repeats of the pattern to cover the specified years
-      // pattern.repeatTimes should already be calculated to cover the years
+      // Process all the repeats of the pattern (already calculated for the years)
       for (let repeatCount = 0; repeatCount < pattern.repeatTimes; repeatCount++) {
         // Process each sequence in the pattern
         for (const sequence of pattern.sequences) {
@@ -159,8 +159,8 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
           }
         }
         
-        // Add days off after each complete cycle (except the last one)
-        if (pattern.daysOffAfter > 0 && repeatCount < pattern.repeatTimes - 1) {
+        // Add the days off after cycle - this should happen after EACH cycle
+        if (pattern.daysOffAfter > 0) {
           // Just advance the days without adding shifts
           currentDay = addDays(currentDay, pattern.daysOffAfter);
           totalDays += pattern.daysOffAfter;
