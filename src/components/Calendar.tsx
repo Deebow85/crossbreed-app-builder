@@ -142,14 +142,14 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
       // Calculate how many times to repeat the pattern
       const maxDays = years * 365; // Approximate days in specified years
       let dayCount = 0;
-      let cycleCount = 0;
       
-      while (dayCount < maxDays && cycleCount < pattern.repeatTimes) {
-        // Process each sequence in the pattern
+      // Repeat the pattern multiple times as specified by repeatTimes
+      for (let cycleCount = 0; cycleCount < pattern.repeatTimes && dayCount < maxDays; cycleCount++) {
+        // Process each sequence in the pattern for this cycle
         for (const sequence of pattern.sequences) {
           const { shiftType, days, isOff } = sequence;
           
-          for (let i = 0; i < days; i++) {
+          for (let i = 0; i < days && dayCount < maxDays; i++) {
             if (!isOff && shiftType) {
               // Add shift assignment
               newShifts.push({
@@ -160,23 +160,20 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
             
             currentDay = addDays(currentDay, 1);
             dayCount++;
-            
-            if (dayCount >= maxDays) break;
           }
-          
-          if (dayCount >= maxDays) break;
         }
         
-        // Add days off after cycle if specified
+        // Add days off after each complete cycle if specified
         if (pattern.daysOffAfter > 0) {
-          currentDay = addDays(currentDay, pattern.daysOffAfter);
-          dayCount += pattern.daysOffAfter;
+          for (let i = 0; i < pattern.daysOffAfter && dayCount < maxDays; i++) {
+            // We don't add any shifts for days off
+            currentDay = addDays(currentDay, 1);
+            dayCount++;
+          }
         }
-        
-        cycleCount++;
       }
       
-      console.log(`Generated ${newShifts.length} shifts from pattern`);
+      console.log(`Generated ${newShifts.length} shifts from pattern over ${dayCount} days`);
       
       // Merge new shifts with existing ones, replacing overlapping dates
       setShifts(prevShifts => {
