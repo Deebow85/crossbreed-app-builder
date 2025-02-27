@@ -63,6 +63,7 @@ const NotesTracking = () => {
   const [currentDate] = useState(new Date());
   const [selectedSwapDate, setSelectedSwapDate] = useState<Date>(new Date());
   const [swapFormOpen, setSwapFormOpen] = useState(false);
+  const [noteFormOpen, setNoteFormOpen] = useState(false);
   
   // Start with all folders closed
   const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({
@@ -345,6 +346,7 @@ const NotesTracking = () => {
     // Reset form
     setNoteHeader("");
     setNoteContent([{type: 'text', content: ''}]);
+    setNoteFormOpen(false);
     
     toast({
       title: "Note saved",
@@ -692,94 +694,102 @@ const NotesTracking = () => {
         </TabsList>
         
         <TabsContent value="notes" className="space-y-4 mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Add Note</CardTitle>
-              <CardDescription>
-                Create a note for today
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="note-header">Header</Label>
-                <Input
-                  id="note-header"
-                  placeholder="Enter note header..."
-                  value={noteHeader}
-                  onChange={(e) => setNoteHeader(e.target.value)}
-                />
+          {/* Collapsible Note Form */}
+          <Collapsible 
+            open={noteFormOpen} 
+            onOpenChange={setNoteFormOpen}
+            className="border rounded-md overflow-hidden mb-4"
+          >
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
+              <div className="flex items-center">
+                <Plus className="mr-2 h-5 w-5 text-primary" />
+                <span className="font-medium">Add Note</span>
               </div>
-              
-              <div className="space-y-2">
-                <Label>Content</Label>
-                <div className="space-y-3">
-                  {noteContent.map((block, index) => (
-                    <div key={index} className="relative">
-                      {block.type === 'text' ? (
-                        <div className="space-y-2">
-                          <Textarea
-                            placeholder="Enter your note here..."
-                            value={block.content}
-                            onChange={(e) => updateNoteTextContent(index, e.target.value)}
-                            className="min-h-[100px]"
-                          />
-                          <div className="flex gap-2">
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={handleImageUpload}
-                              className="hidden"
-                              id={`note-image-upload-${index}`}
-                              ref={index === noteContent.length - 1 ? fileInputRef : null}
+              <ChevronDown className={`h-5 w-5 text-muted-foreground transform transition-transform ${noteFormOpen ? 'rotate-180' : ''}`} />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="border-t">
+              <div className="p-4 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="note-header">Header</Label>
+                  <Input
+                    id="note-header"
+                    placeholder="Enter note header..."
+                    value={noteHeader}
+                    onChange={(e) => setNoteHeader(e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Content</Label>
+                  <div className="space-y-3">
+                    {noteContent.map((block, index) => (
+                      <div key={index} className="relative">
+                        {block.type === 'text' ? (
+                          <div className="space-y-2">
+                            <Textarea
+                              placeholder="Enter your note here..."
+                              value={block.content}
+                              onChange={(e) => updateNoteTextContent(index, e.target.value)}
+                              className="min-h-[100px]"
+                            />
+                            <div className="flex gap-2">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                className="hidden"
+                                id={`note-image-upload-${index}`}
+                                ref={index === noteContent.length - 1 ? fileInputRef : null}
+                              />
+                              <Button 
+                                type="button" 
+                                variant="outline" 
+                                className="flex-1"
+                                onClick={() => document.getElementById(`note-image-upload-${index}`)?.click()}
+                              >
+                                <Image className="mr-2 h-4 w-4" />
+                                Add Image
+                              </Button>
+                              <Button 
+                                type="button" 
+                                variant="outline" 
+                                className="flex-1"
+                                onClick={handleCameraCapture}
+                              >
+                                <Camera className="mr-2 h-4 w-4" />
+                                Camera
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="relative">
+                            <img 
+                              src={block.content} 
+                              alt={`Note attachment ${index}`} 
+                              className="max-h-[200px] w-auto object-contain rounded-md border"
                             />
                             <Button 
-                              type="button" 
-                              variant="outline" 
-                              className="flex-1"
-                              onClick={() => document.getElementById(`note-image-upload-${index}`)?.click()}
+                              onClick={() => removeContentBlock(index)} 
+                              variant="destructive" 
+                              size="sm" 
+                              className="absolute top-2 right-2"
                             >
-                              <Image className="mr-2 h-4 w-4" />
-                              Add Image
-                            </Button>
-                            <Button 
-                              type="button" 
-                              variant="outline" 
-                              className="flex-1"
-                              onClick={handleCameraCapture}
-                            >
-                              <Camera className="mr-2 h-4 w-4" />
-                              Camera
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="relative">
-                          <img 
-                            src={block.content} 
-                            alt={`Note attachment ${index}`} 
-                            className="max-h-[200px] w-auto object-contain rounded-md border"
-                          />
-                          <Button 
-                            onClick={() => removeContentBlock(index)} 
-                            variant="destructive" 
-                            size="sm" 
-                            className="absolute top-2 right-2"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
+                
+                <Button onClick={saveNote} className="w-full">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Save Note
+                </Button>
               </div>
-              
-              <Button onClick={saveNote} className="w-full">
-                <Plus className="mr-2 h-4 w-4" />
-                Save Note
-              </Button>
-            </CardContent>
-          </Card>
+            </CollapsibleContent>
+          </Collapsible>
           
           <div className="space-y-3">
             <h3 className="font-medium">Your Notes</h3>
