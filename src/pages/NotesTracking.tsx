@@ -57,6 +57,7 @@ import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Slider } from "@/components/ui/slider"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 type NoteContent = {
   type: 'text' | 'list';
@@ -192,6 +193,7 @@ const DateRangePicker = ({ date, onDateChange }: DateRangePickerProps) => {
 };
 
 const NotesTracking = () => {
+  const [activeTab, setActiveTab] = useState<string>("notes");
   const [notes, setNotes] = useState<ExtendedNote[]>(() => {
     const savedNotes = localStorage.getItem('notes');
     return savedNotes ? JSON.parse(savedNotes) : [];
@@ -335,7 +337,7 @@ const NotesTracking = () => {
              n.text === note.text && 
              n.header === note.header &&
              JSON.stringify(n.content) === JSON.stringify(note.content) &&
-             JSON.stringify(n.swap) === JSON.stringify(n.swap);
+             JSON.stringify(n.swap) === JSON.stringify(note.swap);
     });
   };
 
@@ -352,8 +354,21 @@ const NotesTracking = () => {
 
   const filteredNotes = notes.filter(note => {
     if (!dateRange?.from || !dateRange?.to) return true;
+    
+    // Filter by date range
     const noteDate = parseISO(note.date);
-    return noteDate >= dateRange.from && noteDate <= (dateRange.to);
+    const dateInRange = noteDate >= dateRange.from && noteDate <= (dateRange.to);
+    
+    // Filter by type
+    if (activeTab === "notes") {
+      return dateInRange && !note.toilType && !note.swap;
+    } else if (activeTab === "toil") {
+      return dateInRange && note.toilType !== undefined;
+    } else if (activeTab === "swaps") {
+      return dateInRange && note.swap !== undefined;
+    }
+    
+    return dateInRange;
   });
 
   return (
@@ -479,46 +494,70 @@ const NotesTracking = () => {
             <div>
               <DateRangePicker date={dateRange} onDateChange={setDateRange} />
             </div>
-            <Table>
-              <TableCaption>A list of your notes.</TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[100px]">Date</TableHead>
-                  <TableHead>Header</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredNotes.map((note) => (
-                  <TableRow key={note.id}>
-                    <TableCell className="font-medium">{format(parseISO(note.date), 'MMM d, yyyy')}</TableCell>
-                    <TableCell>{note.header}</TableCell>
-                    <TableCell className="flex gap-2">
-                      <Button variant="secondary" size="sm" onClick={() => handleNoteEdit(note)}>
-                        Edit
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm">Delete</Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will permanently delete your note from our servers.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleNoteDelete(note)}>Continue</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="notes">Notes</TabsTrigger>
+                <TabsTrigger value="toil">TOIL</TabsTrigger>
+                <TabsTrigger value="swaps">Shift Swaps</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value={activeTab} className="mt-4">
+                <Table>
+                  <TableCaption>A list of your {activeTab}.</TableCaption>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[100px]">Date</TableHead>
+                      <TableHead>Header</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredNotes.length > 0 ? (
+                      filteredNotes.map((note) => (
+                        <TableRow key={note.id}>
+                          <TableCell className="font-medium">{format(parseISO(note.date), 'MMM d, yyyy')}</TableCell>
+                          <TableCell>
+                            {note.header}
+                            {note.toilType && (
+                              <Badge className="ml-2" variant={note.toilType === "done" ? "default" : "secondary"}>
+                                {note.toilHours} hrs {note.toilType}
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="flex gap-2">
+                            <Button variant="secondary" size="sm" onClick={() => handleNoteEdit(note)}>
+                              Edit
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm">Delete</Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete your note from our servers.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleNoteDelete(note)}>Continue</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center">No {activeTab} found for the selected date range.</TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
