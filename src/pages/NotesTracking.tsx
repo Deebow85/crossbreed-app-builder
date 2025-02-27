@@ -55,6 +55,9 @@ interface ContentBlock {
   content: string;
 }
 
+// Record type enum
+type RecordType = 'swap' | 'toil';
+
 const NotesTracking = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("notes");
@@ -74,6 +77,9 @@ const NotesTracking = () => {
   const [selectedSwapDate, setSelectedSwapDate] = useState<Date>(new Date());
   const [swapFormOpen, setSwapFormOpen] = useState(false);
   const [noteFormOpen, setNoteFormOpen] = useState(false);
+  const [recordType, setRecordType] = useState<RecordType>('swap');
+  const [toilHours, setToilHours] = useState("");
+  const [toilNote, setToilNote] = useState("");
   
   // For image preview modal
   const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
@@ -528,51 +534,103 @@ const NotesTracking = () => {
   };
 
   const saveSwap = () => {
-    if (!swapWorkerName.trim()) {
+    if (recordType === 'swap') {
+      if (!swapWorkerName.trim()) {
+        toast({
+          title: "No name provided",
+          description: "Please enter the name of the person you swapped with",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!swapHours || isNaN(parseFloat(swapHours)) || parseFloat(swapHours) <= 0) {
+        toast({
+          title: "Invalid hours",
+          description: "Please enter a valid number of hours",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const dateString = format(selectedSwapDate, "yyyy-MM-dd");
+      
+      const newSwap: ExtendedShiftSwap = {
+        date: dateString,
+        workerName: swapWorkerName,
+        type: swapType,
+        hours: parseFloat(swapHours),
+        note: `Created on ${format(new Date(), "MMM d, yyyy")}`,
+        images: swapImages.length > 0 ? swapImages : undefined,
+        isCompleted: false,
+      };
+
+      const updatedSwaps = [...swaps, newSwap];
+      setSwaps(updatedSwaps);
+      localStorage.setItem("swaps", JSON.stringify(updatedSwaps));
+      
+      // Reset form
+      setSwapWorkerName("");
+      setSwapHours("");
+      setSelectedSwapDate(new Date());
+      setSwapImages([]);
+      setSwapFormOpen(false);
+      
       toast({
-        title: "No name provided",
-        description: "Please enter the name of the person you swapped with",
-        variant: "destructive",
+        title: "Shift swap recorded",
+        description: `${swapHours} hours with ${swapWorkerName}`,
       });
-      return;
-    }
+    } else {
+      // Save TOIL entry
+      if (!toilHours || isNaN(parseFloat(toilHours)) || parseFloat(toilHours) <= 0) {
+        toast({
+          title: "Invalid hours",
+          description: "Please enter a valid number of TOIL hours",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    if (!swapHours || isNaN(parseFloat(swapHours)) || parseFloat(swapHours) <= 0) {
+      const dateString = format(selectedSwapDate, "yyyy-MM-dd");
+      
+      // Create a TOIL note
+      const toilContent: ContentBlock[] = [
+        { 
+          type: 'text', 
+          content: `TOIL: ${toilHours} hours\n\n${toilNote.trim()}` 
+        }
+      ];
+
+      // Add images if there are any
+      if (swapImages.length > 0) {
+        swapImages.forEach(image => {
+          toilContent.push({ type: 'image', content: image });
+        });
+      }
+
+      const newNote: ExtendedNote = {
+        date: dateString,
+        text: `TOIL: ${toilHours} hours\n\n${toilNote.trim()}`,
+        header: `TOIL Hours: ${toilHours}`,
+        content: toilContent,
+      };
+
+      const updatedNotes = [...notes, newNote];
+      setNotes(updatedNotes);
+      localStorage.setItem("notes", JSON.stringify(updatedNotes));
+      
+      // Reset form
+      setToilHours("");
+      setToilNote("");
+      setSelectedSwapDate(new Date());
+      setSwapImages([]);
+      setSwapFormOpen(false);
+      
       toast({
-        title: "Invalid hours",
-        description: "Please enter a valid number of hours",
-        variant: "destructive",
+        title: "TOIL hours recorded",
+        description: `${toilHours} TOIL hours recorded for ${format(selectedSwapDate, "MMM d, yyyy")}`,
       });
-      return;
     }
-
-    const dateString = format(selectedSwapDate, "yyyy-MM-dd");
-    
-    const newSwap: ExtendedShiftSwap = {
-      date: dateString,
-      workerName: swapWorkerName,
-      type: swapType,
-      hours: parseFloat(swapHours),
-      note: `Created on ${format(new Date(), "MMM d, yyyy")}`,
-      images: swapImages.length > 0 ? swapImages : undefined,
-      isCompleted: false,
-    };
-
-    const updatedSwaps = [...swaps, newSwap];
-    setSwaps(updatedSwaps);
-    localStorage.setItem("swaps", JSON.stringify(updatedSwaps));
-    
-    // Reset form
-    setSwapWorkerName("");
-    setSwapHours("");
-    setSelectedSwapDate(new Date());
-    setSwapImages([]);
-    setSwapFormOpen(false);
-    
-    toast({
-      title: "Shift swap recorded",
-      description: `${swapHours} hours with ${swapWorkerName}`,
-    });
   };
 
   // Handle Delete Item
@@ -885,6 +943,19 @@ const NotesTracking = () => {
     });
   };
 
+  // Reset form when switching record types
+  const handleRecordTypeChange = (type: RecordType) => {
+    setRecordType(type);
+    // Reset form fields when switching
+    if (type === 'swap') {
+      setToilHours("");
+      setToilNote("");
+    } else {
+      setSwapWorkerName("");
+      setSwapHours("");
+    }
+  };
+
   return (
     <div className="container max-w-md mx-auto p-4 pb-20">
       <h1 className="text-2xl font-bold mb-4">Notes & Tracking</h1>
@@ -1078,7 +1149,7 @@ const NotesTracking = () => {
         </TabsContent>
         
         <TabsContent value="tracking" className="space-y-4 mt-4">
-          {/* Collapsible Shift Swap Form */}
+          {/* Collapsible Shift Swap / TOIL Form */}
           <Collapsible 
             open={swapFormOpen} 
             onOpenChange={setSwapFormOpen}
@@ -1087,35 +1158,28 @@ const NotesTracking = () => {
             <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
               <div className="flex items-center">
                 <Plus className="mr-2 h-5 w-5 text-primary" />
-                <span className="font-medium">Record Shift Swap</span>
+                <span className="font-medium">Record Shift Swap / TOIL</span>
               </div>
               <ChevronDown className={`h-5 w-5 text-muted-foreground transform transition-transform ${swapFormOpen ? 'rotate-180' : ''}`} />
             </CollapsibleTrigger>
             <CollapsibleContent className="border-t">
               <div className="p-4 space-y-4">
+                {/* Record Type Selection */}
                 <div className="space-y-2">
-                  <Label htmlFor="swap-worker">Worker Name</Label>
-                  <Input
-                    id="swap-worker"
-                    placeholder="Enter colleague name"
-                    value={swapWorkerName}
-                    onChange={(e) => setSwapWorkerName(e.target.value)}
-                  />
+                  <Label>Record Type</Label>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <span className={`text-sm ${recordType === "swap" ? "text-foreground font-medium" : "text-muted-foreground"}`}>Shift Swap</span>
+                      <Switch 
+                        checked={recordType === "toil"}
+                        onCheckedChange={(checked) => handleRecordTypeChange(checked ? "toil" : "swap")}
+                      />
+                      <span className={`text-sm ${recordType === "toil" ? "text-foreground font-medium" : "text-muted-foreground"}`}>TOIL</span>
+                    </div>
+                  </div>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="swap-hours">Hours</Label>
-                  <Input
-                    id="swap-hours"
-                    type="number"
-                    min="0.5"
-                    step="0.5"
-                    placeholder="Number of hours"
-                    value={swapHours}
-                    onChange={(e) => setSwapHours(e.target.value)}
-                  />
-                </div>
-                
+
+                {/* Date Selection - common for both */}
                 <div className="space-y-2">
                   <Label htmlFor="swap-date">Date</Label>
                   <Popover>
@@ -1139,20 +1203,76 @@ const NotesTracking = () => {
                   </Popover>
                 </div>
                 
-                <div className="space-y-2">
-                  <Label>Swap Type</Label>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className={`text-sm ${swapType === "owed" ? "text-foreground font-medium" : "text-muted-foreground"}`}>You Owe</span>
-                      <Switch 
-                        checked={swapType === "payback"}
-                        onCheckedChange={(checked) => setSwapType(checked ? "payback" : "owed")}
+                {recordType === 'swap' ? (
+                  // Shift Swap Fields
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="swap-worker">Worker Name</Label>
+                      <Input
+                        id="swap-worker"
+                        placeholder="Enter colleague name"
+                        value={swapWorkerName}
+                        onChange={(e) => setSwapWorkerName(e.target.value)}
                       />
-                      <span className={`text-sm ${swapType === "payback" ? "text-foreground font-medium" : "text-muted-foreground"}`}>Owed to You</span>
                     </div>
-                  </div>
-                </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="swap-hours">Hours</Label>
+                      <Input
+                        id="swap-hours"
+                        type="number"
+                        min="0.5"
+                        step="0.5"
+                        placeholder="Number of hours"
+                        value={swapHours}
+                        onChange={(e) => setSwapHours(e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Swap Type</Label>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <span className={`text-sm ${swapType === "owed" ? "text-foreground font-medium" : "text-muted-foreground"}`}>You Owe</span>
+                          <Switch 
+                            checked={swapType === "payback"}
+                            onCheckedChange={(checked) => setSwapType(checked ? "payback" : "owed")}
+                          />
+                          <span className={`text-sm ${swapType === "payback" ? "text-foreground font-medium" : "text-muted-foreground"}`}>Owed to You</span>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  // TOIL Fields
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="toil-hours">TOIL Hours</Label>
+                      <Input
+                        id="toil-hours"
+                        type="number"
+                        min="0.5"
+                        step="0.5"
+                        placeholder="Number of TOIL hours"
+                        value={toilHours}
+                        onChange={(e) => setToilHours(e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="toil-note">Notes (Optional)</Label>
+                      <Textarea
+                        id="toil-note"
+                        placeholder="Additional notes about these TOIL hours..."
+                        value={toilNote}
+                        onChange={(e) => setToilNote(e.target.value)}
+                        className="min-h-[100px]"
+                      />
+                    </div>
+                  </>
+                )}
                 
+                {/* Images - common for both types */}
                 <div className="space-y-2">
                   <Label>Images (Optional)</Label>
                   
@@ -1162,7 +1282,7 @@ const NotesTracking = () => {
                         <div key={i} className="relative rounded-md overflow-hidden border">
                           <img 
                             src={image} 
-                            alt={`Swap image ${i+1}`} 
+                            alt={`${recordType === 'swap' ? 'Swap' : 'TOIL'} image ${i+1}`} 
                             className="w-full h-24 object-cover"
                           />
                           <Button 
@@ -1210,7 +1330,7 @@ const NotesTracking = () => {
                 
                 <Button onClick={saveSwap} className="w-full">
                   <Plus className="mr-2 h-4 w-4" />
-                  Record Swap
+                  Record {recordType === 'swap' ? 'Shift Swap' : 'TOIL Hours'}
                 </Button>
               </div>
             </CollapsibleContent>
