@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
-import { Search, Plus, Clock, ArrowLeftRight, CalendarDays, FolderOpen, Pencil, Trash2, Image, Camera, ChevronDown } from "lucide-react";
+import { Search, Plus, Clock, ArrowLeftRight, CalendarDays, FolderOpen, Pencil, Trash2, Image, Camera, ChevronDown, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Note, ShiftSwap, SwapType } from "@/types/calendar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -33,12 +33,18 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Extended Note type to include header and content blocks
 interface ExtendedNote extends Note {
   header?: string;
   content?: ContentBlock[];
   imageUrl?: string; // Add imageUrl for legacy support
+}
+
+// Extended ShiftSwap type to include completion status
+interface ExtendedShiftSwap extends ShiftSwap {
+  isCompleted?: boolean;
 }
 
 // Content block can be either text or image
@@ -55,10 +61,11 @@ const NotesTracking = () => {
   const [notes, setNotes] = useState<ExtendedNote[]>([]);
   const [noteContent, setNoteContent] = useState<ContentBlock[]>([{type: 'text', content: ''}]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [swaps, setSwaps] = useState<ShiftSwap[]>([]);
+  const [swaps, setSwaps] = useState<ExtendedShiftSwap[]>([]);
   const [swapWorkerName, setSwapWorkerName] = useState("");
   const [swapHours, setSwapHours] = useState("");
   const [swapType, setSwapType] = useState<SwapType>("owed");
+  const [isSwapCompleted, setIsSwapCompleted] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentDate] = useState(new Date());
   const [selectedSwapDate, setSelectedSwapDate] = useState<Date>(new Date());
@@ -84,6 +91,7 @@ const NotesTracking = () => {
   const [editSwapWorkerName, setEditSwapWorkerName] = useState("");
   const [editSwapHours, setEditSwapHours] = useState("");
   const [editSwapType, setEditSwapType] = useState<SwapType>("owed");
+  const [editIsSwapCompleted, setEditIsSwapCompleted] = useState(false);
   
   // Load notes and swaps from localStorage on component mount
   useEffect(() => {
@@ -124,6 +132,23 @@ const NotesTracking = () => {
       }
     }
   }, []);
+
+  // Handle swap completion toggle
+  const toggleSwapCompletion = (index: number) => {
+    const updatedSwaps = [...swaps];
+    updatedSwaps[index] = {
+      ...updatedSwaps[index],
+      isCompleted: !updatedSwaps[index].isCompleted
+    };
+    
+    setSwaps(updatedSwaps);
+    localStorage.setItem("swaps", JSON.stringify(updatedSwaps));
+    
+    toast({
+      title: updatedSwaps[index].isCompleted ? "Swap marked as done" : "Swap marked as pending",
+      description: `Swap with ${updatedSwaps[index].workerName} has been updated`,
+    });
+  };
 
   // Handle image upload
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -376,12 +401,13 @@ const NotesTracking = () => {
     const dateString = format(selectedSwapDate, "yyyy-MM-dd");
     const creationDateString = format(new Date(), "yyyy-MM-dd");
     
-    const newSwap: ShiftSwap = {
+    const newSwap: ExtendedShiftSwap = {
       date: dateString,
       workerName: swapWorkerName,
       type: swapType,
       hours: parseFloat(swapHours),
       note: `Created on ${format(new Date(), "MMM d, yyyy")}`,
+      isCompleted: isSwapCompleted,
     };
 
     const updatedSwaps = [...swaps, newSwap];
@@ -391,6 +417,7 @@ const NotesTracking = () => {
     setSwapWorkerName("");
     setSwapHours("");
     setSelectedSwapDate(new Date());
+    setIsSwapCompleted(false);
     setSwapFormOpen(false);
     
     toast({
@@ -467,6 +494,7 @@ const NotesTracking = () => {
       setEditSwapWorkerName(swap.workerName);
       setEditSwapHours(swap.hours.toString());
       setEditSwapType(swap.type);
+      setEditIsSwapCompleted(swap.isCompleted || false);
     }
     
     setEditDialogOpen(true);
@@ -542,6 +570,7 @@ const NotesTracking = () => {
         workerName: editSwapWorkerName,
         hours: parseFloat(editSwapHours),
         type: editSwapType,
+        isCompleted: editIsSwapCompleted,
       };
       
       setSwaps(updatedSwaps);
@@ -643,7 +672,7 @@ const NotesTracking = () => {
   };
   
   // Find original index of a swap in the overall swaps array
-  const findOriginalSwapIndex = (swap: ShiftSwap): number => {
+  const findOriginalSwapIndex = (swap: ExtendedShiftSwap): number => {
     return swaps.findIndex(s => 
       s.date === swap.date && 
       s.workerName === swap.workerName && 
@@ -955,6 +984,17 @@ const NotesTracking = () => {
                   </div>
                 </div>
                 
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="swap-completed" 
+                    checked={isSwapCompleted}
+                    onCheckedChange={(checked) => setIsSwapCompleted(checked === true)}
+                  />
+                  <Label htmlFor="swap-completed" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Paid Back / Done
+                  </Label>
+                </div>
+                
                 <Button onClick={saveSwap} className="w-full">
                   <Plus className="mr-2 h-4 w-4" />
                   Record Swap
@@ -991,10 +1031,11 @@ const NotesTracking = () => {
                         items.map((item, idx) => {
                           if ('workerName' in item) {
                             // This is a shift swap
-                            const swap = item as ShiftSwap;
+                            const swap = item as ExtendedShiftSwap;
+                            const swapIndex = findOriginalSwapIndex(swap);
                             const key = swap.type === "payback" ? "swap-done" : "swap-owed";
                             return (
-                              <Card key={idx} className="shadow-none border">
+                              <Card key={idx} className={`shadow-none border ${swap.isCompleted ? 'bg-muted/20' : ''}`}>
                                 <CardContent className="p-3">
                                   <div className="flex items-center justify-between">
                                     <div className="flex items-center text-sm text-muted-foreground mb-2">
@@ -1022,12 +1063,30 @@ const NotesTracking = () => {
                                       {swap.note}
                                     </div>
                                   )}
+                                  
+                                  <div className="mt-3 flex items-center">
+                                    <Checkbox 
+                                      id={`swap-completed-${idx}`} 
+                                      checked={swap.isCompleted}
+                                      onCheckedChange={() => toggleSwapCompletion(swapIndex)}
+                                      className="mr-2"
+                                    />
+                                    <Label 
+                                      htmlFor={`swap-completed-${idx}`}
+                                      className={`text-sm font-medium ${swap.isCompleted ? 'line-through text-muted-foreground' : ''}`}
+                                    >
+                                      Paid Back / Done
+                                    </Label>
+                                    {swap.isCompleted && (
+                                      <CheckCircle2 className="ml-auto h-4 w-4 text-green-500" />
+                                    )}
+                                  </div>
                                 </CardContent>
                                 <CardFooter className="p-2 pt-0 flex justify-end gap-2">
                                   <Button 
                                     variant="ghost" 
                                     size="sm"
-                                    onClick={() => handleEditClick('swap', findOriginalSwapIndex(swap))}
+                                    onClick={() => handleEditClick('swap', swapIndex)}
                                   >
                                     <Pencil className="h-4 w-4" />
                                     <span className="sr-only">Edit</span>
@@ -1036,7 +1095,7 @@ const NotesTracking = () => {
                                     variant="ghost" 
                                     size="sm" 
                                     className="text-destructive hover:text-destructive/90"
-                                    onClick={() => handleDeleteClick('swap', findOriginalSwapIndex(swap))}
+                                    onClick={() => handleDeleteClick('swap', swapIndex)}
                                   >
                                     <Trash2 className="h-4 w-4" />
                                     <span className="sr-only">Delete</span>
@@ -1239,6 +1298,17 @@ const NotesTracking = () => {
                     <span className={`text-sm ${editSwapType === "payback" ? "text-foreground font-medium" : "text-muted-foreground"}`}>Owed to You</span>
                   </div>
                 </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="edit-swap-completed" 
+                  checked={editIsSwapCompleted}
+                  onCheckedChange={(checked) => setEditIsSwapCompleted(checked === true)}
+                />
+                <Label htmlFor="edit-swap-completed" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Paid Back / Done
+                </Label>
               </div>
             </div>
           )}
