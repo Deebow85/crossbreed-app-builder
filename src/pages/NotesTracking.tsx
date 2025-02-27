@@ -30,10 +30,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-// Extended Note type to include header and image
+// Extended Note type to include header and content blocks
 interface ExtendedNote extends Note {
   header?: string;
-  imageUrl?: string;
+  content?: ContentBlock[];
+}
+
+// Content block can be either text or image
+interface ContentBlock {
+  type: 'text' | 'image';
+  content: string;
 }
 
 const NotesTracking = () => {
@@ -42,7 +48,7 @@ const NotesTracking = () => {
   const [noteHeader, setNoteHeader] = useState("");
   const [noteText, setNoteText] = useState("");
   const [notes, setNotes] = useState<ExtendedNote[]>([]);
-  const [noteImage, setNoteImage] = useState<string | null>(null);
+  const [noteContent, setNoteContent] = useState<ContentBlock[]>([{type: 'text', content: ''}]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [swaps, setSwaps] = useState<ShiftSwap[]>([]);
   const [swapWorkerName, setSwapWorkerName] = useState("");
@@ -63,8 +69,7 @@ const NotesTracking = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{ type: 'note' | 'swap', index: number } | null>(null);
   const [editNoteHeader, setEditNoteHeader] = useState("");
-  const [editNoteText, setEditNoteText] = useState("");
-  const [editNoteImage, setEditNoteImage] = useState<string | null>(null);
+  const [editNoteContent, setEditNoteContent] = useState<ContentBlock[]>([]);
   const editFileInputRef = useRef<HTMLInputElement>(null);
   const [editSwapWorkerName, setEditSwapWorkerName] = useState("");
   const [editSwapHours, setEditSwapHours] = useState("");
@@ -75,7 +80,26 @@ const NotesTracking = () => {
     const savedNotes = localStorage.getItem("notes");
     if (savedNotes) {
       try {
-        setNotes(JSON.parse(savedNotes));
+        const parsed = JSON.parse(savedNotes);
+        
+        // Convert old format notes to new format
+        const convertedNotes = parsed.map((note: any) => {
+          if (note.content) {
+            return note; // Already in new format
+          } else {
+            // Convert old format to new format
+            const newNote: ExtendedNote = {
+              ...note,
+              content: [
+                ...(note.text ? [{type: 'text', content: note.text}] : []),
+                ...(note.imageUrl ? [{type: 'image', content: note.imageUrl}] : [])
+              ]
+            };
+            return newNote;
+          }
+        });
+        
+        setNotes(convertedNotes);
       } catch (e) {
         console.error("Error loading notes:", e);
       }
@@ -97,7 +121,12 @@ const NotesTracking = () => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setNoteImage(reader.result as string);
+        // Add a new image block
+        setNoteContent(prev => [
+          ...prev,
+          { type: 'image', content: reader.result as string },
+          { type: 'text', content: '' } // Add a new text block after image
+        ]);
       };
       reader.readAsDataURL(file);
     }
@@ -136,7 +165,13 @@ const NotesTracking = () => {
         
         // Convert canvas to data URL
         const imageDataUrl = canvas.toDataURL('image/png');
-        setNoteImage(imageDataUrl);
+        
+        // Add a new image block
+        setNoteContent(prev => [
+          ...prev,
+          { type: 'image', content: imageDataUrl },
+          { type: 'text', content: '' } // Add a new text block after image
+        ]);
         
         toast({
           title: "Image captured",
@@ -154,19 +189,25 @@ const NotesTracking = () => {
   };
 
   // Handle edit image upload
-  const handleEditImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEditImageUpload = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setEditNoteImage(reader.result as string);
+        const imageUrl = reader.result as string;
+        // Add a new image block after the current text block
+        const newContent = [...editNoteContent];
+        newContent.splice(index + 1, 0, { type: 'image', content: imageUrl });
+        // Add a new text block after the image
+        newContent.splice(index + 2, 0, { type: 'text', content: '' });
+        setEditNoteContent(newContent);
       };
       reader.readAsDataURL(file);
     }
   };
 
   // Handle edit camera capture
-  const handleEditCameraCapture = async () => {
+  const handleEditCameraCapture = async (index: number) => {
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         toast({
@@ -193,11 +234,17 @@ const NotesTracking = () => {
         stream.getTracks().forEach(track => track.stop());
         
         const imageDataUrl = canvas.toDataURL('image/png');
-        setEditNoteImage(imageDataUrl);
+        
+        // Add a new image block after the current text block
+        const newContent = [...editNoteContent];
+        newContent.splice(index + 1, 0, { type: 'image', content: imageDataUrl });
+        // Add a new text block after the image
+        newContent.splice(index + 2, 0, { type: 'text', content: '' });
+        setEditNoteContent(newContent);
         
         toast({
           title: "Image captured",
-          description: "Camera image updated in note",
+          description: "Camera image added to note",
         });
       }, 500);
     } catch (error) {
@@ -210,8 +257,62 @@ const NotesTracking = () => {
     }
   };
 
+  // Update text content at a specific index
+  const updateNoteTextContent = (index: number, value: string) => {
+    const newContent = [...noteContent];
+    if (newContent[index].type === 'text') {
+      newContent[index].content = value;
+      setNoteContent(newContent);
+    }
+  };
+
+  // Update edit text content at a specific index
+  const updateEditNoteTextContent = (index: number, value: string) => {
+    const newContent = [...editNoteContent];
+    if (newContent[index].type === 'text') {
+      newContent[index].content = value;
+      setEditNoteContent(newContent);
+    }
+  };
+
+  // Remove a content block
+  const removeContentBlock = (index: number) => {
+    const newContent = [...noteContent];
+    newContent.splice(index, 1);
+    // Make sure we have at least one text block
+    if (newContent.length === 0 || newContent.every(block => block.type !== 'text')) {
+      newContent.push({ type: 'text', content: '' });
+    }
+    setNoteContent(newContent);
+  };
+
+  // Remove an edit content block
+  const removeEditContentBlock = (index: number) => {
+    const newContent = [...editNoteContent];
+    newContent.splice(index, 1);
+    // Make sure we have at least one text block
+    if (newContent.length === 0 || newContent.every(block => block.type !== 'text')) {
+      newContent.push({ type: 'text', content: '' });
+    }
+    setEditNoteContent(newContent);
+  };
+
   const saveNote = () => {
-    if (!noteText.trim() && !noteImage) {
+    // Filter out empty content blocks at the end
+    const filteredContent = [...noteContent];
+    while (
+      filteredContent.length > 0 && 
+      filteredContent[filteredContent.length - 1].type === 'text' && 
+      filteredContent[filteredContent.length - 1].content.trim() === ''
+    ) {
+      filteredContent.pop();
+    }
+    
+    // Check if note is empty (no text content and no images)
+    const hasText = filteredContent.some(block => block.type === 'text' && block.content.trim() !== '');
+    const hasImages = filteredContent.some(block => block.type === 'image');
+    
+    if (!hasText && !hasImages) {
       toast({
         title: "Empty note",
         description: "Please enter some text or add an image for your note",
@@ -223,9 +324,9 @@ const NotesTracking = () => {
     const dateString = format(currentDate, "yyyy-MM-dd");
     const newNote: ExtendedNote = {
       date: dateString,
-      text: noteText,
+      text: filteredContent.filter(block => block.type === 'text').map(block => block.content).join('\n\n'),
       header: noteHeader.trim() || undefined,
-      imageUrl: noteImage || undefined,
+      content: filteredContent.length > 0 ? filteredContent : undefined,
     };
 
     const updatedNotes = [...notes, newNote];
@@ -233,9 +334,8 @@ const NotesTracking = () => {
     localStorage.setItem("notes", JSON.stringify(updatedNotes));
     
     // Reset form
-    setNoteText("");
     setNoteHeader("");
-    setNoteImage(null);
+    setNoteContent([{type: 'text', content: ''}]);
     
     toast({
       title: "Note saved",
@@ -283,7 +383,7 @@ const NotesTracking = () => {
     });
   };
 
-  // Handle Delete Item - now with immediate deletion
+  // Handle Delete Item
   const handleDeleteClick = (type: 'note' | 'swap', index: number) => {
     setSelectedItem({ type, index });
     setDeleteDialogOpen(true);
@@ -326,9 +426,26 @@ const NotesTracking = () => {
     
     if (type === 'note') {
       const note = notes[index] as ExtendedNote;
-      setEditNoteText(note.text);
       setEditNoteHeader(note.header || "");
-      setEditNoteImage(note.imageUrl || null);
+      
+      // Convert note to content blocks format
+      if (note.content) {
+        setEditNoteContent(note.content);
+      } else {
+        // Legacy format conversion
+        const blocks: ContentBlock[] = [];
+        if (note.text) {
+          blocks.push({ type: 'text', content: note.text });
+        }
+        if (note.imageUrl) {
+          blocks.push({ type: 'image', content: note.imageUrl });
+        }
+        // Ensure there's at least one text block
+        if (blocks.length === 0 || blocks.every(block => block.type !== 'text')) {
+          blocks.push({ type: 'text', content: '' });
+        }
+        setEditNoteContent(blocks);
+      }
     } else {
       const swap = swaps[index];
       setEditSwapWorkerName(swap.workerName);
@@ -346,7 +463,21 @@ const NotesTracking = () => {
     setEditDialogOpen(false);
     
     if (selectedItem.type === 'note') {
-      if (!editNoteText.trim() && !editNoteImage) {
+      // Filter out empty content blocks at the end
+      const filteredContent = [...editNoteContent];
+      while (
+        filteredContent.length > 0 && 
+        filteredContent[filteredContent.length - 1].type === 'text' && 
+        filteredContent[filteredContent.length - 1].content.trim() === ''
+      ) {
+        filteredContent.pop();
+      }
+      
+      // Check if note is empty (no text content and no images)
+      const hasText = filteredContent.some(block => block.type === 'text' && block.content.trim() !== '');
+      const hasImages = filteredContent.some(block => block.type === 'image');
+      
+      if (!hasText && !hasImages) {
         toast({
           title: "Empty note",
           description: "Please enter some text or add an image for your note",
@@ -358,9 +489,9 @@ const NotesTracking = () => {
       const updatedNotes = [...notes];
       updatedNotes[selectedItem.index] = {
         ...updatedNotes[selectedItem.index],
-        text: editNoteText,
         header: editNoteHeader.trim() || undefined,
-        imageUrl: editNoteImage || undefined,
+        text: filteredContent.filter(block => block.type === 'text').map(block => block.content).join('\n\n'),
+        content: filteredContent.length > 0 ? filteredContent : undefined,
       };
       
       setNotes(updatedNotes);
@@ -409,12 +540,26 @@ const NotesTracking = () => {
     setSelectedItem(null);
   };
 
+  // Helper function to get text from a note for searching and categorizing
+  const getNoteText = (note: ExtendedNote): string => {
+    if (note.content) {
+      return note.content
+        .filter(block => block.type === 'text')
+        .map(block => block.content)
+        .join(' ');
+    }
+    return note.text || '';
+  };
+
   // Filter notes and swaps based on search term
-  const filteredNotes = notes.filter(note => 
-    (note.text && note.text.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (note.header && note.header.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    note.date.includes(searchTerm)
-  );
+  const filteredNotes = notes.filter(note => {
+    const noteText = getNoteText(note);
+    return (
+      noteText.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (note.header && note.header.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      note.date.includes(searchTerm)
+    );
+  });
 
   const filteredSwaps = swaps.filter(swap => 
     swap.workerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -425,14 +570,11 @@ const NotesTracking = () => {
   const categorizedItems = {
     "swap-done": filteredSwaps.filter(swap => swap.type === "payback"),
     "swap-owed": filteredSwaps.filter(swap => swap.type === "owed"),
-    "toil": filteredNotes.filter(note => note.text && note.text.toLowerCase().includes("toil")),
-    "notes": filteredNotes.filter(note => 
-      !note.text || (
-        !note.text.toLowerCase().includes("toil") && 
-        !note.text.toLowerCase().includes("swap") &&
-        !note.swap
-      )
-    ),
+    "toil": filteredNotes.filter(note => getNoteText(note).toLowerCase().includes("toil")),
+    "notes": filteredNotes.filter(note => {
+      const text = getNoteText(note);
+      return !text.toLowerCase().includes("toil") && !text.toLowerCase().includes("swap") && !note.swap;
+    }),
     "calendar-notes": filteredNotes.filter(note => note.swap)
   };
 
@@ -462,7 +604,7 @@ const NotesTracking = () => {
       n.date === note.date && 
       n.text === note.text && 
       n.header === note.header &&
-      n.imageUrl === note.imageUrl &&
+      JSON.stringify(n.content) === JSON.stringify(note.content) &&
       JSON.stringify(n.swap) === JSON.stringify(note.swap)
     );
   };
@@ -486,16 +628,19 @@ const NotesTracking = () => {
           date: format(new Date(), "yyyy-MM-dd"),
           header: "Important Information",
           text: "Regular note with some important information",
+          content: [{ type: 'text', content: "Regular note with some important information" }]
         },
         {
           date: format(new Date(Date.now() - 86400000), "yyyy-MM-dd"),
           header: "TOIL Hours",
           text: "TOIL hours accumulated: 4 hours on project X",
+          content: [{ type: 'text', content: "TOIL hours accumulated: 4 hours on project X" }]
         },
         {
           date: format(new Date(Date.now() - 172800000), "yyyy-MM-dd"),
           header: "Team Meeting",
           text: "Meeting notes from team standup",
+          content: [{ type: 'text', content: "Meeting notes from team standup" }]
         }
       ];
       
@@ -523,21 +668,38 @@ const NotesTracking = () => {
     }
   }, [notes.length, swaps.length]);
 
-  // Remove image from note
-  const removeNoteImage = () => {
-    setNoteImage(null);
-    // If there's a file input, reset its value
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  // Remove image from edit note
-  const removeEditNoteImage = () => {
-    setEditNoteImage(null);
-    // If there's a file input, reset its value
-    if (editFileInputRef.current) {
-      editFileInputRef.current.value = "";
+  // Render a note in view mode
+  const renderNoteContent = (note: ExtendedNote) => {
+    if (note.content) {
+      return note.content.map((block, index) => (
+        <div key={index} className={`mb-3 ${block.type === 'image' ? 'image-block' : 'text-block'}`}>
+          {block.type === 'image' ? (
+            <img 
+              src={block.content} 
+              alt={`Note attachment ${index}`} 
+              className="max-h-[200px] w-auto object-contain rounded-md border"
+            />
+          ) : (
+            <p className="whitespace-pre-line">{block.content}</p>
+          )}
+        </div>
+      ));
+    } else {
+      // Legacy format
+      return (
+        <>
+          {note.imageUrl && (
+            <div className="mb-3">
+              <img 
+                src={note.imageUrl} 
+                alt="Note attachment" 
+                className="max-h-[200px] w-auto object-contain rounded-md border my-2"
+              />
+            </div>
+          )}
+          <p className="whitespace-pre-line">{note.text}</p>
+        </>
+      );
     }
   };
 
@@ -584,65 +746,66 @@ const NotesTracking = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="note-text">Note</Label>
-                <Textarea
-                  id="note-text"
-                  placeholder="Enter your note here..."
-                  value={noteText}
-                  onChange={(e) => setNoteText(e.target.value)}
-                  className="min-h-[100px]"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Image</Label>
-                <div className="flex flex-col gap-2">
-                  {noteImage && (
-                    <div className="relative">
-                      <img 
-                        src={noteImage} 
-                        alt="Note attachment" 
-                        className="max-h-[200px] w-auto object-contain rounded-md border"
-                      />
-                      <Button 
-                        onClick={removeNoteImage} 
-                        variant="destructive" 
-                        size="sm" 
-                        className="absolute top-2 right-2"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                <Label>Content</Label>
+                <div className="space-y-3">
+                  {noteContent.map((block, index) => (
+                    <div key={index} className="relative">
+                      {block.type === 'text' ? (
+                        <div className="space-y-2">
+                          <Textarea
+                            placeholder="Enter your note here..."
+                            value={block.content}
+                            onChange={(e) => updateNoteTextContent(index, e.target.value)}
+                            className="min-h-[100px]"
+                          />
+                          <div className="flex gap-2">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleImageUpload}
+                              className="hidden"
+                              id={`note-image-upload-${index}`}
+                              ref={index === noteContent.length - 1 ? fileInputRef : null}
+                            />
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              className="flex-1"
+                              onClick={() => document.getElementById(`note-image-upload-${index}`)?.click()}
+                            >
+                              <Image className="mr-2 h-4 w-4" />
+                              Add Image
+                            </Button>
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              className="flex-1"
+                              onClick={handleCameraCapture}
+                            >
+                              <Camera className="mr-2 h-4 w-4" />
+                              Camera
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <img 
+                            src={block.content} 
+                            alt={`Note attachment ${index}`} 
+                            className="max-h-[200px] w-auto object-contain rounded-md border"
+                          />
+                          <Button 
+                            onClick={() => removeContentBlock(index)} 
+                            variant="destructive" 
+                            size="sm" 
+                            className="absolute top-2 right-2"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  
-                  <div className="flex gap-2">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                      id="note-image-upload"
-                    />
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      className="flex-1"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <Image className="mr-2 h-4 w-4" />
-                      Upload Image
-                    </Button>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      className="flex-1"
-                      onClick={handleCameraCapture}
-                    >
-                      <Camera className="mr-2 h-4 w-4" />
-                      Camera
-                    </Button>
-                  </div>
+                  ))}
                 </div>
               </div>
               
@@ -690,17 +853,7 @@ const NotesTracking = () => {
                                   <h4 className="text-base font-semibold mb-2">{note.header}</h4>
                                 )}
                                 
-                                {note.imageUrl && (
-                                  <div className="mb-3">
-                                    <img 
-                                      src={note.imageUrl} 
-                                      alt="Note attachment" 
-                                      className="max-h-[200px] w-auto object-contain rounded-md border my-2"
-                                    />
-                                  </div>
-                                )}
-                                
-                                <p className="whitespace-pre-line">{note.text}</p>
+                                {renderNoteContent(note)}
                               </CardContent>
                               <CardFooter className="p-2 pt-0 flex justify-end gap-2">
                                 <Button 
@@ -864,17 +1017,7 @@ const NotesTracking = () => {
                                     <h4 className="text-base font-semibold mb-2">{note.header}</h4>
                                   )}
                                   
-                                  {note.imageUrl && (
-                                    <div className="mb-3">
-                                      <img 
-                                        src={note.imageUrl} 
-                                        alt="Note attachment" 
-                                        className="max-h-[200px] w-auto object-contain rounded-md border my-2"
-                                      />
-                                    </div>
-                                  )}
-                                  
-                                  <p className="whitespace-pre-line">{note.text}</p>
+                                  {renderNoteContent(note)}
                                 </CardContent>
                                 <CardFooter className="p-2 pt-0 flex justify-end gap-2">
                                   <Button 
@@ -931,7 +1074,7 @@ const NotesTracking = () => {
       
       {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               Edit {selectedItem?.type === 'note' ? 'Note' : 'Shift Swap'}
@@ -954,65 +1097,66 @@ const NotesTracking = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="edit-note-text">Note</Label>
-                <Textarea
-                  id="edit-note-text"
-                  placeholder="Enter your note here..."
-                  value={editNoteText}
-                  onChange={(e) => setEditNoteText(e.target.value)}
-                  className="min-h-[100px]"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Image</Label>
-                <div className="flex flex-col gap-2">
-                  {editNoteImage && (
-                    <div className="relative">
-                      <img 
-                        src={editNoteImage} 
-                        alt="Note attachment" 
-                        className="max-h-[200px] w-auto object-contain rounded-md border"
-                      />
-                      <Button 
-                        onClick={removeEditNoteImage} 
-                        variant="destructive" 
-                        size="sm" 
-                        className="absolute top-2 right-2"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                <Label>Content</Label>
+                <div className="space-y-3">
+                  {editNoteContent.map((block, index) => (
+                    <div key={index} className="relative">
+                      {block.type === 'text' ? (
+                        <div className="space-y-2">
+                          <Textarea
+                            placeholder="Enter your note here..."
+                            value={block.content}
+                            onChange={(e) => updateEditNoteTextContent(index, e.target.value)}
+                            className="min-h-[100px]"
+                          />
+                          <div className="flex gap-2">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleEditImageUpload(e, index)}
+                              className="hidden"
+                              id={`edit-note-image-upload-${index}`}
+                              ref={index === editNoteContent.length - 1 ? editFileInputRef : null}
+                            />
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              className="flex-1"
+                              onClick={() => document.getElementById(`edit-note-image-upload-${index}`)?.click()}
+                            >
+                              <Image className="mr-2 h-4 w-4" />
+                              Add Image
+                            </Button>
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              className="flex-1"
+                              onClick={() => handleEditCameraCapture(index)}
+                            >
+                              <Camera className="mr-2 h-4 w-4" />
+                              Camera
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <img 
+                            src={block.content} 
+                            alt={`Note attachment ${index}`} 
+                            className="max-h-[200px] w-auto object-contain rounded-md border"
+                          />
+                          <Button 
+                            onClick={() => removeEditContentBlock(index)} 
+                            variant="destructive" 
+                            size="sm" 
+                            className="absolute top-2 right-2"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  
-                  <div className="flex gap-2">
-                    <input
-                      ref={editFileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleEditImageUpload}
-                      className="hidden"
-                      id="edit-note-image-upload"
-                    />
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      className="flex-1"
-                      onClick={() => editFileInputRef.current?.click()}
-                    >
-                      <Image className="mr-2 h-4 w-4" />
-                      Upload Image
-                    </Button>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      className="flex-1"
-                      onClick={handleEditCameraCapture}
-                    >
-                      <Camera className="mr-2 h-4 w-4" />
-                      Camera
-                    </Button>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
