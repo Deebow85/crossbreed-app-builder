@@ -41,6 +41,7 @@ interface ExtendedNote extends Note {
   header?: string;
   content?: ContentBlock[];
   imageUrl?: string; // Add imageUrl for legacy support
+  toilHours?: number; // Add TOIL hours for TOIL tracking
 }
 
 // Extended ShiftSwap type to include completion status and images
@@ -85,8 +86,8 @@ const NotesTracking = () => {
   const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string>("");
   
-  // Expanded swap cards
-  const [expandedSwaps, setExpandedSwaps] = useState<Record<string, boolean>>({});
+  // Expanded cards
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   
   // Start with all folders closed
   const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({
@@ -117,11 +118,11 @@ const NotesTracking = () => {
     setImagePreviewOpen(true);
   };
 
-  // Toggle swap expansion
-  const toggleSwapExpansion = (swapId: string) => {
-    setExpandedSwaps(prev => ({
+  // Toggle card expansion
+  const toggleCardExpansion = (cardId: string) => {
+    setExpandedCards(prev => ({
       ...prev,
-      [swapId]: !prev[swapId]
+      [cardId]: !prev[cardId]
     }));
   };
   
@@ -613,6 +614,7 @@ const NotesTracking = () => {
         text: `TOIL: ${toilHours} hours\n\n${toilNote.trim()}`,
         header: `TOIL Hours: ${toilHours}`,
         content: toilContent,
+        toilHours: parseFloat(toilHours), // Store TOIL hours for easier reference
       };
 
       const updatedNotes = [...notes, newNote];
@@ -824,10 +826,12 @@ const NotesTracking = () => {
   const categorizedItems = {
     "swap-done": filteredSwaps.filter(swap => swap.type === "payback"),
     "swap-owed": filteredSwaps.filter(swap => swap.type === "owed"),
-    "toil": filteredNotes.filter(note => getNoteText(note).toLowerCase().includes("toil")),
+    "toil": filteredNotes.filter(note => 
+      getNoteText(note).toLowerCase().includes("toil") || note.toilHours !== undefined
+    ),
     "notes": filteredNotes.filter(note => {
       const text = getNoteText(note);
-      return !text.toLowerCase().includes("toil") && !text.toLowerCase().includes("swap") && !note.swap;
+      return !text.toLowerCase().includes("toil") && !note.toilHours && !text.toLowerCase().includes("swap") && !note.swap;
     }),
     "calendar-notes": filteredNotes.filter(note => note.swap)
   };
@@ -890,9 +894,31 @@ const NotesTracking = () => {
     );
   };
 
-  // Generate a unique ID for a swap to use in the expandedSwaps state
-  const getSwapId = (swap: ExtendedShiftSwap, index: number): string => {
-    return `${swap.date}-${swap.workerName}-${index}`;
+  // Generate a unique ID for a card to use in the expandedCards state
+  const getCardId = (type: string, item: any, index: number): string => {
+    if (type === 'swap') {
+      const swap = item as ExtendedShiftSwap;
+      return `swap-${swap.date}-${swap.workerName}-${index}`;
+    } else {
+      const note = item as ExtendedNote;
+      return `note-${note.date}-${index}`;
+    }
+  };
+
+  // Check if a note has images
+  const noteHasImages = (note: ExtendedNote): boolean => {
+    if (note.content) {
+      return note.content.some(block => block.type === 'image');
+    }
+    return !!note.imageUrl;
+  };
+
+  // Count images in a note
+  const countNoteImages = (note: ExtendedNote): number => {
+    if (note.content) {
+      return note.content.filter(block => block.type === 'image').length;
+    }
+    return note.imageUrl ? 1 : 0;
   };
 
   // Render a note in view mode
@@ -1367,15 +1393,15 @@ const NotesTracking = () => {
                             const swap = item as ExtendedShiftSwap;
                             const swapIndex = findOriginalSwapIndex(swap);
                             const swapKey = key;
-                            const swapId = getSwapId(swap, swapIndex);
-                            const isExpanded = expandedSwaps[swapId] || false;
+                            const cardId = getCardId('swap', swap, idx);
+                            const isExpanded = expandedCards[cardId] || false;
                             
                             return (
                               <Card key={idx} className={`shadow-none border ${swap.isCompleted ? 'bg-muted/20' : ''}`}>
                                 {/* Collapsible Swap Card Header */}
                                 <div 
                                   className="p-3 cursor-pointer hover:bg-muted/30" 
-                                  onClick={() => toggleSwapExpansion(swapId)}
+                                  onClick={() => toggleCardExpansion(cardId)}
                                 >
                                   <div className="flex items-center justify-between">
                                     <div className="flex items-center text-sm text-muted-foreground">
@@ -1505,39 +1531,77 @@ const NotesTracking = () => {
                           } else {
                             // This is a TOIL note
                             const note = item as ExtendedNote;
+                            const noteIndex = findOriginalNoteIndex(note);
+                            const cardId = getCardId('toil', note, idx);
+                            const isExpanded = expandedCards[cardId] || false;
+                            const imageCount = countNoteImages(note);
+                            const toilHours = note.toilHours || parseFloat(
+                              getNoteText(note).match(/TOIL:\s*(\d+(\.\d+)?)\s*hours/i)?.[1] || "0"
+                            );
+                            
                             return (
                               <Card key={idx} className="shadow-none border">
-                                <CardContent className="p-3">
-                                  <div className="flex items-center text-sm text-muted-foreground mb-2">
-                                    <CalendarDays className="mr-2 h-4 w-4" />
-                                    {format(new Date(note.date), "MMMM d, yyyy")}
+                                {/* Collapsible TOIL Card Header */}
+                                <div 
+                                  className="p-3 cursor-pointer hover:bg-muted/30" 
+                                  onClick={() => toggleCardExpansion(cardId)}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center text-sm text-muted-foreground">
+                                      <CalendarDays className="mr-2 h-4 w-4" />
+                                      {format(new Date(note.date), "MMMM d, yyyy")}
+                                    </div>
+                                    <ChevronDown 
+                                      className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                                    />
                                   </div>
-                                  
-                                  {note.header && (
-                                    <h4 className="text-base font-semibold mb-2">{note.header}</h4>
-                                  )}
-                                  
-                                  {renderNoteContent(note)}
-                                </CardContent>
-                                <CardFooter className="p-2 pt-0 flex justify-end gap-2">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm"
-                                    onClick={() => handleEditClick('note', findOriginalNoteIndex(note))}
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                    <span className="sr-only">Edit</span>
-                                  </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    className="text-destructive hover:text-destructive/90"
-                                    onClick={() => handleDeleteClick('note', findOriginalNoteIndex(note))}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                    <span className="sr-only">Delete</span>
-                                  </Button>
-                                </CardFooter>
+                                  <div className="flex items-center mt-2">
+                                    <div className="flex-1">
+                                      <div className="flex items-center">
+                                        <Clock className="mr-2 h-4 w-4" />
+                                        <span className="font-medium">TOIL Hours: {toilHours}</span>
+                                      </div>
+                                      
+                                      {/* Display image count indicator */}
+                                      {imageCount > 0 && (
+                                        <div className="flex items-center mt-1">
+                                          <div className="flex items-center text-xs text-primary ml-auto">
+                                            <Image className="mr-1 h-3.5 w-3.5" />
+                                            <span>{imageCount}</span>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {/* Collapsible TOIL Card Content */}
+                                {isExpanded && (
+                                  <>
+                                    <CardContent className="p-3 pt-0 border-t">
+                                      {renderNoteContent(note)}
+                                    </CardContent>
+                                    <CardFooter className="p-2 pt-0 flex justify-end gap-2 border-t">
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm"
+                                        onClick={() => handleEditClick('note', noteIndex)}
+                                      >
+                                        <Pencil className="h-4 w-4" />
+                                        <span className="sr-only">Edit</span>
+                                      </Button>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="text-destructive hover:text-destructive/90"
+                                        onClick={() => handleDeleteClick('note', noteIndex)}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                        <span className="sr-only">Delete</span>
+                                      </Button>
+                                    </CardFooter>
+                                  </>
+                                )}
                               </Card>
                             );
                           }
