@@ -118,6 +118,20 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
     return () => window.removeEventListener('storage', loadSettings);
   }, []);
 
+  // **************************************************************************
+  // WARNING: DO NOT MODIFY THE PATTERN LOGIC BELOW WITHOUT CAREFUL REVIEW
+  // This pattern algorithm has been carefully tested and validated.
+  //
+  // How the pattern works:
+  // 1. Steps in pattern.sequences are each shift type with its duration in days
+  // 2. The entire sequence is repeated for pattern.repeatTimes 
+  // 3. After ALL repeats are done, pattern.daysOffAfter days are added at the end
+  // 4. This entire super-cycle is repeated enough times to cover the years specified
+  //
+  // IMPORTANT: Days off within sequences (isOff: true) are different from daysOffAfter!
+  // Days off *within* a pattern sequence are regular days off in the rotation.
+  // Days off *after* all repeats (daysOffAfter) are added at the very end of all cycles.
+  // **************************************************************************
   const applyShiftPattern = (patternData: any) => {
     // Make sure we have valid data
     if (!patternData?.pattern?.sequences || !patternData.startDate) {
@@ -203,6 +217,9 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
       console.error('Error applying shift pattern:', error);
     }
   };
+  // **************************************************************************
+  // END OF PATTERN LOGIC - SEE WARNING ABOVE
+  // **************************************************************************
 
   const handleDayClick = (date: Date) => {
     const dateStr = date.toISOString();
