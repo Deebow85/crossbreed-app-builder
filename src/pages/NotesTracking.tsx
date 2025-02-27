@@ -42,9 +42,10 @@ interface ExtendedNote extends Note {
   imageUrl?: string; // Add imageUrl for legacy support
 }
 
-// Extended ShiftSwap type to include completion status
+// Extended ShiftSwap type to include completion status and images
 interface ExtendedShiftSwap extends ShiftSwap {
   isCompleted?: boolean;
+  images?: string[]; // Array of image data URLs
 }
 
 // Content block can be either text or image
@@ -61,11 +62,12 @@ const NotesTracking = () => {
   const [notes, setNotes] = useState<ExtendedNote[]>([]);
   const [noteContent, setNoteContent] = useState<ContentBlock[]>([{type: 'text', content: ''}]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const swapFileInputRef = useRef<HTMLInputElement>(null);
   const [swaps, setSwaps] = useState<ExtendedShiftSwap[]>([]);
   const [swapWorkerName, setSwapWorkerName] = useState("");
   const [swapHours, setSwapHours] = useState("");
   const [swapType, setSwapType] = useState<SwapType>("owed");
-  const [isSwapCompleted, setIsSwapCompleted] = useState(false);
+  const [swapImages, setSwapImages] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentDate] = useState(new Date());
   const [selectedSwapDate, setSelectedSwapDate] = useState<Date>(new Date());
@@ -88,9 +90,11 @@ const NotesTracking = () => {
   const [editNoteHeader, setEditNoteHeader] = useState("");
   const [editNoteContent, setEditNoteContent] = useState<ContentBlock[]>([]);
   const editFileInputRef = useRef<HTMLInputElement>(null);
+  const editSwapFileInputRef = useRef<HTMLInputElement>(null);
   const [editSwapWorkerName, setEditSwapWorkerName] = useState("");
   const [editSwapHours, setEditSwapHours] = useState("");
   const [editSwapType, setEditSwapType] = useState<SwapType>("owed");
+  const [editSwapImages, setEditSwapImages] = useState<string[]>([]);
   const [editIsSwapCompleted, setEditIsSwapCompleted] = useState(false);
   
   // Load notes and swaps from localStorage on component mount
@@ -150,7 +154,7 @@ const NotesTracking = () => {
     });
   }, []);
 
-  // Handle image upload
+  // Handle image upload for notes
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -167,7 +171,41 @@ const NotesTracking = () => {
     }
   };
 
-  // Handle camera capture
+  // Handle image upload for swaps
+  const handleSwapImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSwapImages(prev => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle image upload for swap edits
+  const handleEditSwapImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditSwapImages(prev => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Remove swap image
+  const removeSwapImage = (index: number) => {
+    setSwapImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Remove edit swap image
+  const removeEditSwapImage = (index: number) => {
+    setEditSwapImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Handle camera capture for notes
   const handleCameraCapture = async () => {
     try {
       // Check if the browser supports getUserMedia
@@ -211,6 +249,94 @@ const NotesTracking = () => {
         toast({
           title: "Image captured",
           description: "Camera image added to note",
+        });
+      }, 500);
+    } catch (error) {
+      console.error("Error accessing camera:", error);
+      toast({
+        title: "Camera error",
+        description: "Could not access camera. Please check permissions.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle camera capture for swaps
+  const handleSwapCameraCapture = async () => {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        toast({
+          title: "Camera not supported",
+          description: "Your browser doesn't support camera access",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      video.play();
+      
+      setTimeout(() => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext('2d');
+        context?.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        stream.getTracks().forEach(track => track.stop());
+        const imageDataUrl = canvas.toDataURL('image/png');
+        
+        setSwapImages(prev => [...prev, imageDataUrl]);
+        
+        toast({
+          title: "Image captured",
+          description: "Camera image added to swap record",
+        });
+      }, 500);
+    } catch (error) {
+      console.error("Error accessing camera:", error);
+      toast({
+        title: "Camera error",
+        description: "Could not access camera. Please check permissions.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle camera capture for swap edits
+  const handleEditSwapCameraCapture = async () => {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        toast({
+          title: "Camera not supported",
+          description: "Your browser doesn't support camera access",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      video.play();
+      
+      setTimeout(() => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext('2d');
+        context?.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        stream.getTracks().forEach(track => track.stop());
+        const imageDataUrl = canvas.toDataURL('image/png');
+        
+        setEditSwapImages(prev => [...prev, imageDataUrl]);
+        
+        toast({
+          title: "Image captured",
+          description: "Camera image added to swap record",
         });
       }, 500);
     } catch (error) {
@@ -399,7 +525,6 @@ const NotesTracking = () => {
     }
 
     const dateString = format(selectedSwapDate, "yyyy-MM-dd");
-    const creationDateString = format(new Date(), "yyyy-MM-dd");
     
     const newSwap: ExtendedShiftSwap = {
       date: dateString,
@@ -407,17 +532,19 @@ const NotesTracking = () => {
       type: swapType,
       hours: parseFloat(swapHours),
       note: `Created on ${format(new Date(), "MMM d, yyyy")}`,
-      isCompleted: isSwapCompleted,
+      images: swapImages.length > 0 ? swapImages : undefined,
+      isCompleted: false,
     };
 
     const updatedSwaps = [...swaps, newSwap];
     setSwaps(updatedSwaps);
     localStorage.setItem("swaps", JSON.stringify(updatedSwaps));
     
+    // Reset form
     setSwapWorkerName("");
     setSwapHours("");
     setSelectedSwapDate(new Date());
-    setIsSwapCompleted(false);
+    setSwapImages([]);
     setSwapFormOpen(false);
     
     toast({
@@ -495,6 +622,7 @@ const NotesTracking = () => {
       setEditSwapHours(swap.hours.toString());
       setEditSwapType(swap.type);
       setEditIsSwapCompleted(swap.isCompleted || false);
+      setEditSwapImages(swap.images || []);
     }
     
     setEditDialogOpen(true);
@@ -571,6 +699,7 @@ const NotesTracking = () => {
         hours: parseFloat(editSwapHours),
         type: editSwapType,
         isCompleted: editIsSwapCompleted,
+        images: editSwapImages.length > 0 ? editSwapImages : updatedSwaps[selectedItem.index].images,
       };
       
       setSwaps(updatedSwaps);
@@ -995,15 +1124,59 @@ const NotesTracking = () => {
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="swap-completed" 
-                    checked={isSwapCompleted}
-                    onCheckedChange={(checked) => setIsSwapCompleted(checked === true)}
-                  />
-                  <Label htmlFor="swap-completed" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    Paid Back / Done
-                  </Label>
+                <div className="space-y-2">
+                  <Label>Images (Optional)</Label>
+                  
+                  {swapImages.length > 0 && (
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      {swapImages.map((image, i) => (
+                        <div key={i} className="relative rounded-md overflow-hidden border">
+                          <img 
+                            src={image} 
+                            alt={`Swap image ${i+1}`} 
+                            className="w-full h-24 object-cover"
+                          />
+                          <Button 
+                            variant="destructive" 
+                            size="sm" 
+                            className="absolute top-1 right-1 h-6 w-6 p-0"
+                            onClick={() => removeSwapImage(i)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleSwapImageUpload}
+                      className="hidden"
+                      id="swap-image-upload"
+                      ref={swapFileInputRef}
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => document.getElementById("swap-image-upload")?.click()}
+                    >
+                      <Image className="mr-2 h-4 w-4" />
+                      Add Image
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={handleSwapCameraCapture}
+                    >
+                      <Camera className="mr-2 h-4 w-4" />
+                      Camera
+                    </Button>
+                  </div>
                 </div>
                 
                 <Button onClick={saveSwap} className="w-full">
@@ -1069,6 +1242,22 @@ const NotesTracking = () => {
                                     <Clock className="mr-2 h-4 w-4" />
                                     <span>{swap.hours} hour{swap.hours !== 1 ? "s" : ""}</span>
                                   </div>
+                                  
+                                  {/* Display swap images if they exist */}
+                                  {swap.images && swap.images.length > 0 && (
+                                    <div className="mt-2 grid grid-cols-2 gap-2">
+                                      {swap.images.map((image, i) => (
+                                        <div key={i} className="relative">
+                                          <img 
+                                            src={image} 
+                                            alt={`Swap image ${i+1}`} 
+                                            className="rounded-md w-full h-20 object-cover"
+                                          />
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                  
                                   {swap.note && (
                                     <div className="mt-2 text-xs text-muted-foreground">
                                       {swap.note}
@@ -1308,6 +1497,61 @@ const NotesTracking = () => {
                     />
                     <span className={`text-sm ${editSwapType === "payback" ? "text-foreground font-medium" : "text-muted-foreground"}`}>Owed to You</span>
                   </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Images</Label>
+                
+                {editSwapImages.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    {editSwapImages.map((image, i) => (
+                      <div key={i} className="relative rounded-md overflow-hidden border">
+                        <img 
+                          src={image} 
+                          alt={`Swap image ${i+1}`} 
+                          className="w-full h-24 object-cover"
+                        />
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          className="absolute top-1 right-1 h-6 w-6 p-0"
+                          onClick={() => removeEditSwapImage(i)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                <div className="flex gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleEditSwapImageUpload}
+                    className="hidden"
+                    id="edit-swap-image-upload"
+                    ref={editSwapFileInputRef}
+                  />
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => document.getElementById("edit-swap-image-upload")?.click()}
+                  >
+                    <Image className="mr-2 h-4 w-4" />
+                    Add Image
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={handleEditSwapCameraCapture}
+                  >
+                    <Camera className="mr-2 h-4 w-4" />
+                    Camera
+                  </Button>
                 </div>
               </div>
               
