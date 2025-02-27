@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -139,32 +140,31 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
       let currentDay = new Date(startDateObj);
       let totalDays = 0;
       
-      // Calculate total days needed for one complete cycle
-      const daysInMainPattern = pattern.sequences.reduce((sum, seq) => sum + seq.days, 0);
-      const totalDaysPerCycle = daysInMainPattern + pattern.daysOffAfter;
-      
-      // For each repeat of the pattern
-      for (let cycleCount = 0; cycleCount < pattern.repeatTimes; cycleCount++) {
-        // Process each sequence in order
+      // This is the complete pattern cycle - run it multiple times
+      for (let repeatCount = 0; repeatCount < pattern.repeatTimes; repeatCount++) {
+        // Process each sequence in the pattern
         for (const sequence of pattern.sequences) {
-          // For each day in this sequence
+          // Process each day in this sequence
           for (let day = 0; day < sequence.days; day++) {
+            // If this is not a day off and has a shift type, add a shift
             if (!sequence.isOff && sequence.shiftType) {
               newShifts.push({
                 date: currentDay.toISOString(),
                 shiftType: sequence.shiftType
               });
             }
+            // Always advance to the next day
             currentDay = addDays(currentDay, 1);
             totalDays++;
           }
         }
-        
-        // After completing a cycle, add the days off after (unless it's the last cycle)
-        if (cycleCount < pattern.repeatTimes - 1) {
-          currentDay = addDays(currentDay, pattern.daysOffAfter);
-          totalDays += pattern.daysOffAfter;
-        }
+      }
+      
+      // After all cycles are complete, add the days off after
+      if (pattern.daysOffAfter > 0) {
+        // Just advance the days without adding shifts
+        currentDay = addDays(currentDay, pattern.daysOffAfter);
+        totalDays += pattern.daysOffAfter;
       }
 
       console.log(`Generated ${newShifts.length} shifts from pattern over ${totalDays} days`);
