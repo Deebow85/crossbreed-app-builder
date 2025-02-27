@@ -57,13 +57,13 @@ const NotesTracking = () => {
   const [swapType, setSwapType] = useState<SwapType>("owed");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentDate] = useState(new Date());
-  // Start with all folders open
+  // Start with all folders closed
   const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({
-    "swap-done": true,
-    "swap-owed": true,
-    "toil": true,
-    "notes": true,
-    "calendar-notes": true
+    "swap-done": false,
+    "swap-owed": false,
+    "toil": false,
+    "notes": false,
+    "calendar-notes": false
   });
   
   // For edit and delete functionality
@@ -606,7 +606,7 @@ const NotesTracking = () => {
       n.date === note.date && 
       n.text === note.text && 
       n.header === note.header &&
-      JSON.stringify(n.content) === JSON.stringify(n.content) &&
+      JSON.stringify(n.content) === JSON.stringify(note.content) &&
       JSON.stringify(n.swap) === JSON.stringify(note.swap)
     );
   };
