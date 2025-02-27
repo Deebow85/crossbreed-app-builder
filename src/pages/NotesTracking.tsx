@@ -79,6 +79,9 @@ const NotesTracking = () => {
   const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string>("");
   
+  // Expanded swap cards
+  const [expandedSwaps, setExpandedSwaps] = useState<Record<string, boolean>>({});
+  
   // Start with all folders closed
   const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({
     "swap-done": false,
@@ -106,6 +109,14 @@ const NotesTracking = () => {
   const handleImageClick = (imageUrl: string) => {
     setPreviewImage(imageUrl);
     setImagePreviewOpen(true);
+  };
+
+  // Toggle swap expansion
+  const toggleSwapExpansion = (swapId: string) => {
+    setExpandedSwaps(prev => ({
+      ...prev,
+      [swapId]: !prev[swapId]
+    }));
   };
   
   // Load notes and swaps from localStorage on component mount
@@ -821,6 +832,11 @@ const NotesTracking = () => {
     );
   };
 
+  // Generate a unique ID for a swap to use in the expandedSwaps state
+  const getSwapId = (swap: ExtendedShiftSwap, index: number): string => {
+    return `${swap.date}-${swap.workerName}-${index}`;
+  };
+
   // Render a note in view mode
   const renderNoteContent = (note: ExtendedNote) => {
     if (note.content) {
@@ -1230,105 +1246,123 @@ const NotesTracking = () => {
                             // This is a shift swap
                             const swap = item as ExtendedShiftSwap;
                             const swapIndex = findOriginalSwapIndex(swap);
-                            const key = swap.type === "payback" ? "swap-done" : "swap-owed";
+                            const swapKey = key;
+                            const swapId = getSwapId(swap, swapIndex);
+                            const isExpanded = expandedSwaps[swapId] || false;
+                            
                             return (
                               <Card key={idx} className={`shadow-none border ${swap.isCompleted ? 'bg-muted/20' : ''}`}>
-                                <CardContent className="p-3">
+                                {/* Collapsible Swap Card Header */}
+                                <div 
+                                  className="p-3 cursor-pointer hover:bg-muted/30" 
+                                  onClick={() => toggleSwapExpansion(swapId)}
+                                >
                                   <div className="flex items-center justify-between">
-                                    <div className="flex items-center text-sm text-muted-foreground mb-2">
+                                    <div className="flex items-center text-sm text-muted-foreground">
                                       <CalendarDays className="mr-2 h-4 w-4" />
                                       {format(new Date(swap.date), "MMMM d, yyyy")}
                                     </div>
-                                    <div className={`px-2 py-1 rounded-full text-xs ${
-                                      key === "swap-done" 
-                                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                                    }`}>
-                                      {key === "swap-done" ? "Owed to You" : "You Owe"}
+                                    <div className="flex items-center gap-2">
+                                      <div className={`px-2 py-1 rounded-full text-xs ${
+                                        swapKey === "swap-done" 
+                                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                      }`}>
+                                        {swapKey === "swap-done" ? "Owed to You" : "You Owe"}
+                                      </div>
+                                      <ChevronDown 
+                                        className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                                      />
                                     </div>
                                   </div>
                                   <div className="flex items-center mt-2">
-                                    <ArrowLeftRight className="mr-2 h-4 w-4" />
-                                    <span className="font-medium">{swap.workerName}</span>
-                                  </div>
-                                  <div className="flex items-center mt-1">
-                                    <Clock className="mr-2 h-4 w-4" />
-                                    <span>{swap.hours} hour{swap.hours !== 1 ? "s" : ""}</span>
-                                  </div>
-                                  
-                                  {/* Display swap images if they exist */}
-                                  {swap.images && swap.images.length > 0 && (
-                                    <div className="mt-2">
-                                      <Collapsible>
-                                        <CollapsibleTrigger className="flex items-center text-sm text-primary">
-                                          <Image className="mr-1 h-3.5 w-3.5" />
-                                          <span>{swap.images.length} image{swap.images.length !== 1 ? 's' : ''}</span>
-                                          <ChevronDown className="ml-1 h-3.5 w-3.5" />
-                                        </CollapsibleTrigger>
-                                        <CollapsibleContent className="mt-2">
-                                          <div className="grid grid-cols-3 gap-1">
-                                            {swap.images.map((image, i) => (
-                                              <div 
-                                                key={i} 
-                                                className="cursor-pointer"
-                                                onClick={() => handleImageClick(image)}
-                                              >
-                                                <img 
-                                                  src={image} 
-                                                  alt={`Swap image ${i+1}`} 
-                                                  className="rounded-md w-full h-14 object-cover border"
-                                                />
-                                              </div>
-                                            ))}
-                                          </div>
-                                        </CollapsibleContent>
-                                      </Collapsible>
+                                    <div className="flex-1">
+                                      <div className="flex items-center">
+                                        <ArrowLeftRight className="mr-2 h-4 w-4" />
+                                        <span className="font-medium">{swap.workerName}</span>
+                                      </div>
+                                      <div className="flex items-center mt-1">
+                                        <Clock className="mr-2 h-4 w-4" />
+                                        <span>{swap.hours} hour{swap.hours !== 1 ? "s" : ""}</span>
+                                      </div>
                                     </div>
-                                  )}
-                                  
-                                  {swap.note && (
-                                    <div className="mt-2 text-xs text-muted-foreground">
-                                      {swap.note}
-                                    </div>
-                                  )}
-                                  
-                                  <div className="mt-3 flex items-center">
-                                    <Checkbox 
-                                      id={`swap-completed-${idx}`} 
-                                      checked={swap.isCompleted}
-                                      onCheckedChange={() => handleSwapStatusToggle(swapIndex)}
-                                      className="mr-2"
-                                    />
-                                    <Label 
-                                      htmlFor={`swap-completed-${idx}`}
-                                      className={`text-sm font-medium ${swap.isCompleted ? 'line-through text-muted-foreground' : ''}`}
-                                    >
-                                      Paid Back / Done
-                                    </Label>
-                                    {swap.isCompleted && (
-                                      <CheckCircle2 className="ml-auto h-4 w-4 text-green-500" />
+                                    {swap.images && swap.images.length > 0 && (
+                                      <div className="flex items-center text-xs text-primary">
+                                        <Image className="mr-1 h-3.5 w-3.5" />
+                                        <span>{swap.images.length}</span>
+                                      </div>
                                     )}
                                   </div>
-                                </CardContent>
-                                <CardFooter className="p-2 pt-0 flex justify-end gap-2">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm"
-                                    onClick={() => handleEditClick('swap', swapIndex)}
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                    <span className="sr-only">Edit</span>
-                                  </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    className="text-destructive hover:text-destructive/90"
-                                    onClick={() => handleDeleteClick('swap', swapIndex)}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                    <span className="sr-only">Delete</span>
-                                  </Button>
-                                </CardFooter>
+                                </div>
+                                
+                                {/* Collapsible Swap Card Content */}
+                                {isExpanded && (
+                                  <>
+                                    <CardContent className="p-3 pt-0 border-t">
+                                      {/* Display swap images if they exist */}
+                                      {swap.images && swap.images.length > 0 && (
+                                        <div className="mt-3 grid grid-cols-3 gap-1">
+                                          {swap.images.map((image, i) => (
+                                            <div 
+                                              key={i} 
+                                              className="cursor-pointer"
+                                              onClick={() => handleImageClick(image)}
+                                            >
+                                              <img 
+                                                src={image} 
+                                                alt={`Swap image ${i+1}`} 
+                                                className="rounded-md w-full h-14 object-cover border"
+                                              />
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                      
+                                      {swap.note && (
+                                        <div className="mt-3 text-xs text-muted-foreground">
+                                          {swap.note}
+                                        </div>
+                                      )}
+                                      
+                                      <div className="mt-3 flex items-center">
+                                        <Checkbox 
+                                          id={`swap-completed-${idx}`} 
+                                          checked={swap.isCompleted}
+                                          onCheckedChange={() => handleSwapStatusToggle(swapIndex)}
+                                          className="mr-2"
+                                        />
+                                        <Label 
+                                          htmlFor={`swap-completed-${idx}`}
+                                          className={`text-sm font-medium ${swap.isCompleted ? 'line-through text-muted-foreground' : ''}`}
+                                        >
+                                          Paid Back / Done
+                                        </Label>
+                                        {swap.isCompleted && (
+                                          <CheckCircle2 className="ml-auto h-4 w-4 text-green-500" />
+                                        )}
+                                      </div>
+                                    </CardContent>
+                                    <CardFooter className="p-2 pt-0 flex justify-end gap-2 border-t">
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm"
+                                        onClick={() => handleEditClick('swap', swapIndex)}
+                                      >
+                                        <Pencil className="h-4 w-4" />
+                                        <span className="sr-only">Edit</span>
+                                      </Button>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="text-destructive hover:text-destructive/90"
+                                        onClick={() => handleDeleteClick('swap', swapIndex)}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                        <span className="sr-only">Delete</span>
+                                      </Button>
+                                    </CardFooter>
+                                  </>
+                                )}
                               </Card>
                             );
                           } else {
