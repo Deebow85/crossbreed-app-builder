@@ -108,7 +108,11 @@ const DateRangePicker = ({ date, onDateChange }: DateRangePickerProps) => {
             <Calendar
               mode="single"
               selected={date?.from}
-              onSelect={(day) => onDateChange({ from: day, to: date?.to })}
+              onSelect={(day) => {
+                if (day) {
+                  onDateChange({ from: day, to: date?.to });
+                }
+              }}
               initialFocus
             />
           </PopoverContent>
@@ -132,7 +136,11 @@ const DateRangePicker = ({ date, onDateChange }: DateRangePickerProps) => {
             <Calendar
               mode="single"
               selected={date?.to}
-              onSelect={(day) => onDateChange({ from: date?.from, to: day })}
+              onSelect={(day) => {
+                if (day) {
+                  onDateChange({ from: date?.from, to: day });
+                }
+              }}
               initialFocus
               disabled={(date) => date < (date?.from || new Date())}
             />
@@ -321,7 +329,7 @@ const NotesTracking = () => {
       return n.date === note.date && 
              n.text === note.text && 
              n.header === note.header &&
-             JSON.stringify(n.content) === JSON.stringify(note.content) &&
+             JSON.stringify(n.content) === JSON.stringify(n.content) &&
              JSON.stringify(n.swap) === JSON.stringify(n.swap);
     });
   };
