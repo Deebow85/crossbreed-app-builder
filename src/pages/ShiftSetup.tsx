@@ -423,14 +423,14 @@ const ShiftSetup = () => {
     }
     
     // Calculate the total days in one complete pattern cycle (including days off after cycle)
-    const daysInCycle = currentPattern.reduce((total, step) => total + step.days, 0) + daysOffAfter;
+    const daysInCycle = currentPattern.reduce((total, step) => total + step.days, 0) * repeatTimes + daysOffAfter;
     
-    // Calculate how many patterns we need to fill the years specified
+    // Calculate how many full cycles we need to fill the specified years
     // 365.25 days per year (accounting for leap years)
     const totalDaysNeeded = yearsToGenerate * 365.25;
     
     // Calculate how many complete cycles we need
-    const calculatedRepeatTimes = Math.ceil(totalDaysNeeded / daysInCycle);
+    const calculatedCycles = Math.ceil(totalDaysNeeded / daysInCycle);
     
     const pattern: PatternCycle = {
       sequences: currentPattern.map(p => ({
@@ -438,7 +438,7 @@ const ShiftSetup = () => {
         days: p.days,
         isOff: p.isOff
       })),
-      repeatTimes: calculatedRepeatTimes,
+      repeatTimes: repeatTimes,
       daysOffAfter,
       patternName
     };
