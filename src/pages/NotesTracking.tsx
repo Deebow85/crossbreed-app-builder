@@ -426,9 +426,9 @@ const NotesTracking = () => {
           <div className="space-y-3">
             <h3 className="font-medium">Your Notes</h3>
             
-            {/* Always show all folders, even if empty */}
+            {/* Show only regular notes and calendar notes in this tab */}
             {Object.entries(categorizedItems)
-              .filter(([key]) => key === "notes" || key === "toil" || key === "calendar-notes")
+              .filter(([key]) => key === "notes" || key === "calendar-notes")
               .map(([key, items]) => (
                 <Collapsible 
                   key={key} 
@@ -547,12 +547,12 @@ const NotesTracking = () => {
             </CardContent>
           </Card>
           
-          <div className="space-y-2">
-            <h3 className="font-medium">Shift Swaps</h3>
+          <div className="space-y-3">
+            <h3 className="font-medium">Shift Swaps & TOIL</h3>
             
-            {/* Always show swap folders, even if empty */}
+            {/* Show swap folders and TOIL folder in this tab */}
             {Object.entries(categorizedItems)
-              .filter(([key]) => key === "swap-done" || key === "swap-owed")
+              .filter(([key]) => key === "swap-done" || key === "swap-owed" || key === "toil")
               .map(([key, items]) => (
                 <Collapsible 
                   key={key} 
@@ -572,52 +572,92 @@ const NotesTracking = () => {
                   <CollapsibleContent className="border-t">
                     <div className="p-1 space-y-1">
                       {items.length > 0 ? (
-                        items.map((swap, index) => (
-                          <Card key={index} className="shadow-none border">
-                            <CardContent className="p-3">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center text-sm text-muted-foreground mb-2">
-                                  <CalendarDays className="mr-2 h-4 w-4" />
-                                  {format(new Date(swap.date), "MMMM d, yyyy")}
-                                </div>
-                                <div className={`px-2 py-1 rounded-full text-xs ${
-                                  key === "swap-done" 
-                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                                }`}>
-                                  {key === "swap-done" ? "Owed to You" : "You Owe"}
-                                </div>
-                              </div>
-                              <div className="flex items-center mt-2">
-                                <ArrowLeftRight className="mr-2 h-4 w-4" />
-                                <span className="font-medium">{swap.workerName}</span>
-                              </div>
-                              <div className="flex items-center mt-1">
-                                <Clock className="mr-2 h-4 w-4" />
-                                <span>{swap.hours} hour{swap.hours !== 1 ? "s" : ""}</span>
-                              </div>
-                            </CardContent>
-                            <CardFooter className="p-2 pt-0 flex justify-end gap-2">
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => handleEditClick('swap', findOriginalSwapIndex(swap))}
-                              >
-                                <Pencil className="h-4 w-4" />
-                                <span className="sr-only">Edit</span>
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="text-destructive hover:text-destructive/90"
-                                onClick={() => handleDeleteClick('swap', findOriginalSwapIndex(swap))}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">Delete</span>
-                              </Button>
-                            </CardFooter>
-                          </Card>
-                        ))
+                        items.map((item, idx) => {
+                          if ('workerName' in item) {
+                            // This is a shift swap
+                            const swap = item as ShiftSwap;
+                            const key = swap.type === "payback" ? "swap-done" : "swap-owed";
+                            return (
+                              <Card key={idx} className="shadow-none border">
+                                <CardContent className="p-3">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center text-sm text-muted-foreground mb-2">
+                                      <CalendarDays className="mr-2 h-4 w-4" />
+                                      {format(new Date(swap.date), "MMMM d, yyyy")}
+                                    </div>
+                                    <div className={`px-2 py-1 rounded-full text-xs ${
+                                      key === "swap-done" 
+                                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                    }`}>
+                                      {key === "swap-done" ? "Owed to You" : "You Owe"}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center mt-2">
+                                    <ArrowLeftRight className="mr-2 h-4 w-4" />
+                                    <span className="font-medium">{swap.workerName}</span>
+                                  </div>
+                                  <div className="flex items-center mt-1">
+                                    <Clock className="mr-2 h-4 w-4" />
+                                    <span>{swap.hours} hour{swap.hours !== 1 ? "s" : ""}</span>
+                                  </div>
+                                </CardContent>
+                                <CardFooter className="p-2 pt-0 flex justify-end gap-2">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => handleEditClick('swap', findOriginalSwapIndex(swap))}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                    <span className="sr-only">Edit</span>
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="text-destructive hover:text-destructive/90"
+                                    onClick={() => handleDeleteClick('swap', findOriginalSwapIndex(swap))}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                    <span className="sr-only">Delete</span>
+                                  </Button>
+                                </CardFooter>
+                              </Card>
+                            );
+                          } else {
+                            // This is a TOIL note
+                            const note = item as Note;
+                            return (
+                              <Card key={idx} className="shadow-none border">
+                                <CardContent className="p-3">
+                                  <div className="flex items-center text-sm text-muted-foreground mb-2">
+                                    <CalendarDays className="mr-2 h-4 w-4" />
+                                    {format(new Date(note.date), "MMMM d, yyyy")}
+                                  </div>
+                                  <p className="whitespace-pre-line">{note.text}</p>
+                                </CardContent>
+                                <CardFooter className="p-2 pt-0 flex justify-end gap-2">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => handleEditClick('note', findOriginalNoteIndex(note))}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                    <span className="sr-only">Edit</span>
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="text-destructive hover:text-destructive/90"
+                                    onClick={() => handleDeleteClick('note', findOriginalNoteIndex(note))}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                    <span className="sr-only">Delete</span>
+                                  </Button>
+                                </CardFooter>
+                              </Card>
+                            );
+                          }
+                        })
                       ) : (
                         <p className="text-center text-muted-foreground py-4">No items in this folder</p>
                       )}
