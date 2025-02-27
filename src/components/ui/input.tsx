@@ -1,14 +1,9 @@
-
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  autoCorrect?: boolean;
-}
-
-const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, autoCorrect = false, ...props }, ref) => {
+const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
+  ({ className, type, ...props }, ref) => {
     return (
       <input
         type={type}
@@ -17,8 +12,6 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           className
         )}
         ref={ref}
-        spellCheck={autoCorrect}
-        autoCorrect={autoCorrect ? "on" : "off"}
         {...props}
       />
     )
