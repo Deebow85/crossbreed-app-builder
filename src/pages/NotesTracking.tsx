@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { Search, Plus, Clock, ArrowLeftRight, CalendarDays, FolderOpen, Pencil, Trash2, Image, Camera, ChevronDown, CheckCircle2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Note, ShiftSwap, SwapType } from "@/types/calendar";
+import { Note, ShiftSwap, SwapType, TOILType } from "@/types/calendar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   AlertDialog,
@@ -42,6 +42,9 @@ interface ExtendedNote extends Note {
   content?: ContentBlock[];
   imageUrl?: string; // Add imageUrl for legacy support
   toilHours?: number; // Add TOIL hours for TOIL tracking
+  toilType?: TOILType; // TOIL type: taken or done
+  isToilDone?: boolean; // Is TOIL done
+  isToilTaken?: boolean; // Is TOIL taken
 }
 
 // Extended ShiftSwap type to include completion status and images
@@ -81,10 +84,16 @@ const NotesTracking = () => {
   const [recordType, setRecordType] = useState<RecordType>('swap');
   const [toilHours, setToilHours] = useState("");
   const [toilNote, setToilNote] = useState("");
+  const [toilType, setToilType] = useState<TOILType>("done");
+  const [isToilDone, setIsToilDone] = useState(false);
+  const [isToilTaken, setIsToilTaken] = useState(false);
   
   // For image preview modal
   const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string>("");
+
+  // For image preview collapsibles
+  const [expandedImageSections, setExpandedImageSections] = useState<Record<string, boolean>>({});
   
   // Expanded cards
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
@@ -111,6 +120,9 @@ const NotesTracking = () => {
   const [editSwapType, setEditSwapType] = useState<SwapType>("owed");
   const [editSwapImages, setEditSwapImages] = useState<string[]>([]);
   const [editIsSwapCompleted, setEditIsSwapCompleted] = useState(false);
+  const [editToilType, setEditToilType] = useState<TOILType>("done");
+  const [editIsToilDone, setEditIsToilDone] = useState(false);
+  const [editIsToilTaken, setEditIsToilTaken] = useState(false);
   
   // Open image preview
   const handleImageClick = (imageUrl: string) => {
@@ -123,6 +135,14 @@ const NotesTracking = () => {
     setExpandedCards(prev => ({
       ...prev,
       [cardId]: !prev[cardId]
+    }));
+  };
+
+  // Toggle image section expansion
+  const toggleImageSection = (sectionId: string) => {
+    setExpandedImageSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
     }));
   };
   
@@ -180,6 +200,40 @@ const NotesTracking = () => {
       
       // We'll show a toast directly in the component instead of here
       return updatedSwaps;
+    });
+  }, []);
+
+  // Handle TOIL status toggle - done
+  const toggleToilDone = useCallback((index: number) => {
+    setNotes(currentNotes => {
+      const updatedNotes = [...currentNotes];
+      updatedNotes[index] = {
+        ...updatedNotes[index],
+        isToilDone: !updatedNotes[index].isToilDone
+      };
+      
+      // Save to localStorage
+      localStorage.setItem("notes", JSON.stringify(updatedNotes));
+      
+      // We'll show a toast directly in the component
+      return updatedNotes;
+    });
+  }, []);
+
+  // Handle TOIL status toggle - taken
+  const toggleToilTaken = useCallback((index: number) => {
+    setNotes(currentNotes => {
+      const updatedNotes = [...currentNotes];
+      updatedNotes[index] = {
+        ...updatedNotes[index],
+        isToilTaken: !updatedNotes[index].isToilTaken
+      };
+      
+      // Save to localStorage
+      localStorage.setItem("notes", JSON.stringify(updatedNotes));
+      
+      // We'll show a toast directly in the component
+      return updatedNotes;
     });
   }, []);
 
@@ -615,6 +669,9 @@ const NotesTracking = () => {
         header: `TOIL Hours: ${toilHours}`,
         content: toilContent,
         toilHours: parseFloat(toilHours), // Store TOIL hours for easier reference
+        toilType: toilType, // Store TOIL type
+        isToilDone: false,
+        isToilTaken: false,
       };
 
       const updatedNotes = [...notes, newNote];
@@ -626,6 +683,9 @@ const NotesTracking = () => {
       setToilNote("");
       setSelectedSwapDate(new Date());
       setSwapImages([]);
+      setToilType("done");
+      setIsToilDone(false);
+      setIsToilTaken(false);
       setSwapFormOpen(false);
       
       toast({
@@ -679,6 +739,9 @@ const NotesTracking = () => {
     if (type === 'note') {
       const note = notes[index] as ExtendedNote;
       setEditNoteHeader(note.header || "");
+      setEditToilType(note.toilType || "done");
+      setEditIsToilDone(note.isToilDone || false);
+      setEditIsToilTaken(note.isToilTaken || false);
       
       // Convert note to content blocks format
       if (note.content) {
@@ -746,6 +809,9 @@ const NotesTracking = () => {
         header: editNoteHeader.trim() || undefined,
         text: filteredContent.filter(block => block.type === 'text').map(block => block.content).join('\n\n'),
         content: filteredContent.length > 0 ? filteredContent : undefined,
+        toilType: editToilType,
+        isToilDone: editIsToilDone,
+        isToilTaken: editIsToilTaken,
       };
       
       setNotes(updatedNotes);
@@ -905,6 +971,17 @@ const NotesTracking = () => {
     }
   };
 
+  // Generate a unique ID for image sections
+  const getImageSectionId = (type: string, item: any, index: number): string => {
+    if (type === 'swap') {
+      const swap = item as ExtendedShiftSwap;
+      return `img-swap-${swap.date}-${swap.workerName}-${index}`;
+    } else {
+      const note = item as ExtendedNote;
+      return `img-note-${note.date}-${index}`;
+    }
+  };
+
   // Check if a note has images
   const noteHasImages = (note: ExtendedNote): boolean => {
     if (note.content) {
@@ -921,28 +998,44 @@ const NotesTracking = () => {
     return note.imageUrl ? 1 : 0;
   };
 
-  // Render a note in view mode
-  const renderNoteContent = (note: ExtendedNote) => {
+  // Get all images from a note
+  const getNoteImages = (note: ExtendedNote): string[] => {
     if (note.content) {
-      return note.content.map((block, index) => (
-        <div key={index} className={`mb-3 ${block.type === 'image' ? 'image-block' : 'text-block'}`}>
-          {block.type === 'image' ? (
-            <img 
-              src={block.content} 
-              alt={`Note attachment ${index}`} 
-              className="max-h-[200px] w-auto object-contain rounded-md border cursor-pointer"
-              onClick={() => handleImageClick(block.content)}
-            />
-          ) : (
-            <p className="whitespace-pre-line">{block.content}</p>
-          )}
-        </div>
-      ));
+      return note.content
+        .filter(block => block.type === 'image')
+        .map(block => block.content);
+    }
+    return note.imageUrl ? [note.imageUrl] : [];
+  };
+
+  // Render a note in view mode
+  const renderNoteContent = (note: ExtendedNote, hideImages: boolean = false) => {
+    if (note.content) {
+      return note.content.map((block, index) => {
+        if (block.type === 'image' && hideImages) {
+          return null; // Skip images when hideImages is true
+        }
+        
+        return (
+          <div key={index} className={`mb-3 ${block.type === 'image' ? 'image-block' : 'text-block'}`}>
+            {block.type === 'image' ? (
+              <img 
+                src={block.content} 
+                alt={`Note attachment ${index}`} 
+                className="max-h-[200px] w-auto object-contain rounded-md border cursor-pointer"
+                onClick={() => handleImageClick(block.content)}
+              />
+            ) : (
+              <p className="whitespace-pre-line">{block.content}</p>
+            )}
+          </div>
+        );
+      });
     } else {
       // Legacy format
       return (
         <>
-          {note.imageUrl && (
+          {!hideImages && note.imageUrl && (
             <div className="mb-3">
               <img 
                 src={note.imageUrl} 
@@ -969,6 +1062,27 @@ const NotesTracking = () => {
     });
   };
 
+  // Handle TOIL status toggle directly
+  const handleToilDoneToggle = (index: number) => {
+    toggleToilDone(index);
+    // Add immediate visual feedback
+    const note = notes[index];
+    toast({
+      title: !note.isToilDone ? "TOIL marked as done" : "TOIL marked as not done",
+      description: `TOIL has been updated`,
+    });
+  };
+
+  const handleToilTakenToggle = (index: number) => {
+    toggleToilTaken(index);
+    // Add immediate visual feedback
+    const note = notes[index];
+    toast({
+      title: !note.isToilTaken ? "TOIL marked as taken" : "TOIL marked as not taken",
+      description: `TOIL has been updated`,
+    });
+  };
+
   // Reset form when switching record types
   const handleRecordTypeChange = (type: RecordType) => {
     setRecordType(type);
@@ -976,10 +1090,33 @@ const NotesTracking = () => {
     if (type === 'swap') {
       setToilHours("");
       setToilNote("");
+      setIsToilDone(false);
+      setIsToilTaken(false);
     } else {
       setSwapWorkerName("");
       setSwapHours("");
     }
+  };
+
+  // Render thumbnail grid for swap images
+  const renderImageThumbnails = (images: string[], onClick: (url: string) => void) => {
+    return (
+      <div className="grid grid-cols-3 gap-1">
+        {images.map((image, i) => (
+          <div 
+            key={i} 
+            className="cursor-pointer"
+            onClick={() => onClick(image)}
+          >
+            <img 
+              src={image} 
+              alt={`Image ${i+1}`}
+              className="rounded-md w-full h-12 object-cover border" 
+            />
+          </div>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -1128,6 +1265,12 @@ const NotesTracking = () => {
                       {items.length > 0 ? (
                         items.map((item, idx) => {
                           const note = item as ExtendedNote;
+                          const noteIndex = findOriginalNoteIndex(note);
+                          const hasImages = noteHasImages(note);
+                          const images = getNoteImages(note);
+                          const imageSectionId = getImageSectionId('note', note, idx);
+                          const isImageSectionExpanded = expandedImageSections[imageSectionId] || false;
+                          
                           return (
                             <Card key={idx} className="shadow-none border">
                               <CardContent className="p-3">
@@ -1140,13 +1283,36 @@ const NotesTracking = () => {
                                   <h4 className="text-base font-semibold mb-2">{note.header}</h4>
                                 )}
                                 
-                                {renderNoteContent(note)}
+                                {/* Text content, always shown */}
+                                {renderNoteContent(note, true)}
+                                
+                                {/* Collapsible images section */}
+                                {hasImages && (
+                                  <div className="mt-2">
+                                    <Collapsible 
+                                      open={isImageSectionExpanded} 
+                                      onOpenChange={() => toggleImageSection(imageSectionId)}
+                                      className="border rounded-md overflow-hidden"
+                                    >
+                                      <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-muted/50 text-sm">
+                                        <div className="flex items-center">
+                                          <Image className="mr-2 h-4 w-4 text-muted-foreground" />
+                                          <span>{images.length} image{images.length !== 1 ? 's' : ''}</span>
+                                        </div>
+                                        <ChevronDown className={`h-4 w-4 text-muted-foreground transform transition-transform ${isImageSectionExpanded ? 'rotate-180' : ''}`} />
+                                      </CollapsibleTrigger>
+                                      <CollapsibleContent className="p-2 border-t">
+                                        {renderImageThumbnails(images, handleImageClick)}
+                                      </CollapsibleContent>
+                                    </Collapsible>
+                                  </div>
+                                )}
                               </CardContent>
                               <CardFooter className="p-2 pt-0 flex justify-end gap-2">
                                 <Button 
                                   variant="ghost" 
                                   size="sm"
-                                  onClick={() => handleEditClick('note', findOriginalNoteIndex(note))}
+                                  onClick={() => handleEditClick('note', noteIndex)}
                                 >
                                   <Pencil className="h-4 w-4" />
                                   <span className="sr-only">Edit</span>
@@ -1155,7 +1321,7 @@ const NotesTracking = () => {
                                   variant="ghost" 
                                   size="sm" 
                                   className="text-destructive hover:text-destructive/90"
-                                  onClick={() => handleDeleteClick('note', findOriginalNoteIndex(note))}
+                                  onClick={() => handleDeleteClick('note', noteIndex)}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                   <span className="sr-only">Delete</span>
@@ -1286,6 +1452,20 @@ const NotesTracking = () => {
                     </div>
                     
                     <div className="space-y-2">
+                      <Label>TOIL Type</Label>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <span className={`text-sm ${toilType === "done" ? "text-foreground font-medium" : "text-muted-foreground"}`}>TOIL Done</span>
+                          <Switch 
+                            checked={toilType === "taken"}
+                            onCheckedChange={(checked) => setToilType(checked ? "taken" : "done")}
+                          />
+                          <span className={`text-sm ${toilType === "taken" ? "text-foreground font-medium" : "text-muted-foreground"}`}>TOIL Taken</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
                       <Label htmlFor="toil-note">Notes (Optional)</Label>
                       <Textarea
                         id="toil-note"
@@ -1303,13 +1483,13 @@ const NotesTracking = () => {
                   <Label>Images (Optional)</Label>
                   
                   {swapImages.length > 0 && (
-                    <div className="grid grid-cols-2 gap-2 mb-2">
+                    <div className="grid grid-cols-3 gap-2 mb-2">
                       {swapImages.map((image, i) => (
                         <div key={i} className="relative rounded-md overflow-hidden border">
                           <img 
                             src={image} 
                             alt={`${recordType === 'swap' ? 'Swap' : 'TOIL'} image ${i+1}`} 
-                            className="w-full h-24 object-cover"
+                            className="w-full h-16 object-cover"
                           />
                           <Button 
                             variant="destructive" 
@@ -1395,6 +1575,8 @@ const NotesTracking = () => {
                             const swapKey = key;
                             const cardId = getCardId('swap', swap, idx);
                             const isExpanded = expandedCards[cardId] || false;
+                            const imageSectionId = getImageSectionId('swap', swap, idx);
+                            const isImageSectionExpanded = expandedImageSections[imageSectionId] || false;
                             
                             return (
                               <Card key={idx} className={`shadow-none border ${swap.isCompleted ? 'bg-muted/20' : ''}`}>
@@ -1462,22 +1644,25 @@ const NotesTracking = () => {
                                 {isExpanded && (
                                   <>
                                     <CardContent className="p-3 pt-0 border-t">
-                                      {/* Display swap images if they exist */}
+                                      {/* Collapsible image section */}
                                       {swap.images && swap.images.length > 0 && (
-                                        <div className="mt-3 grid grid-cols-3 gap-1">
-                                          {swap.images.map((image, i) => (
-                                            <div 
-                                              key={i} 
-                                              className="cursor-pointer"
-                                              onClick={() => handleImageClick(image)}
-                                            >
-                                              <img 
-                                                src={image} 
-                                                alt={`Swap image ${i+1}`} 
-                                                className="rounded-md w-full h-14 object-cover border"
-                                              />
-                                            </div>
-                                          ))}
+                                        <div className="mt-3">
+                                          <Collapsible 
+                                            open={isImageSectionExpanded} 
+                                            onOpenChange={() => toggleImageSection(imageSectionId)}
+                                            className="border rounded-md overflow-hidden"
+                                          >
+                                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-muted/50 text-sm">
+                                              <div className="flex items-center">
+                                                <Image className="mr-2 h-4 w-4 text-muted-foreground" />
+                                                <span>{swap.images.length} image{swap.images.length !== 1 ? 's' : ''}</span>
+                                              </div>
+                                              <ChevronDown className={`h-4 w-4 text-muted-foreground transform transition-transform ${isImageSectionExpanded ? 'rotate-180' : ''}`} />
+                                            </CollapsibleTrigger>
+                                            <CollapsibleContent className="p-2 border-t">
+                                              {renderImageThumbnails(swap.images, handleImageClick)}
+                                            </CollapsibleContent>
+                                          </Collapsible>
                                         </div>
                                       )}
                                       
@@ -1534,10 +1719,15 @@ const NotesTracking = () => {
                             const noteIndex = findOriginalNoteIndex(note);
                             const cardId = getCardId('toil', note, idx);
                             const isExpanded = expandedCards[cardId] || false;
+                            const imageSectionId = getImageSectionId('toil', note, idx);
+                            const isImageSectionExpanded = expandedImageSections[imageSectionId] || false;
                             const imageCount = countNoteImages(note);
+                            const images = getNoteImages(note);
                             const toilHours = note.toilHours || parseFloat(
                               getNoteText(note).match(/TOIL:\s*(\d+(\.\d+)?)\s*hours/i)?.[1] || "0"
                             );
+                            const isDone = note.isToilDone || false;
+                            const isTaken = note.isToilTaken || false;
                             
                             return (
                               <Card key={idx} className="shadow-none border">
@@ -1562,15 +1752,30 @@ const NotesTracking = () => {
                                         <span className="font-medium">TOIL Hours: {toilHours}</span>
                                       </div>
                                       
-                                      {/* Display image count indicator */}
-                                      {imageCount > 0 && (
-                                        <div className="flex items-center mt-1">
-                                          <div className="flex items-center text-xs text-primary ml-auto">
+                                      {/* Status indicators */}
+                                      <div className="flex items-center mt-1 space-x-2">
+                                        {/* Image count indicator */}
+                                        {imageCount > 0 && (
+                                          <div className="flex items-center text-xs text-primary">
                                             <Image className="mr-1 h-3.5 w-3.5" />
                                             <span>{imageCount}</span>
                                           </div>
-                                        </div>
-                                      )}
+                                        )}
+                                        
+                                        {/* TOIL Done indicator */}
+                                        {isDone && (
+                                          <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 rounded-sm font-medium">
+                                            TOIL Done
+                                          </span>
+                                        )}
+                                        
+                                        {/* TOIL Taken indicator */}
+                                        {isTaken && (
+                                          <span className="text-xs px-1.5 py-0.5 bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 rounded-sm font-medium">
+                                            TOIL Taken
+                                          </span>
+                                        )}
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
@@ -1579,7 +1784,72 @@ const NotesTracking = () => {
                                 {isExpanded && (
                                   <>
                                     <CardContent className="p-3 pt-0 border-t">
-                                      {renderNoteContent(note)}
+                                      {/* Display note text content */}
+                                      <div className="mt-2">
+                                        {renderNoteContent(note, true)}
+                                      </div>
+                                      
+                                      {/* Collapsible image section */}
+                                      {imageCount > 0 && (
+                                        <div className="mt-3">
+                                          <Collapsible 
+                                            open={isImageSectionExpanded} 
+                                            onOpenChange={() => toggleImageSection(imageSectionId)}
+                                            className="border rounded-md overflow-hidden"
+                                          >
+                                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-muted/50 text-sm">
+                                              <div className="flex items-center">
+                                                <Image className="mr-2 h-4 w-4 text-muted-foreground" />
+                                                <span>{imageCount} image{imageCount !== 1 ? 's' : ''}</span>
+                                              </div>
+                                              <ChevronDown className={`h-4 w-4 text-muted-foreground transform transition-transform ${isImageSectionExpanded ? 'rotate-180' : ''}`} />
+                                            </CollapsibleTrigger>
+                                            <CollapsibleContent className="p-2 border-t">
+                                              {renderImageThumbnails(images, handleImageClick)}
+                                            </CollapsibleContent>
+                                          </Collapsible>
+                                        </div>
+                                      )}
+                                      
+                                      <div className="mt-3 space-y-2">
+                                        {/* TOIL Done Checkbox */}
+                                        <div className="flex items-center">
+                                          <Checkbox 
+                                            id={`toil-done-${idx}`} 
+                                            checked={isDone}
+                                            onCheckedChange={() => handleToilDoneToggle(noteIndex)}
+                                            className="mr-2"
+                                          />
+                                          <Label 
+                                            htmlFor={`toil-done-${idx}`}
+                                            className={`text-sm font-medium ${isDone ? 'text-muted-foreground' : ''}`}
+                                          >
+                                            TOIL Done
+                                          </Label>
+                                          {isDone && (
+                                            <CheckCircle2 className="ml-auto h-4 w-4 text-green-500" />
+                                          )}
+                                        </div>
+                                        
+                                        {/* TOIL Taken Checkbox */}
+                                        <div className="flex items-center">
+                                          <Checkbox 
+                                            id={`toil-taken-${idx}`} 
+                                            checked={isTaken}
+                                            onCheckedChange={() => handleToilTakenToggle(noteIndex)}
+                                            className="mr-2"
+                                          />
+                                          <Label 
+                                            htmlFor={`toil-taken-${idx}`}
+                                            className={`text-sm font-medium ${isTaken ? 'text-muted-foreground' : ''}`}
+                                          >
+                                            TOIL Taken
+                                          </Label>
+                                          {isTaken && (
+                                            <CheckCircle2 className="ml-auto h-4 w-4 text-purple-500" />
+                                          )}
+                                        </div>
+                                      </div>
                                     </CardContent>
                                     <CardFooter className="p-2 pt-0 flex justify-end gap-2 border-t">
                                       <Button 
@@ -1723,6 +1993,49 @@ const NotesTracking = () => {
                   ))}
                 </div>
               </div>
+              
+              {/* TOIL Status section - only shown if this is a TOIL note */}
+              {getNoteText(selectedItem ? notes[selectedItem.index] : {} as ExtendedNote).toLowerCase().includes("toil") && (
+                <div className="space-y-3 border-t pt-3">
+                  <h4 className="text-sm font-medium">TOIL Status</h4>
+                  
+                  {/* TOIL Type */}
+                  <div className="space-y-2">
+                    <Label>TOIL Type</Label>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <span className={`text-sm ${editToilType === "done" ? "text-foreground font-medium" : "text-muted-foreground"}`}>TOIL Done</span>
+                        <Switch 
+                          checked={editToilType === "taken"}
+                          onCheckedChange={(checked) => setEditToilType(checked ? "taken" : "done")}
+                        />
+                        <span className={`text-sm ${editToilType === "taken" ? "text-foreground font-medium" : "text-muted-foreground"}`}>TOIL Taken</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* TOIL Status checkboxes */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="edit-toil-done" 
+                        checked={editIsToilDone}
+                        onCheckedChange={(checked) => setEditIsToilDone(checked === true)}
+                      />
+                      <Label htmlFor="edit-toil-done">TOIL Done</Label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="edit-toil-taken" 
+                        checked={editIsToilTaken}
+                        onCheckedChange={(checked) => setEditIsToilTaken(checked === true)}
+                      />
+                      <Label htmlFor="edit-toil-taken">TOIL Taken</Label>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
@@ -1767,13 +2080,13 @@ const NotesTracking = () => {
                 <Label>Images</Label>
                 
                 {editSwapImages.length > 0 && (
-                  <div className="grid grid-cols-2 gap-2 mb-2">
+                  <div className="grid grid-cols-3 gap-2 mb-2">
                     {editSwapImages.map((image, i) => (
                       <div key={i} className="relative rounded-md overflow-hidden border">
                         <img 
                           src={image} 
                           alt={`Swap image ${i+1}`} 
-                          className="w-full h-24 object-cover cursor-pointer"
+                          className="w-full h-16 object-cover cursor-pointer"
                           onClick={() => handleImageClick(image)}
                         />
                         <Button 
@@ -1847,19 +2160,4 @@ const NotesTracking = () => {
       <Dialog open={imagePreviewOpen} onOpenChange={setImagePreviewOpen}>
         <DialogContent className="max-w-lg sm:max-w-3xl p-1 bg-background/80 backdrop-blur-sm">
           <div className="relative w-full">
-            <DialogClose className="absolute right-2 top-2 z-10 bg-black/20 hover:bg-black/40 rounded-full p-1">
-              <X className="h-4 w-4 text-white" />
-            </DialogClose>
-            <img 
-              src={previewImage} 
-              alt="Preview" 
-              className="w-full max-h-[80vh] object-contain rounded" 
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
-
-export default NotesTracking;
+            <DialogClose className="absolute right-2 top-2 

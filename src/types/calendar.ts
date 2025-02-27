@@ -34,6 +34,8 @@ export type ShiftPattern = {
 
 export type SwapType = "owed" | "payback";
 
+export type TOILType = "taken" | "done";
+
 export type ShiftSwap = {
   date: string;
   workerName: string;
@@ -47,6 +49,9 @@ export type Note = {
   date: string;
   text: string;
   swap?: ShiftSwap;
+  toilType?: TOILType;
+  isToilDone?: boolean;
+  isToilTaken?: boolean;
 };
 
 export type Alarm = {
