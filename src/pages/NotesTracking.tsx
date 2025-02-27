@@ -437,9 +437,6 @@ const NotesTracking = () => {
         if (note.text) {
           blocks.push({ type: 'text', content: note.text });
         }
-        if (note.imageUrl) {
-          blocks.push({ type: 'image', content: note.imageUrl });
-        }
         // Ensure there's at least one text block
         if (blocks.length === 0 || blocks.every(block => block.type !== 'text')) {
           blocks.push({ type: 'text', content: '' });
@@ -615,58 +612,9 @@ const NotesTracking = () => {
       s.date === swap.date && 
       s.workerName === swap.workerName && 
       s.hours === swap.hours && 
-      s.type === swap.type
+      s.type === s.type
     );
   };
-
-  // Add some dummy data if there are no notes or swaps yet
-  useEffect(() => {
-    // Check if there's already data
-    if (notes.length === 0 && swaps.length === 0) {
-      const dummyNotes: ExtendedNote[] = [
-        {
-          date: format(new Date(), "yyyy-MM-dd"),
-          header: "Important Information",
-          text: "Regular note with some important information",
-          content: [{ type: 'text', content: "Regular note with some important information" }]
-        },
-        {
-          date: format(new Date(Date.now() - 86400000), "yyyy-MM-dd"),
-          header: "TOIL Hours",
-          text: "TOIL hours accumulated: 4 hours on project X",
-          content: [{ type: 'text', content: "TOIL hours accumulated: 4 hours on project X" }]
-        },
-        {
-          date: format(new Date(Date.now() - 172800000), "yyyy-MM-dd"),
-          header: "Team Meeting",
-          text: "Meeting notes from team standup",
-          content: [{ type: 'text', content: "Meeting notes from team standup" }]
-        }
-      ];
-      
-      const dummySwaps: ShiftSwap[] = [
-        {
-          date: format(new Date(), "yyyy-MM-dd"),
-          workerName: "John Smith",
-          type: "payback",
-          hours: 4,
-        },
-        {
-          date: format(new Date(Date.now() - 86400000), "yyyy-MM-dd"),
-          workerName: "Sarah Jones",
-          type: "owed",
-          hours: 3,
-        }
-      ];
-      
-      setNotes(dummyNotes);
-      setSwaps(dummySwaps);
-      
-      // Store in localStorage
-      localStorage.setItem("notes", JSON.stringify(dummyNotes));
-      localStorage.setItem("swaps", JSON.stringify(dummySwaps));
-    }
-  }, [notes.length, swaps.length]);
 
   // Render a note in view mode
   const renderNoteContent = (note: ExtendedNote) => {
@@ -685,21 +633,8 @@ const NotesTracking = () => {
         </div>
       ));
     } else {
-      // Legacy format
-      return (
-        <>
-          {note.imageUrl && (
-            <div className="mb-3">
-              <img 
-                src={note.imageUrl} 
-                alt="Note attachment" 
-                className="max-h-[200px] w-auto object-contain rounded-md border my-2"
-              />
-            </div>
-          )}
-          <p className="whitespace-pre-line">{note.text}</p>
-        </>
-      );
+      // Legacy format - just show text
+      return <p className="whitespace-pre-line">{note.text}</p>;
     }
   };
 
