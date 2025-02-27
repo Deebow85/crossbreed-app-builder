@@ -143,7 +143,7 @@ const NotesTracking = () => {
     
     toast({
       title: "Shift swap recorded",
-      description: `${swapType === "owed" ? "You owe" : "You're owed"} ${swapHours} hours from ${swapWorkerName}`,
+      description: `${swapHours} hours with ${swapWorkerName}`,
     });
   };
 
@@ -496,28 +496,6 @@ const NotesTracking = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="swap-type">Swap Type</Label>
-                <div className="flex rounded-md overflow-hidden">
-                  <Button
-                    type="button"
-                    variant={swapType === "owed" ? "default" : "outline"}
-                    className={`flex-1 rounded-r-none ${swapType === "owed" ? "" : "border-r-0"}`}
-                    onClick={() => setSwapType("owed")}
-                  >
-                    I Owe Time
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={swapType === "payback" ? "default" : "outline"}
-                    className={`flex-1 rounded-l-none ${swapType === "payback" ? "" : "border-l-0"}`}
-                    onClick={() => setSwapType("payback")}
-                  >
-                    I'm Owed Time
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
                 <Label htmlFor="swap-worker">Worker Name</Label>
                 <Input
                   id="swap-worker"
@@ -714,28 +692,6 @@ const NotesTracking = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-swap-type">Swap Type</Label>
-                <div className="flex rounded-md overflow-hidden">
-                  <Button
-                    type="button"
-                    variant={editSwapType === "owed" ? "default" : "outline"}
-                    className={`flex-1 rounded-r-none ${editSwapType === "owed" ? "" : "border-r-0"}`}
-                    onClick={() => setEditSwapType("owed")}
-                  >
-                    I Owe Time
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={editSwapType === "payback" ? "default" : "outline"}
-                    className={`flex-1 rounded-l-none ${editSwapType === "payback" ? "" : "border-l-0"}`}
-                    onClick={() => setEditSwapType("payback")}
-                  >
-                    I'm Owed Time
-                  </Button>
-                </div>
-              </div>
-              
               <div className="space-y-2">
                 <Label htmlFor="edit-swap-worker">Worker Name</Label>
                 <Input
