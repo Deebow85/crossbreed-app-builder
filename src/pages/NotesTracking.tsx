@@ -945,7 +945,7 @@ const NotesTracking = () => {
       n.date === note.date && 
       n.text === note.text && 
       n.header === note.header &&
-      JSON.stringify(n.content) === JSON.stringify(n.content) &&
+      JSON.stringify(n.content) === JSON.stringify(note.content) &&
       JSON.stringify(n.swap) === JSON.stringify(n.swap)
     );
   };
