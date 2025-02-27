@@ -137,43 +137,46 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
 
       // Generate shifts based on pattern
       const newShifts: ShiftAssignment[] = [];
-      let currentDay = startDateObj;
+      let currentDay = new Date(startDateObj);
       
-      // Calculate how many times to repeat the pattern
-      const maxDays = years * 365; // Approximate days in specified years
-      let dayCount = 0;
+      // Calculate how many days to generate
+      const maxDays = (years || 1) * 365; // Approximate days in specified years
+      let totalDaysProcessed = 0;
       
-      // Repeat the pattern multiple times as specified by repeatTimes
-      for (let cycleCount = 0; cycleCount < pattern.repeatTimes && dayCount < maxDays; cycleCount++) {
-        // Process each sequence in the pattern for this cycle
+      // Process each repeat of the pattern
+      for (let cycle = 0; cycle < pattern.repeatTimes && totalDaysProcessed < maxDays; cycle++) {
+        // First, process all sequences in this cycle
         for (const sequence of pattern.sequences) {
           const { shiftType, days, isOff } = sequence;
           
-          for (let i = 0; i < days && dayCount < maxDays; i++) {
+          // Process each day in this sequence
+          for (let dayIndex = 0; dayIndex < days && totalDaysProcessed < maxDays; dayIndex++) {
+            // Only add shifts for non-off days that have a shift type
             if (!isOff && shiftType) {
-              // Add shift assignment
               newShifts.push({
                 date: currentDay.toISOString(),
-                shiftType: shiftType
+                shiftType: { ...shiftType }
               });
             }
             
+            // Always advance the day counter
             currentDay = addDays(currentDay, 1);
-            dayCount++;
+            totalDaysProcessed++;
           }
         }
         
-        // Add days off after each complete cycle if specified
-        if (pattern.daysOffAfter > 0) {
-          for (let i = 0; i < pattern.daysOffAfter && dayCount < maxDays; i++) {
-            // We don't add any shifts for days off
+        // After completing a full cycle, add the days off
+        // Only do this if this isn't the last cycle and there are days off specified
+        if (cycle < pattern.repeatTimes - 1 && pattern.daysOffAfter > 0) {
+          for (let dayOff = 0; dayOff < pattern.daysOffAfter && totalDaysProcessed < maxDays; dayOff++) {
+            // Just advance the day without adding a shift
             currentDay = addDays(currentDay, 1);
-            dayCount++;
+            totalDaysProcessed++;
           }
         }
       }
       
-      console.log(`Generated ${newShifts.length} shifts from pattern over ${dayCount} days`);
+      console.log(`Generated ${newShifts.length} shifts from pattern over ${totalDaysProcessed} days`);
       
       // Merge new shifts with existing ones, replacing overlapping dates
       setShifts(prevShifts => {
