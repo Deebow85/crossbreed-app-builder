@@ -57,6 +57,7 @@ const NotesTracking = () => {
   const [swapType, setSwapType] = useState<SwapType>("owed");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentDate] = useState(new Date());
+  // Start with all folders open
   const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({
     "swap-done": true,
     "swap-owed": true,
@@ -605,7 +606,7 @@ const NotesTracking = () => {
       n.date === note.date && 
       n.text === note.text && 
       n.header === note.header &&
-      JSON.stringify(n.content) === JSON.stringify(note.content) &&
+      JSON.stringify(n.content) === JSON.stringify(n.content) &&
       JSON.stringify(n.swap) === JSON.stringify(note.swap)
     );
   };
