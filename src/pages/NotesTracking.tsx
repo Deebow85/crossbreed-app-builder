@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -133,22 +133,22 @@ const NotesTracking = () => {
     }
   }, []);
 
-  // Handle swap completion toggle
-  const toggleSwapCompletion = (index: number) => {
-    const updatedSwaps = [...swaps];
-    updatedSwaps[index] = {
-      ...updatedSwaps[index],
-      isCompleted: !updatedSwaps[index].isCompleted
-    };
-    
-    setSwaps(updatedSwaps);
-    localStorage.setItem("swaps", JSON.stringify(updatedSwaps));
-    
-    toast({
-      title: updatedSwaps[index].isCompleted ? "Swap marked as done" : "Swap marked as pending",
-      description: `Swap with ${updatedSwaps[index].workerName} has been updated`,
+  // Handle swap completion toggle - memoized with useCallback to avoid recreation
+  const toggleSwapCompletion = useCallback((index: number) => {
+    setSwaps(currentSwaps => {
+      const updatedSwaps = [...currentSwaps];
+      updatedSwaps[index] = {
+        ...updatedSwaps[index],
+        isCompleted: !updatedSwaps[index].isCompleted
+      };
+      
+      // Save to localStorage
+      localStorage.setItem("swaps", JSON.stringify(updatedSwaps));
+      
+      // We'll show a toast directly in the component instead of here
+      return updatedSwaps;
     });
-  };
+  }, []);
 
   // Handle image upload
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -667,7 +667,7 @@ const NotesTracking = () => {
       n.text === note.text && 
       n.header === note.header &&
       JSON.stringify(n.content) === JSON.stringify(note.content) &&
-      JSON.stringify(n.swap) === JSON.stringify(note.swap)
+      JSON.stringify(n.swap) === JSON.stringify(n.swap)
     );
   };
   
@@ -714,6 +714,17 @@ const NotesTracking = () => {
         </>
       );
     }
+  };
+
+  // Handle swap status toggle directly
+  const handleSwapStatusToggle = (index: number) => {
+    toggleSwapCompletion(index);
+    // Add immediate visual feedback
+    const swap = swaps[index];
+    toast({
+      title: !swap.isCompleted ? "Swap marked as done" : "Swap marked as pending",
+      description: `Swap with ${swap.workerName} has been updated`,
+    });
   };
 
   return (
@@ -1068,7 +1079,7 @@ const NotesTracking = () => {
                                     <Checkbox 
                                       id={`swap-completed-${idx}`} 
                                       checked={swap.isCompleted}
-                                      onCheckedChange={() => toggleSwapCompletion(swapIndex)}
+                                      onCheckedChange={() => handleSwapStatusToggle(swapIndex)}
                                       className="mr-2"
                                     />
                                     <Label 
