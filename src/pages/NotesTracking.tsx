@@ -945,7 +945,7 @@ const NotesTracking = () => {
       n.date === note.date && 
       n.text === note.text && 
       n.header === note.header &&
-      JSON.stringify(n.content) === JSON.stringify(note.content) &&
+      JSON.stringify(n.content) === JSON.stringify(n.content) &&
       JSON.stringify(n.swap) === JSON.stringify(n.swap)
     );
   };
@@ -2160,4 +2160,19 @@ const NotesTracking = () => {
       <Dialog open={imagePreviewOpen} onOpenChange={setImagePreviewOpen}>
         <DialogContent className="max-w-lg sm:max-w-3xl p-1 bg-background/80 backdrop-blur-sm">
           <div className="relative w-full">
-            <DialogClose className="absolute right-2 top-2 
+            <DialogClose className="absolute right-2 top-2 z-10 bg-black/20 hover:bg-black/40 rounded-full p-1">
+              <X className="h-4 w-4 text-white" />
+            </DialogClose>
+            <img 
+              src={previewImage} 
+              alt="Preview" 
+              className="w-full max-h-[80vh] object-contain rounded" 
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default NotesTracking;
