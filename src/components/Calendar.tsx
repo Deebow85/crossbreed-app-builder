@@ -140,28 +140,45 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
       let currentDay = new Date(startDateObj);
       let totalDays = 0;
       
-      // Process all the repeats of the pattern (already calculated for the years)
-      for (let repeatCount = 0; repeatCount < pattern.repeatTimes; repeatCount++) {
-        // Process each sequence in the pattern
-        for (const sequence of pattern.sequences) {
-          // Process each day in this sequence
-          for (let day = 0; day < sequence.days; day++) {
-            // If this is not a day off and has a shift type, add a shift
-            if (!sequence.isOff && sequence.shiftType) {
-              newShifts.push({
-                date: currentDay.toISOString(),
-                shiftType: sequence.shiftType
-              });
+      // Calculate how many full super-cycles we need for the specified years
+      // A super-cycle is: (sequence repeated X times) + days off after
+      const daysPerYear = 365.25; // Account for leap years
+      const totalDaysNeeded = years * daysPerYear;
+      
+      // Calculate days in one super-cycle
+      const daysInSequence = pattern.sequences.reduce((sum, seq) => sum + seq.days, 0);
+      const daysInRepeatPattern = daysInSequence * pattern.repeatTimes;
+      const daysInSuperCycle = daysInRepeatPattern + pattern.daysOffAfter;
+      
+      // Calculate how many super-cycles we need
+      const superCyclesNeeded = Math.ceil(totalDaysNeeded / daysInSuperCycle);
+      
+      console.log(`Pattern will be applied for ${superCyclesNeeded} super-cycles to cover ${years} years`);
+      
+      // For each super-cycle
+      for (let superCycle = 0; superCycle < superCyclesNeeded; superCycle++) {
+        // First, repeat the sequence the specified number of times
+        for (let repeatCount = 0; repeatCount < pattern.repeatTimes; repeatCount++) {
+          // Process each sequence in the pattern
+          for (const sequence of pattern.sequences) {
+            // Process each day in this sequence
+            for (let day = 0; day < sequence.days; day++) {
+              // If this is not a day off and has a shift type, add a shift
+              if (!sequence.isOff && sequence.shiftType) {
+                newShifts.push({
+                  date: currentDay.toISOString(),
+                  shiftType: sequence.shiftType
+                });
+              }
+              // Always advance to the next day
+              currentDay = addDays(currentDay, 1);
+              totalDays++;
             }
-            // Always advance to the next day
-            currentDay = addDays(currentDay, 1);
-            totalDays++;
           }
         }
         
-        // Add the days off after cycle - this should happen after EACH cycle
+        // After completing all the repeated sequences, add the days off
         if (pattern.daysOffAfter > 0) {
-          // Just advance the days without adding shifts
           currentDay = addDays(currentDay, pattern.daysOffAfter);
           totalDays += pattern.daysOffAfter;
         }
