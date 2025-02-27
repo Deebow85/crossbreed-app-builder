@@ -816,8 +816,8 @@ const NotesTracking = () => {
     return notes.findIndex(n => 
       n.date === note.date && 
       n.text === note.text && 
-      n.header === n.header &&
-      JSON.stringify(n.content) === JSON.stringify(n.content) &&
+      n.header === note.header &&
+      JSON.stringify(n.content) === JSON.stringify(note.content) &&
       JSON.stringify(n.swap) === JSON.stringify(n.swap)
     );
   };
@@ -880,7 +880,7 @@ const NotesTracking = () => {
     // Add immediate visual feedback
     const swap = swaps[index];
     toast({
-      title: !swap.isCompleted ? "Swap marked as done" : "Swap marked as pending",
+      title: !swap.isCompleted ? "Swap marked as done" : "Swap marked as not done",
       description: `Swap with ${swap.workerName} has been updated`,
     });
   };
@@ -1303,7 +1303,7 @@ const NotesTracking = () => {
                                             </span>
                                           ) : (
                                             <span className="text-xs px-1.5 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 rounded-sm font-medium">
-                                              Pending
+                                              Not Done
                                             </span>
                                           )}
                                         </div>
