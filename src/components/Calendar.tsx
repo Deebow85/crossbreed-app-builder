@@ -18,7 +18,9 @@ import {
   addYears,
   subYears,
   setMonth,
-  setYear
+  setYear,
+  addDays,
+  parseISO
 } from "date-fns";
 import { cn } from "@/lib/utils";
 import { LocalNotifications } from '@capacitor/local-notifications';
@@ -102,8 +104,97 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
 
     loadSettings();
     window.addEventListener('storage', loadSettings);
+    
+    // Check for pattern data and apply if present
+    const patternData = sessionStorage.getItem('patternData');
+    if (patternData) {
+      const data = JSON.parse(patternData);
+      console.log('Applying pattern data:', data);
+      applyShiftPattern(data);
+      // Clear pattern data after applying to prevent reapplication on refresh
+      sessionStorage.removeItem('patternData');
+    }
+    
     return () => window.removeEventListener('storage', loadSettings);
   }, []);
+
+  const applyShiftPattern = (patternData: any) => {
+    // Make sure we have valid data
+    if (!patternData?.pattern?.sequences || !patternData.startDate) {
+      console.error('Invalid pattern data:', patternData);
+      return;
+    }
+
+    try {
+      const { pattern, startDate, years } = patternData;
+      const startDateObj = typeof startDate === 'string' ? 
+        new Date(startDate) : new Date();
+      
+      if (isNaN(startDateObj.getTime())) {
+        console.error('Invalid start date:', startDate);
+        return;
+      }
+
+      // Generate shifts based on pattern
+      const newShifts: ShiftAssignment[] = [];
+      let currentDay = startDateObj;
+      
+      // Calculate how many times to repeat the pattern
+      const maxDays = years * 365; // Approximate days in specified years
+      let dayCount = 0;
+      let cycleCount = 0;
+      
+      while (dayCount < maxDays && cycleCount < pattern.repeatTimes) {
+        // Process each sequence in the pattern
+        for (const sequence of pattern.sequences) {
+          const { shiftType, days, isOff } = sequence;
+          
+          for (let i = 0; i < days; i++) {
+            if (!isOff && shiftType) {
+              // Add shift assignment
+              newShifts.push({
+                date: currentDay.toISOString(),
+                shiftType: shiftType
+              });
+            }
+            
+            currentDay = addDays(currentDay, 1);
+            dayCount++;
+            
+            if (dayCount >= maxDays) break;
+          }
+          
+          if (dayCount >= maxDays) break;
+        }
+        
+        // Add days off after cycle if specified
+        if (pattern.daysOffAfter > 0) {
+          currentDay = addDays(currentDay, pattern.daysOffAfter);
+          dayCount += pattern.daysOffAfter;
+        }
+        
+        cycleCount++;
+      }
+      
+      console.log(`Generated ${newShifts.length} shifts from pattern`);
+      
+      // Merge new shifts with existing ones, replacing overlapping dates
+      setShifts(prevShifts => {
+        const existingShiftDates = new Map(
+          prevShifts.map(shift => [shift.date, shift])
+        );
+        
+        // Add new shifts, replacing any with the same date
+        newShifts.forEach(shift => {
+          existingShiftDates.set(shift.date, shift);
+        });
+        
+        return Array.from(existingShiftDates.values());
+      });
+    } catch (error) {
+      console.error('Error applying shift pattern:', error);
+    }
+  };
 
   const handleDayClick = (date: Date) => {
     const dateStr = date.toISOString();
