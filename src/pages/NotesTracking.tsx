@@ -34,6 +34,7 @@ import {
 interface ExtendedNote extends Note {
   header?: string;
   content?: ContentBlock[];
+  imageUrl?: string; // Add imageUrl for legacy support
 }
 
 // Content block can be either text or image
