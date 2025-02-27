@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { format, parseISO } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -48,10 +49,9 @@ import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { CalendarIcon } from "lucide-react"
-import { addDays, isToday } from "date-fns";
+import { addDays, isToday, subDays } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { format as dateFnsFormat } from 'date-fns';
-import { DateRangePicker } from "@/components/date-range-picker"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
@@ -79,6 +79,105 @@ type ExtendedNote = Note & {
   text?: string;
 };
 
+// DateRangePicker component
+interface DateRangePickerProps {
+  date: DateRange | undefined;
+  onDateChange: (date: DateRange | undefined) => void;
+}
+
+const DateRangePicker = ({ date, onDateChange }: DateRangePickerProps) => {
+  return (
+    <div className="flex flex-col space-y-2">
+      <Label>Filter by date range</Label>
+      <div className="grid grid-cols-2 gap-2">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="justify-start text-left font-normal"
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {date?.from ? (
+                format(date.from, "PPP")
+              ) : (
+                <span>Start date</span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={date?.from}
+              onSelect={(day) => onDateChange({ from: day, to: date?.to })}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+        
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="justify-start text-left font-normal"
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {date?.to ? (
+                format(date.to, "PPP")
+              ) : (
+                <span>End date</span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="end">
+            <Calendar
+              mode="single"
+              selected={date?.to}
+              onSelect={(day) => onDateChange({ from: date?.from, to: day })}
+              initialFocus
+              disabled={(date) => date < (date?.from || new Date())}
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+      
+      <div className="flex flex-wrap gap-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => {
+            const today = new Date();
+            onDateChange({ from: today, to: today });
+          }}
+        >
+          Today
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => {
+            const today = new Date();
+            const lastWeek = subDays(today, 7);
+            onDateChange({ from: lastWeek, to: today });
+          }}
+        >
+          Last 7 days
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => {
+            const today = new Date();
+            const lastMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            onDateChange({ from: lastMonth, to: today });
+          }}
+        >
+          This month
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 const NotesTracking = () => {
   const [notes, setNotes] = useState<ExtendedNote[]>(() => {
     const savedNotes = localStorage.getItem('notes');
@@ -94,7 +193,7 @@ const NotesTracking = () => {
   const [toilHours, setToilHours] = useState<number | undefined>(undefined);
   const [isToilDone, setIsToilDone] = useState(false);
   const [isToilTaken, setIsToilTaken] = useState(false);
-  const [dateRange, setDateRange] = React.useState<DateRange>({
+  const [dateRange, setDateRange] = useState<DateRange>({
     from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     to: new Date(),
   })
@@ -223,7 +322,7 @@ const NotesTracking = () => {
              n.text === note.text && 
              n.header === note.header &&
              JSON.stringify(n.content) === JSON.stringify(note.content) &&
-             JSON.stringify(n.swap) === JSON.stringify(note.swap);
+             JSON.stringify(n.swap) === JSON.stringify(n.swap);
     });
   };
 
@@ -241,7 +340,7 @@ const NotesTracking = () => {
   const filteredNotes = notes.filter(note => {
     if (!dateRange?.from || !dateRange?.to) return true;
     const noteDate = parseISO(note.date);
-    return noteDate >= dateRange.from && noteDate <= dateRange.to;
+    return noteDate >= dateRange.from && noteDate <= (dateRange.to);
   });
 
   return (
