@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
-import { Search, Plus, Clock, ArrowLeftRight, CalendarDays, FolderOpen, Pencil, Trash2, Image, Camera } from "lucide-react";
+import { Search, Plus, Clock, ArrowLeftRight, CalendarDays, FolderOpen, Pencil, Trash2, Image, Camera, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Note, ShiftSwap, SwapType } from "@/types/calendar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -29,6 +29,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
 
 // Extended Note type to include header and content blocks
 interface ExtendedNote extends Note {
@@ -57,6 +61,9 @@ const NotesTracking = () => {
   const [swapType, setSwapType] = useState<SwapType>("owed");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentDate] = useState(new Date());
+  const [selectedSwapDate, setSelectedSwapDate] = useState<Date>(new Date());
+  const [swapFormOpen, setSwapFormOpen] = useState(false);
+  
   // Start with all folders closed
   const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({
     "swap-done": false,
@@ -364,12 +371,15 @@ const NotesTracking = () => {
       return;
     }
 
-    const dateString = format(currentDate, "yyyy-MM-dd");
+    const dateString = format(selectedSwapDate, "yyyy-MM-dd");
+    const creationDateString = format(new Date(), "yyyy-MM-dd");
+    
     const newSwap: ShiftSwap = {
       date: dateString,
       workerName: swapWorkerName,
       type: swapType,
       hours: parseFloat(swapHours),
+      note: `Created on ${format(new Date(), "MMM d, yyyy")}`,
     };
 
     const updatedSwaps = [...swaps, newSwap];
@@ -378,6 +388,8 @@ const NotesTracking = () => {
     
     setSwapWorkerName("");
     setSwapHours("");
+    setSelectedSwapDate(new Date());
+    setSwapFormOpen(false);
     
     toast({
       title: "Shift swap recorded",
@@ -841,43 +853,88 @@ const NotesTracking = () => {
         </TabsContent>
         
         <TabsContent value="tracking" className="space-y-4 mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Record Shift Swap</CardTitle>
-              <CardDescription>
-                Track shift swaps
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="swap-worker">Worker Name</Label>
-                <Input
-                  id="swap-worker"
-                  placeholder="Enter colleague name"
-                  value={swapWorkerName}
-                  onChange={(e) => setSwapWorkerName(e.target.value)}
-                />
+          {/* Collapsible Shift Swap Form */}
+          <Collapsible 
+            open={swapFormOpen} 
+            onOpenChange={setSwapFormOpen}
+            className="border rounded-md overflow-hidden mb-4"
+          >
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
+              <div className="flex items-center">
+                <Plus className="mr-2 h-5 w-5 text-primary" />
+                <span className="font-medium">Record Shift Swap</span>
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="swap-hours">Hours</Label>
-                <Input
-                  id="swap-hours"
-                  type="number"
-                  min="0.5"
-                  step="0.5"
-                  placeholder="Number of hours"
-                  value={swapHours}
-                  onChange={(e) => setSwapHours(e.target.value)}
-                />
+              <ChevronDown className={`h-5 w-5 text-muted-foreground transform transition-transform ${swapFormOpen ? 'rotate-180' : ''}`} />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="border-t">
+              <div className="p-4 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="swap-worker">Worker Name</Label>
+                  <Input
+                    id="swap-worker"
+                    placeholder="Enter colleague name"
+                    value={swapWorkerName}
+                    onChange={(e) => setSwapWorkerName(e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="swap-hours">Hours</Label>
+                  <Input
+                    id="swap-hours"
+                    type="number"
+                    min="0.5"
+                    step="0.5"
+                    placeholder="Number of hours"
+                    value={swapHours}
+                    onChange={(e) => setSwapHours(e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="swap-date">Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                      >
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        {format(selectedSwapDate, "MMMM d, yyyy")}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={selectedSwapDate}
+                        onSelect={(date) => date && setSelectedSwapDate(date)}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Swap Type</Label>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <span className={`text-sm ${swapType === "owed" ? "text-foreground font-medium" : "text-muted-foreground"}`}>You Owe</span>
+                      <Switch 
+                        checked={swapType === "payback"}
+                        onCheckedChange={(checked) => setSwapType(checked ? "payback" : "owed")}
+                      />
+                      <span className={`text-sm ${swapType === "payback" ? "text-foreground font-medium" : "text-muted-foreground"}`}>Owed to You</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <Button onClick={saveSwap} className="w-full">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Record Swap
+                </Button>
               </div>
-              
-              <Button onClick={saveSwap} className="w-full">
-                <Plus className="mr-2 h-4 w-4" />
-                Record Swap
-              </Button>
-            </CardContent>
-          </Card>
+            </CollapsibleContent>
+          </Collapsible>
           
           <div className="space-y-3">
             <h3 className="font-medium">Shift Swaps & TOIL</h3>
@@ -933,6 +990,11 @@ const NotesTracking = () => {
                                     <Clock className="mr-2 h-4 w-4" />
                                     <span>{swap.hours} hour{swap.hours !== 1 ? "s" : ""}</span>
                                   </div>
+                                  {swap.note && (
+                                    <div className="mt-2 text-xs text-muted-foreground">
+                                      {swap.note}
+                                    </div>
+                                  )}
                                 </CardContent>
                                 <CardFooter className="p-2 pt-0 flex justify-end gap-2">
                                   <Button 
@@ -1136,6 +1198,20 @@ const NotesTracking = () => {
                   value={editSwapHours}
                   onChange={(e) => setEditSwapHours(e.target.value)}
                 />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Swap Type</Label>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className={`text-sm ${editSwapType === "owed" ? "text-foreground font-medium" : "text-muted-foreground"}`}>You Owe</span>
+                    <Switch 
+                      checked={editSwapType === "payback"}
+                      onCheckedChange={(checked) => setEditSwapType(checked ? "payback" : "owed")}
+                    />
+                    <span className={`text-sm ${editSwapType === "payback" ? "text-foreground font-medium" : "text-muted-foreground"}`}>Owed to You</span>
+                  </div>
+                </div>
               </div>
             </div>
           )}
