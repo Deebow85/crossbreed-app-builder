@@ -30,13 +30,15 @@ export const EnhancedDialogContent: React.FC<EnhancedDialogContentProps> = ({
       return true;
     }
     if (React.isValidElement(child) && child.type === ShadcnDialogHeader) {
-      const headerChild = child.props.children;
-      if (Array.isArray(headerChild)) {
-        return headerChild.some(
-          (hc) => React.isValidElement(hc) && hc.type === ShadcnDialogDescription
+      // Safely check header children with proper type assertion
+      if (React.isValidElement(child)) {
+        const headerChildren = React.Children.toArray(child.props.children);
+        return headerChildren.some(
+          (headerChild) => 
+            React.isValidElement(headerChild) && 
+            headerChild.type === ShadcnDialogDescription
         );
       }
-      return React.isValidElement(headerChild) && headerChild.type === ShadcnDialogDescription;
     }
     return false;
   });
