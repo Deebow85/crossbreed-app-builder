@@ -20,20 +20,26 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
-      onError: (error) => {
-        console.error("Query error:", error);
-      },
+      // Use meta for onError instead of direct property
+      meta: {
+        onError: (error: Error) => {
+          console.error("Query error:", error);
+        }
+      }
     },
     mutations: {
       retry: 1,
-      onError: (error) => {
-        console.error("Mutation error:", error);
-      },
+      // Use meta for onError instead of direct property
+      meta: {
+        onError: (error: Error) => {
+          console.error("Mutation error:", error);
+        }
+      }
     },
   },
 });
 
-// Simple error boundary component
+// Simple error fallback component
 const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 text-center">

@@ -9,12 +9,11 @@ import {
   DialogFooter as ShadcnDialogFooter,
   DialogTrigger as ShadcnDialogTrigger,
   DialogClose as ShadcnDialogClose,
-  DialogProps as ShadcnDialogProps,
-  DialogContentProps as ShadcnDialogContentProps,
 } from "@/components/ui/dialog";
+import { ComponentPropsWithoutRef } from "react";
 
-// Enhanced DialogContent with default description to avoid accessibility warnings
-export interface EnhancedDialogContentProps extends ShadcnDialogContentProps {
+// Define proper interface for DialogContent props
+export interface EnhancedDialogContentProps extends ComponentPropsWithoutRef<typeof ShadcnDialogContent> {
   noDescription?: boolean;
   defaultDescription?: string;
 }
@@ -31,10 +30,13 @@ export const EnhancedDialogContent: React.FC<EnhancedDialogContentProps> = ({
       return true;
     }
     if (React.isValidElement(child) && child.type === ShadcnDialogHeader) {
-      return React.Children.toArray(child.props.children).some(
-        (headerChild) =>
-          React.isValidElement(headerChild) && headerChild.type === ShadcnDialogDescription
-      );
+      const headerChild = child.props.children;
+      if (Array.isArray(headerChild)) {
+        return headerChild.some(
+          (hc) => React.isValidElement(hc) && hc.type === ShadcnDialogDescription
+        );
+      }
+      return React.isValidElement(headerChild) && headerChild.type === ShadcnDialogDescription;
     }
     return false;
   });
@@ -60,4 +62,4 @@ export const DialogFooter = ShadcnDialogFooter;
 export const DialogTitle = ShadcnDialogTitle;
 export const DialogDescription = ShadcnDialogDescription;
 export const DialogClose = ShadcnDialogClose;
-export type DialogProps = ShadcnDialogProps;
+export type DialogProps = React.ComponentProps<typeof ShadcnDialog>;
