@@ -60,22 +60,27 @@ const NoteEditDialog = ({
       text: noteText,
     };
     
+    // Close the dialog immediately before making the save
+    onOpenChange(false);
+    
+    // Then save the note and show toast notification
     onSave(noteData);
     toast({
       title: "Note saved",
       description: "Your note has been saved successfully.",
     });
-    onOpenChange(false);
   };
 
   const handleDelete = () => {
     if (existingNote && onDelete) {
+      // Close the dialog immediately before deleting
+      onOpenChange(false);
+      
       onDelete(existingNote.date);
       toast({
         title: "Note deleted",
         description: "Your note has been deleted.",
       });
-      onOpenChange(false);
     }
   };
 
