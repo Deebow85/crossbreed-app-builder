@@ -45,8 +45,9 @@ const NotesTracking = () => {
   };
 
   const handleSaveNote = (updatedNote: Note) => {
-    // Just reload notes after edit - the dialog component handles the actual saving
-    loadNotes();
+    // This will be handled by the NoteEditDialog component,
+    // which already saves to localStorage
+    loadNotes(); // Reload notes to get the updated list
   };
 
   const renderNotesList = (notesToRender: Note[]) => {
@@ -56,21 +57,16 @@ const NotesTracking = () => {
           <StickyNote className="h-12 w-12 text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium">No notes found</h3>
           <p className="text-muted-foreground mt-2">
-            Add notes from the calendar by right-clicking on a date.
+            Add notes from the calendar or from this page.
           </p>
         </div>
       );
     }
 
-    // Sort notes by date (newest first)
-    const sortedNotes = [...notesToRender].sort((a, b) => {
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
-    });
-
     return (
       <ScrollArea className="h-[60vh]">
         <div className="space-y-4 p-1">
-          {sortedNotes.map((note) => (
+          {notesToRender.map((note) => (
             <Card key={note.date} className="overflow-hidden">
               <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
                 <div className="flex items-center gap-2">

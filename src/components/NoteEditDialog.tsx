@@ -64,10 +64,7 @@ const NoteEditDialog = ({
     // Close the dialog immediately before making the save
     onOpenChange(false);
     
-    // Save the note to the centralized service
-    saveNote(noteData);
-    
-    // Then call the onSave callback
+    // Then save the note and show toast notification
     onSave(noteData);
   };
 

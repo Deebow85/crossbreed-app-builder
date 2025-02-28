@@ -1,51 +1,50 @@
 
 import { Note } from "@/types/calendar";
 
-const NOTES_STORAGE_KEY = "calendarNotes";
-
 // Get all notes from localStorage
 export const getAllNotes = (): Note[] => {
   try {
-    const savedNotes = localStorage.getItem(NOTES_STORAGE_KEY);
-    return savedNotes ? JSON.parse(savedNotes) : [];
+    const notes = localStorage.getItem("calendar-notes");
+    return notes ? JSON.parse(notes) : [];
   } catch (error) {
-    console.error("Error retrieving notes:", error);
+    console.error("Error getting notes:", error);
     return [];
   }
+};
+
+// Get note by date
+export const getNoteByDate = (dateString: string): Note | undefined => {
+  const notes = getAllNotes();
+  return notes.find(note => note.date === dateString);
 };
 
 // Save a note
 export const saveNote = (note: Note): void => {
   try {
     const notes = getAllNotes();
-    const existingIndex = notes.findIndex(n => n.date === note.date);
+    const existingNoteIndex = notes.findIndex(n => n.date === note.date);
     
-    if (existingIndex >= 0) {
+    if (existingNoteIndex >= 0) {
       // Update existing note
-      notes[existingIndex] = note;
+      notes[existingNoteIndex] = note;
     } else {
       // Add new note
       notes.push(note);
     }
     
-    localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
+    localStorage.setItem("calendar-notes", JSON.stringify(notes));
   } catch (error) {
     console.error("Error saving note:", error);
   }
 };
 
-// Delete a note by date
-export const deleteNote = (dateStr: string): void => {
+// Delete a note
+export const deleteNote = (dateString: string): void => {
   try {
     const notes = getAllNotes();
-    const updatedNotes = notes.filter(note => note.date !== dateStr);
-    localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(updatedNotes));
+    const filteredNotes = notes.filter(note => note.date !== dateString);
+    localStorage.setItem("calendar-notes", JSON.stringify(filteredNotes));
   } catch (error) {
     console.error("Error deleting note:", error);
   }
-};
-
-// Get a specific note by date
-export const getNoteByDate = (dateStr: string): Note | undefined => {
-  return getAllNotes().find(note => note.date === dateStr);
 };
