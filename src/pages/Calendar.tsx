@@ -1,126 +1,152 @@
-
 import { useState, useEffect } from "react";
-import { addMonths, subMonths, startOfMonth, format } from "date-fns";
-import { Calendar as CalendarComponent } from "@/components/Calendar";
-import { Separator } from "@/components/ui/separator";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
-import { useTheme } from "@/lib/theme";
-import ShiftSelectionDialog from "@/components/ShiftSelectionDialog";
-import NoteEditDialog from "@/components/NoteEditDialog";
-import { Note } from "@/types/calendar";
-import { getNoteByDate, saveNote, deleteNote } from "@/services/noteService";
-import { useToast } from "@/hooks/use-toast";
+import { CalendarDays, Banknote, Clock } from "lucide-react";
+import { format, differenceInDays } from 'date-fns';
+import { Calendar as CalendarUI } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { addDays } from 'date-fns';
+import { useToast } from "@/components/ui/use-toast";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useNavigate } from "react-router-dom";
+import { getNextPayday } from "@/utils/dateUtils";
+import { AppSettings, defaultSettings } from "@/types/settings";
 
 const Calendar = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [isShiftDialogOpen, setIsShiftDialogOpen] = useState(false);
-  const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
-  const [selectedNote, setSelectedNote] = useState<Note | undefined>(undefined);
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+  const [totalOvertimeHours, setTotalOvertimeHours] = useState(0);
   const { toast } = useToast();
-  const { theme } = useTheme();
+  const navigate = useNavigate();
 
-  const navigateMonth = (direction: "prev" | "next") => {
-    setCurrentDate((prevDate) => {
-      if (direction === "prev") {
-        return subMonths(prevDate, 1);
-      } else {
-        return addMonths(prevDate, 1);
-      }
-    });
-  };
-
-  const goToToday = () => {
-    setCurrentDate(new Date());
-  };
-
-  const handleDateClick = (date: Date) => {
-    setSelectedDate(date);
-    
-    // Check if there's an existing note for this date
-    const dateString = date.toISOString().split('T')[0];
-    const existingNote = getNoteByDate(dateString);
-    setSelectedNote(existingNote);
-    
-    // Open context menu or dialog
-    setIsShiftDialogOpen(true);
-  };
-
-  const handleNoteClick = () => {
-    if (selectedDate) {
-      setIsShiftDialogOpen(false);
-      setIsNoteDialogOpen(true);
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('appSettings');
+    if (savedSettings) {
+      const parsed = JSON.parse(savedSettings);
+      const settings = {
+        ...defaultSettings,
+        ...parsed,
+        overtime: {
+          ...defaultSettings.overtime,
+          ...parsed.overtime,
+          schedule: {
+            ...defaultSettings.overtime.schedule,
+            ...(parsed.overtime?.schedule || {})
+          }
+        }
+      };
+      setSettings(settings);
     }
+  }, []);
+
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    setIsPopoverOpen(true);
   };
 
-  const handleSaveNote = (note: Note) => {
-    saveNote(note);
-    toast({
-      title: "Note saved",
-      description: "Your note has been saved to the calendar."
-    });
+  const handleNextMonth = () => {
+    setCurrentDate(addDays(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1), -1));
   };
 
-  const handleDeleteNote = (noteId: string) => {
-    deleteNote(noteId);
-    setSelectedNote(undefined);
-    toast({
-      title: "Note deleted",
-      description: "The note has been removed from this date."
-    });
+  const handlePrevMonth = () => {
+    setCurrentDate(addDays(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1), -1));
   };
 
   return (
-    <div className="container py-6 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-bold tracking-tight">Calendar</h1>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" onClick={() => navigateMonth("prev")}>
-            <ChevronLeft className="h-4 w-4" />
+    <div className="relative flex flex-col min-h-screen pb-20">
+      <Card className="w-full mx-auto px-2 sm:px-4 py-4 flex-1">
+        <div className="flex items-center justify-between mb-6">
+          <Button variant="ghost" size="icon" onClick={handlePrevMonth}>
+            <CalendarDays className="h-5 w-5" />
           </Button>
-          <Button variant="outline" size="sm" onClick={goToToday}>
-            Today
+
+          <div className="text-center flex-1 mx-4">
+            <div className="flex items-center justify-center mb-2">
+              <h2 className="text-lg sm:text-xl font-bold">
+                {format(currentDate, 'MMMM yyyy')}
+              </h2>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="flex flex-col items-center">
+                {settings?.paydayEnabled && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                        <Banknote className="h-4 w-4" />
+                        <span>
+                          {differenceInDays(getNextPayday(settings) || new Date(), new Date()) + 1} days until payday
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>Next payday: {format(getNextPayday(settings) || new Date(), 'MMM do')}</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+
+                {settings?.overtime?.enabled && (
+                  <div className="-mt-4">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                          <Clock className="h-4 w-4" />
+                          <span>{totalOvertimeHours} hours overtime</span>
+                        </TooltipTrigger>
+                        <TooltipContent>Total overtime hours this pay period</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <Button variant="ghost" size="icon" onClick={handleNextMonth}>
+            <CalendarDays className="h-5 w-5" />
           </Button>
-          <Button variant="outline" size="sm" onClick={() => navigateMonth("next")}>
-            <ChevronRight className="h-4 w-4" />
+        </div>
+
+        <CalendarUI
+          mode="single"
+          selected={selectedDate}
+          onSelect={handleDateSelect}
+          initialFocus
+          className="mx-auto"
+        />
+      </Card>
+
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t py-4">
+        <div className="container max-w-md mx-auto flex items-center justify-between px-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hover:bg-accent"
+            onClick={() => navigate("/")}
+          >
+            <CalendarDays className="h-8 w-8" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="relative p-0"
+            onClick={() => navigate("/shift-setup")}
+          >
+            <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg">
+              <span className="text-primary-foreground font-semibold text-xl">S</span>
+            </div>
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hover:bg-accent"
+            onClick={() => navigate("/settings")}
+          >
+            <CalendarDays className="h-8 w-8" />
           </Button>
         </div>
       </div>
-      
-      <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4">
-          <h2 className="text-lg font-semibold">
-            {format(startOfMonth(currentDate), "MMMM yyyy")}
-          </h2>
-        </div>
-        <Separator />
-        <div>
-          <CalendarComponent 
-            currentDate={currentDate} 
-            onDayClick={handleDateClick}
-          />
-        </div>
-      </div>
-
-      {/* Shift Selection Dialog with Note Option */}
-      <ShiftSelectionDialog 
-        isOpen={isShiftDialogOpen}
-        onClose={() => setIsShiftDialogOpen(false)}
-        selectedDate={selectedDate}
-        hasNote={!!selectedNote}
-        onNoteClick={handleNoteClick}
-      />
-
-      {/* Note Edit Dialog */}
-      <NoteEditDialog
-        isOpen={isNoteDialogOpen}
-        onClose={() => setIsNoteDialogOpen(false)}
-        date={selectedDate}
-        existingNote={selectedNote}
-        onSave={handleSaveNote}
-        onDelete={handleDeleteNote}
-      />
     </div>
   );
 };

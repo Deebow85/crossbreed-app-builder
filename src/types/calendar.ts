@@ -46,7 +46,6 @@ export type ShiftSwap = {
 };
 
 export type Note = {
-  id: string;
   date: string;
   text: string;
   swap?: ShiftSwap;
