@@ -36,6 +36,7 @@ import {
   ShiftType, ShiftAssignment, PaydaySettings, ShiftPattern,
   Note, ShiftSwap, Alarm, PatternCycle
 } from "@/types/calendar";
+import { getAllNotes, saveNote, deleteNote, getNoteByDate } from "@/services/noteService";
 
 type CalendarProps = {
   isSelectingMultiple?: boolean;
@@ -57,10 +58,7 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
     paydayType: "monthly",
     paydayDate: 15
   });
-  const [notes, setNotes] = useState<Note[]>(() => {
-    const savedNotes = localStorage.getItem('calendarNotes');
-    return savedNotes ? JSON.parse(savedNotes) : [];
-  });
+  const [notes, setNotes] = useState<Note[]>([]);
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [calendarSize, setCalendarSize] = useState<'default' | 'large' | 'small'>('default');
   const [showShiftDialog, setShowShiftDialog] = useState(false);
@@ -91,8 +89,9 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
   }, [shifts]);
 
   useEffect(() => {
-    localStorage.setItem('calendarNotes', JSON.stringify(notes));
-  }, [notes]);
+    // Load notes from the centralized service
+    loadNotes();
+  }, []);
 
   useEffect(() => {
     const loadSettings = () => {
@@ -128,6 +127,12 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
     
     return () => window.removeEventListener('storage', loadSettings);
   }, []);
+
+  // Load notes from the service
+  const loadNotes = () => {
+    const allNotes = getAllNotes();
+    setNotes(allNotes);
+  };
 
   // **************************************************************************
   // WARNING: DO NOT MODIFY THE PATTERN LOGIC BELOW WITHOUT CAREFUL REVIEW
@@ -323,16 +328,9 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
   };
 
   const handleSaveNote = (note: Note) => {
-    setNotes(prevNotes => {
-      const existingIndex = prevNotes.findIndex(n => n.date === note.date);
-      if (existingIndex >= 0) {
-        const updatedNotes = [...prevNotes];
-        updatedNotes[existingIndex] = note;
-        return updatedNotes;
-      } else {
-        return [...prevNotes, note];
-      }
-    });
+    // Use the centralized service to save the note
+    saveNote(note);
+    loadNotes(); // Reload notes after saving
 
     toast({
       title: "Note saved",
@@ -341,7 +339,10 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
   };
 
   const handleDeleteNote = (dateStr: string) => {
-    setNotes(prevNotes => prevNotes.filter(n => n.date !== dateStr));
+    // Use the centralized service to delete the note
+    deleteNote(dateStr);
+    loadNotes(); // Reload notes after deleting
+
     toast({
       title: "Note deleted",
       description: "The note has been removed."
@@ -406,7 +407,7 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
   };
 
   const getNote = (date: Date): Note | undefined => {
-    return notes.find(note => note.date === date.toISOString());
+    return getNoteByDate(date.toISOString());
   };
 
   const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

@@ -14,6 +14,7 @@ import {
 import { Note } from "@/types/calendar";
 import { StickyNote } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { saveNote } from "@/services/noteService";
 
 interface NoteEditDialogProps {
   open: boolean;
@@ -63,12 +64,11 @@ const NoteEditDialog = ({
     // Close the dialog immediately before making the save
     onOpenChange(false);
     
-    // Then save the note and show toast notification
+    // Save the note to the centralized service
+    saveNote(noteData);
+    
+    // Then call the onSave callback
     onSave(noteData);
-    toast({
-      title: "Note saved",
-      description: "Your note has been saved successfully.",
-    });
   };
 
   const handleDelete = () => {
@@ -77,10 +77,6 @@ const NoteEditDialog = ({
       onOpenChange(false);
       
       onDelete(existingNote.date);
-      toast({
-        title: "Note deleted",
-        description: "Your note has been deleted.",
-      });
     }
   };
 
