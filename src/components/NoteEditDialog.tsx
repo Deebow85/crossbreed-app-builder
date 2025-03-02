@@ -24,10 +24,6 @@ interface NoteEditDialogProps {
   onDelete?: (date: string) => void;
 }
 
-// Define the exact folder name as a constant to ensure consistency
-// IMPORTANT: This exact string is critical for categorization
-const CALENDAR_NOTES_FOLDER = "notes from calendar";
-
 const NoteEditDialog = ({ 
   open, 
   onOpenChange, 
@@ -59,15 +55,11 @@ const NoteEditDialog = ({
       return;
     }
 
-    // Create the note with the EXACT calendar category name - this is critical
+    // Create the note without a specific category
     const noteData: Note = {
       date: date.toISOString(),
-      text: noteText,
-      category: CALENDAR_NOTES_FOLDER
+      text: noteText
     };
-    
-    // Log before saving to verify category is correct
-    console.log("About to save note with category:", noteData.category);
     
     // Close the dialog immediately before making the save
     onOpenChange(false);
@@ -89,52 +81,36 @@ const NoteEditDialog = ({
       // Remove any existing note with the same date if it exists to avoid duplicates
       const filteredNotes = existingNotes.filter((note: Note) => note.date !== noteData.date);
       
-      // Add the new note with EXACT category - this is critical for folder display
+      // Add the new note without a category
       filteredNotes.push({
         date: noteData.date,
-        text: noteData.text,
-        category: CALENDAR_NOTES_FOLDER // Using the constant directly
+        text: noteData.text
       });
       
-      // Save back to localStorage with explicit formatting
+      // Save back to localStorage
       localStorage.setItem('notes', JSON.stringify(filteredNotes));
-      console.log("Note saved directly to localStorage with category:", CALENDAR_NOTES_FOLDER);
-      
-      // Verify that the note was saved correctly by retrieving it
-      const savedNotes = JSON.parse(localStorage.getItem('notes') || '[]');
-      const savedNote = savedNotes.find((note: Note) => note.date === noteData.date);
-      console.log("Verified saved note has category:", savedNote?.category);
+      console.log("Note saved directly to localStorage");
     } catch (error) {
       console.error("Error saving note to localStorage:", error);
     }
     
     // Dispatch a custom event to notify that notes have been updated
-    // Include the EXACT category name in all relevant places
     const notesUpdatedEvent = new CustomEvent('notesUpdated', {
       detail: { 
         noteData: {
           date: noteData.date,
-          text: noteData.text,
-          category: CALENDAR_NOTES_FOLDER
+          text: noteData.text
         },
-        action: "save",
-        category: CALENDAR_NOTES_FOLDER
+        action: "save"
       }
     });
     document.dispatchEvent(notesUpdatedEvent);
-    
-    // Console log for debugging
-    console.log("Note saved with category:", CALENDAR_NOTES_FOLDER);
-    console.log("notesUpdated event dispatched:", notesUpdatedEvent.detail);
   };
 
   const handleDelete = () => {
     if (existingNote && onDelete) {
       // Close the dialog immediately before deleting
       onOpenChange(false);
-      
-      // Log deletion to verify
-      console.log("About to delete note with category:", existingNote.category || CALENDAR_NOTES_FOLDER);
       
       // Call the onDelete function passed as prop
       onDelete(existingNote.date);
@@ -155,16 +131,14 @@ const NoteEditDialog = ({
         console.error("Error removing note from localStorage:", error);
       }
       
-      // Dispatch a custom event for note deletion with the EXACT category name
+      // Dispatch a custom event for note deletion
       const notesUpdatedEvent = new CustomEvent('notesUpdated', {
         detail: { 
           action: "delete",
-          date: existingNote.date,
-          category: CALENDAR_NOTES_FOLDER
+          date: existingNote.date
         }
       });
       document.dispatchEvent(notesUpdatedEvent);
-      console.log("Note deleted event dispatched:", notesUpdatedEvent.detail);
     }
   };
 
@@ -177,7 +151,7 @@ const NoteEditDialog = ({
             Note for {date ? format(date, 'MMMM d, yyyy') : ''}
           </DialogTitle>
           <DialogDescription>
-            Add a note for this date. Notes will be shown on the calendar and in the "{CALENDAR_NOTES_FOLDER}" folder.
+            Add a note for this date. Notes will be shown on the calendar and in the notes section.
           </DialogDescription>
         </DialogHeader>
 
