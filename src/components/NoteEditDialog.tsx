@@ -71,6 +71,10 @@ const NoteEditDialog = ({
     
     // Then save the note and show toast notification
     onSave(noteData);
+    
+    // Dispatch a custom event to notify other components about the note update
+    window.dispatchEvent(new Event('notesUpdated'));
+    
     toast({
       title: "Note saved",
       description: "Your note has been saved successfully.",
