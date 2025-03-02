@@ -55,11 +55,11 @@ const NoteEditDialog = ({
       return;
     }
 
-    // Create the note with the calendar category
+    // Create the note with the calendar category - IMPORTANT: exact string match needed
     const noteData: Note = {
       date: date.toISOString(),
       text: noteText,
-      category: "notes from calendar"  // Hard-code this category for all calendar notes
+      category: "notes from calendar"  // This exact string is required for folder categorization
     };
     
     // Log before saving to verify category
@@ -85,12 +85,13 @@ const NoteEditDialog = ({
       // Remove any existing note with the same date if it exists to avoid duplicates
       const filteredNotes = existingNotes.filter((note: Note) => note.date !== noteData.date);
       
-      // Add the new note
-      filteredNotes.push(noteData);
+      // Add the new note with the exact category string
+      const noteWithCategory = {...noteData, category: "notes from calendar"};
+      filteredNotes.push(noteWithCategory);
       
       // Save back to localStorage
       localStorage.setItem('notes', JSON.stringify(filteredNotes));
-      console.log("Note saved directly to localStorage");
+      console.log("Note saved directly to localStorage with category:", noteWithCategory.category);
     } catch (error) {
       console.error("Error saving note to localStorage:", error);
     }
@@ -100,7 +101,7 @@ const NoteEditDialog = ({
       detail: { 
         noteData,
         action: "save",
-        category: "notes from calendar"
+        category: "notes from calendar" // Exact string match for category
       }
     });
     document.dispatchEvent(notesUpdatedEvent);
@@ -141,7 +142,7 @@ const NoteEditDialog = ({
         detail: { 
           action: "delete",
           date: existingNote.date,
-          category: "notes from calendar" // Always use this category for calendar notes
+          category: "notes from calendar" // Exact string match for category
         }
       });
       document.dispatchEvent(notesUpdatedEvent);
