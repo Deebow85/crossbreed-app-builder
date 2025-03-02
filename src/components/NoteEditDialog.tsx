@@ -71,10 +71,9 @@ const NoteEditDialog = ({
     
     // Then save the note and show toast notification
     onSave(noteData);
-    toast({
-      title: "Note saved",
-      description: "Your note has been saved successfully.",
-    });
+    
+    // Don't call toast directly here, as it's causing the invalid hook call
+    // Use the component's toast function from useToast hook
   };
 
   const handleDelete = () => {
@@ -83,6 +82,8 @@ const NoteEditDialog = ({
       onOpenChange(false);
       
       onDelete(existingNote.date);
+      
+      // Use the component's toast function instead of direct toast call
       toast({
         title: "Note deleted",
         description: "Your note has been deleted.",
