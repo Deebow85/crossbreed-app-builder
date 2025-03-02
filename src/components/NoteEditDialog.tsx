@@ -58,7 +58,13 @@ const NoteEditDialog = ({
     const noteData: Note = {
       date: date.toISOString(),
       text: noteText,
+      category: "notes from calendar" // Add category for calendar notes
     };
+    
+    // Preserve existing category if this is an edit
+    if (existingNote && existingNote.category) {
+      noteData.category = existingNote.category;
+    }
     
     // Close the dialog immediately before making the save
     onOpenChange(false);
