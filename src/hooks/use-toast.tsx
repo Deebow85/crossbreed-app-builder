@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import {
   Toast,
@@ -100,23 +99,9 @@ export function ToasterProvider({
   )
 }
 
-// We need to refactor this to avoid direct hook calls outside of components
-export const toast = ({title, description, variant, action, ...props}: ToastProps) => {
-  // Do not call hooks directly here - this was causing the invalid hook call error
-  return {
-    id: crypto.randomUUID(),
-    title,
-    description,
-    variant,
-    action,
-    ...props
-  }
-}
-
 export const useToast = () => {
   const { toasts, addToast, removeToast, removeAllToasts } = useToaster()
 
-  // Create a proper toast function that's safe to use in components
   const toast = React.useCallback(
     (props: ToastProps) => {
       const id = crypto.randomUUID()
