@@ -24,9 +24,9 @@ interface NoteEditDialogProps {
   onDelete?: (date: string) => void;
 }
 
-// Define the exact folder name as a constant to ensure consistency
+// Define the exact folder name as a constant with a new value
 // This exact string must be used everywhere
-export const CALENDAR_NOTES_FOLDER = "notes from calendar";
+export const CALENDAR_NOTES_FOLDER = "Calendar Notes";
 
 const NoteEditDialog = ({ 
   open, 
@@ -59,7 +59,7 @@ const NoteEditDialog = ({
       return;
     }
 
-    // Create the note with the EXACT calendar category name
+    // Create the note with the new calendar category name
     const noteData: Note = {
       date: date.toISOString(),
       text: noteText,
@@ -94,7 +94,7 @@ const NoteEditDialog = ({
       const filteredNotes = existingNotes.filter((note: Note) => note.date !== noteData.date);
       console.log("After filtering out existing note with same date:", filteredNotes);
       
-      // Create a new note with EXACT category string
+      // Create a new note with new category string
       const newNote = {
         date: noteData.date,
         text: noteData.text,
