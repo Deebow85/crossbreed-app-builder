@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import {
   Toast,
@@ -126,3 +127,26 @@ export const useToast = () => {
     dismissAll: removeAllToasts,
   }
 }
+
+// Create a standalone toast function that can be imported directly
+export const toast = (props: ToastProps) => {
+  const id = crypto.randomUUID();
+  const toastProps = { id, ...props } as ToasterToast;
+  
+  // This is a workaround for direct imports
+  // It will dispatch a custom event that the ToastProvider will listen for
+  const event = new CustomEvent('toast', { detail: toastProps });
+  document.dispatchEvent(event);
+  
+  return {
+    id,
+    dismiss: () => {
+      document.dispatchEvent(new CustomEvent('toast-dismiss', { detail: { id } }));
+    },
+    update: (props: ToastProps) => {
+      document.dispatchEvent(
+        new CustomEvent('toast-update', { detail: { id, ...props } })
+      );
+    },
+  };
+};
