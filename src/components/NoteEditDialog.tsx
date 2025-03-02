@@ -25,8 +25,8 @@ interface NoteEditDialogProps {
 }
 
 // Define the exact folder name as a constant to ensure consistency
-// IMPORTANT: This exact string is critical for categorization
-const CALENDAR_NOTES_FOLDER = "notes from calendar";
+// This exact string must be used everywhere
+export const CALENDAR_NOTES_FOLDER = "notes from calendar";
 
 const NoteEditDialog = ({ 
   open, 
@@ -59,57 +59,68 @@ const NoteEditDialog = ({
       return;
     }
 
-    // Create the note with the EXACT calendar category name - this is critical
+    // Create the note with the EXACT calendar category name
     const noteData: Note = {
       date: date.toISOString(),
       text: noteText,
       category: CALENDAR_NOTES_FOLDER
     };
     
-    // Log before saving to verify category is correct
-    console.log("About to save note with category:", noteData.category);
+    // Log extensively for debugging
+    console.log("About to save note with category:", CALENDAR_NOTES_FOLDER);
+    console.log("Note data:", JSON.stringify(noteData));
     
     // Close the dialog immediately before making the save
     onOpenChange(false);
     
-    // Then save the note
+    // Pass the note to the parent component's save handler
     onSave(noteData);
     
-    // Use the component's toast function from useToast hook
+    // Show success toast
     toast({
       title: "Note saved",
       description: "Your note has been saved successfully.",
     });
     
-    // Direct localStorage handling - this ensures notes show in the Notes page
+    // Direct localStorage handling with detailed logging
     try {
-      // Get existing notes from localStorage
-      const existingNotes = JSON.parse(localStorage.getItem('notes') || '[]');
+      // Get existing notes
+      const existingNotesString = localStorage.getItem('notes');
+      console.log("Existing notes string:", existingNotesString);
+      const existingNotes = JSON.parse(existingNotesString || '[]');
+      console.log("Parsed existing notes:", existingNotes);
       
-      // Remove any existing note with the same date if it exists to avoid duplicates
+      // Remove any existing note with the same date
       const filteredNotes = existingNotes.filter((note: Note) => note.date !== noteData.date);
+      console.log("After filtering out existing note with same date:", filteredNotes);
       
-      // Add the new note with EXACT category - this is critical for folder display
-      filteredNotes.push({
+      // Create a new note with EXACT category string
+      const newNote = {
         date: noteData.date,
         text: noteData.text,
-        category: CALENDAR_NOTES_FOLDER // Using the constant directly
-      });
+        category: CALENDAR_NOTES_FOLDER
+      };
+      console.log("New note to be added:", newNote);
       
-      // Save back to localStorage with explicit formatting
-      localStorage.setItem('notes', JSON.stringify(filteredNotes));
-      console.log("Note saved directly to localStorage with category:", CALENDAR_NOTES_FOLDER);
+      // Add the new note
+      filteredNotes.push(newNote);
       
-      // Verify that the note was saved correctly by retrieving it
-      const savedNotes = JSON.parse(localStorage.getItem('notes') || '[]');
+      // Save back to localStorage
+      const notesToSave = JSON.stringify(filteredNotes);
+      console.log("Notes to be saved to localStorage:", notesToSave);
+      localStorage.setItem('notes', notesToSave);
+      
+      // Verify the note was saved correctly
+      const savedNotesString = localStorage.getItem('notes');
+      const savedNotes = JSON.parse(savedNotesString || '[]');
       const savedNote = savedNotes.find((note: Note) => note.date === noteData.date);
-      console.log("Verified saved note has category:", savedNote?.category);
+      console.log("Verification - saved note category:", savedNote?.category);
+      console.log("All notes in localStorage:", savedNotes);
     } catch (error) {
       console.error("Error saving note to localStorage:", error);
     }
     
-    // Dispatch a custom event to notify that notes have been updated
-    // Include the EXACT category name in all relevant places
+    // Dispatch a detailed custom event for notes update
     const notesUpdatedEvent = new CustomEvent('notesUpdated', {
       detail: { 
         noteData: {
@@ -121,41 +132,46 @@ const NoteEditDialog = ({
         category: CALENDAR_NOTES_FOLDER
       }
     });
-    document.dispatchEvent(notesUpdatedEvent);
     
-    // Console log for debugging
-    console.log("Note saved with category:", CALENDAR_NOTES_FOLDER);
-    console.log("notesUpdated event dispatched:", notesUpdatedEvent.detail);
+    document.dispatchEvent(notesUpdatedEvent);
+    console.log("notesUpdated event dispatched with category:", CALENDAR_NOTES_FOLDER);
+    console.log("Complete event details:", notesUpdatedEvent.detail);
   };
 
   const handleDelete = () => {
     if (existingNote && onDelete) {
-      // Close the dialog immediately before deleting
+      // Close the dialog immediately
       onOpenChange(false);
       
-      // Log deletion to verify
-      console.log("About to delete note with category:", existingNote.category || CALENDAR_NOTES_FOLDER);
+      // Log deletion
+      console.log("About to delete note with date:", existingNote.date);
+      console.log("Note category:", existingNote.category || CALENDAR_NOTES_FOLDER);
       
-      // Call the onDelete function passed as prop
+      // Call the delete handler
       onDelete(existingNote.date);
       
-      // Use the component's toast function
+      // Show success toast
       toast({
         title: "Note deleted",
         description: "Your note has been deleted.",
       });
       
-      // Direct localStorage handling for deletion
+      // Direct localStorage handling for deletion with logging
       try {
-        const existingNotes = JSON.parse(localStorage.getItem('notes') || '[]');
+        const existingNotesString = localStorage.getItem('notes');
+        console.log("Existing notes before deletion:", existingNotesString);
+        const existingNotes = JSON.parse(existingNotesString || '[]');
+        
         const filteredNotes = existingNotes.filter((note: Note) => note.date !== existingNote.date);
+        console.log("Notes after filtering out deleted note:", filteredNotes);
+        
         localStorage.setItem('notes', JSON.stringify(filteredNotes));
-        console.log("Note removed directly from localStorage");
+        console.log("Updated localStorage after deletion");
       } catch (error) {
         console.error("Error removing note from localStorage:", error);
       }
       
-      // Dispatch a custom event for note deletion with the EXACT category name
+      // Dispatch a custom event for note deletion
       const notesUpdatedEvent = new CustomEvent('notesUpdated', {
         detail: { 
           action: "delete",
