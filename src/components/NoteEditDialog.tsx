@@ -24,6 +24,9 @@ interface NoteEditDialogProps {
   onDelete?: (date: string) => void;
 }
 
+// Define the exact folder name as a constant to ensure consistency
+const CALENDAR_NOTES_FOLDER = "notes from calendar";
+
 const NoteEditDialog = ({ 
   open, 
   onOpenChange, 
@@ -59,7 +62,7 @@ const NoteEditDialog = ({
     const noteData: Note = {
       date: date.toISOString(),
       text: noteText,
-      category: "notes from calendar"  // This exact string is required for folder categorization
+      category: CALENDAR_NOTES_FOLDER  // Using constant for consistency
     };
     
     // Log before saving to verify category
@@ -85,8 +88,12 @@ const NoteEditDialog = ({
       // Remove any existing note with the same date if it exists to avoid duplicates
       const filteredNotes = existingNotes.filter((note: Note) => note.date !== noteData.date);
       
-      // Add the new note with the exact category string
-      const noteWithCategory = {...noteData, category: "notes from calendar"};
+      // CRITICAL: Ensure category is exactly "notes from calendar" (no variation in casing or spacing)
+      const noteWithCategory = {
+        ...noteData,
+        category: CALENDAR_NOTES_FOLDER
+      };
+      
       filteredNotes.push(noteWithCategory);
       
       // Save back to localStorage
@@ -99,15 +106,18 @@ const NoteEditDialog = ({
     // Dispatch a custom event to notify that notes have been updated
     const notesUpdatedEvent = new CustomEvent('notesUpdated', {
       detail: { 
-        noteData,
+        noteData: {
+          ...noteData,
+          category: CALENDAR_NOTES_FOLDER // Ensure exact string match in event data
+        },
         action: "save",
-        category: "notes from calendar" // Exact string match for category
+        category: CALENDAR_NOTES_FOLDER // Exact string match for category
       }
     });
     document.dispatchEvent(notesUpdatedEvent);
     
     // Console log to help debug
-    console.log("Note saved with category:", noteData.category);
+    console.log("Note saved with category:", CALENDAR_NOTES_FOLDER);
     console.log("notesUpdated event dispatched with:", JSON.stringify(notesUpdatedEvent.detail));
   };
 
@@ -117,7 +127,7 @@ const NoteEditDialog = ({
       onOpenChange(false);
       
       // Log deletion to verify
-      console.log("About to delete note with category:", existingNote.category || "notes from calendar");
+      console.log("About to delete note with category:", existingNote.category || CALENDAR_NOTES_FOLDER);
       
       onDelete(existingNote.date);
       
@@ -142,7 +152,7 @@ const NoteEditDialog = ({
         detail: { 
           action: "delete",
           date: existingNote.date,
-          category: "notes from calendar" // Exact string match for category
+          category: CALENDAR_NOTES_FOLDER // Exact string match for category
         }
       });
       document.dispatchEvent(notesUpdatedEvent);
@@ -159,7 +169,7 @@ const NoteEditDialog = ({
             Note for {date ? format(date, 'MMMM d, yyyy') : ''}
           </DialogTitle>
           <DialogDescription>
-            Add a note for this date. Notes will be shown on the calendar and in the "notes from calendar" folder.
+            Add a note for this date. Notes will be shown on the calendar and in the "{CALENDAR_NOTES_FOLDER}" folder.
           </DialogDescription>
         </DialogHeader>
 
