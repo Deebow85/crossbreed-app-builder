@@ -81,9 +81,15 @@ const NoteEditDialog = ({
     // Dispatch a custom event to notify that notes have been updated
     // This will allow the NotesTracking page to refresh its data
     const notesUpdatedEvent = new CustomEvent('notesUpdated', {
-      detail: { noteData }
+      detail: { 
+        noteData,
+        category: "notes from calendar" // Explicitly include the category in the event
+      }
     });
     document.dispatchEvent(notesUpdatedEvent);
+    
+    // Console log to help debug
+    console.log("Note saved with category:", noteData.category);
   };
 
   const handleDelete = () => {
@@ -100,8 +106,13 @@ const NoteEditDialog = ({
       });
       
       // Dispatch a custom event to notify that notes have been updated
-      const notesUpdatedEvent = new CustomEvent('notesUpdated');
+      const notesUpdatedEvent = new CustomEvent('notesUpdated', {
+        detail: { 
+          category: "notes from calendar" // Include the category in the delete event too
+        }
+      });
       document.dispatchEvent(notesUpdatedEvent);
+      console.log("Note deleted event dispatched");
     }
   };
 
