@@ -55,20 +55,12 @@ const NoteEditDialog = ({
       return;
     }
 
-    // Always set the category to "notes from calendar" for calendar notes
+    // Create the note with the calendar category
     const noteData: Note = {
       date: date.toISOString(),
       text: noteText,
-      category: "notes from calendar" 
+      category: "notes from calendar"  // Hard-code this category for all calendar notes
     };
-    
-    // Preserve existing category if this is an edit
-    if (existingNote && existingNote.category) {
-      noteData.category = existingNote.category;
-    } else {
-      // Ensure new notes have the correct category
-      noteData.category = "notes from calendar";
-    }
     
     // Log before saving to verify category
     console.log("About to save note with category:", noteData.category);
@@ -85,13 +77,30 @@ const NoteEditDialog = ({
       description: "Your note has been saved successfully.",
     });
     
+    // Make sure the noteData is stored in localStorage directly as well
+    // This ensures it will show up on the Notes page regardless of event handling
+    try {
+      const existingNotes = JSON.parse(localStorage.getItem('notes') || '[]');
+      
+      // Remove any existing note with the same date if it exists to avoid duplicates
+      const filteredNotes = existingNotes.filter((note: Note) => note.date !== noteData.date);
+      
+      // Add the new note
+      filteredNotes.push(noteData);
+      
+      // Save back to localStorage
+      localStorage.setItem('notes', JSON.stringify(filteredNotes));
+      console.log("Note saved directly to localStorage");
+    } catch (error) {
+      console.error("Error saving note to localStorage:", error);
+    }
+    
     // Dispatch a custom event to notify that notes have been updated
-    // This will allow the NotesTracking page to refresh its data
     const notesUpdatedEvent = new CustomEvent('notesUpdated', {
       detail: { 
         noteData,
         action: "save",
-        category: "notes from calendar" // Explicitly include the category in the event
+        category: "notes from calendar"
       }
     });
     document.dispatchEvent(notesUpdatedEvent);
@@ -117,12 +126,22 @@ const NoteEditDialog = ({
         description: "Your note has been deleted.",
       });
       
+      // Directly remove from localStorage as well to ensure it's removed from Notes page
+      try {
+        const existingNotes = JSON.parse(localStorage.getItem('notes') || '[]');
+        const filteredNotes = existingNotes.filter((note: Note) => note.date !== existingNote.date);
+        localStorage.setItem('notes', JSON.stringify(filteredNotes));
+        console.log("Note removed directly from localStorage");
+      } catch (error) {
+        console.error("Error removing note from localStorage:", error);
+      }
+      
       // Dispatch a custom event to notify that notes have been updated
       const notesUpdatedEvent = new CustomEvent('notesUpdated', {
         detail: { 
           action: "delete",
           date: existingNote.date,
-          category: existingNote.category || "notes from calendar" // Include the category in the delete event too
+          category: "notes from calendar" // Always use this category for calendar notes
         }
       });
       document.dispatchEvent(notesUpdatedEvent);
