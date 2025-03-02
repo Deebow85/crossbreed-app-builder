@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Note } from "@/types/calendar";
 import { StickyNote } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 interface NoteEditDialogProps {
   open: boolean;
