@@ -1,12 +1,6 @@
 
 import * as React from "react"
 import {
-  Toast,
-  ToastClose,
-  ToastDescription,
-  ToastProvider,
-  ToastTitle,
-  ToastViewport,
   type ToastProps,
   type ToastActionElement,
 } from "@/components/ui/toast"
@@ -58,29 +52,17 @@ export function ToasterProvider({
 
   const addToast = React.useCallback(
     (toast: ToasterToast) => {
-      setState((prevState) => {
-        const newToasts = [toast, ...prevState.toasts].slice(0, TOAST_LIMIT)
-        return {
-          ...prevState,
-          toasts: newToasts,
-        }
-      })
+      // Toast functionality disabled - do nothing
     },
     []
   )
 
   const removeToast = React.useCallback((id: string) => {
-    setState((prevState) => ({
-      ...prevState,
-      toasts: prevState.toasts.filter((toast) => toast.id !== id),
-    }))
+    // Toast functionality disabled - do nothing
   }, [])
 
   const removeAllToasts = React.useCallback(() => {
-    setState((prevState) => ({
-      ...prevState,
-      toasts: [],
-    }))
+    // Toast functionality disabled - do nothing
   }, [])
 
   const value = React.useMemo(
@@ -100,44 +82,29 @@ export function ToasterProvider({
   )
 }
 
-// We need to refactor this to avoid direct hook calls outside of components
-export const toast = ({title, description, variant, action, ...props}: ToastProps) => {
-  // Do not call hooks directly here - this was causing the invalid hook call error
+// Stub for the toast function - does nothing
+export const toast = (props: ToastProps) => {
+  // Toast functionality disabled - do nothing
   return {
     id: crypto.randomUUID(),
-    title,
-    description,
-    variant,
-    action,
-    ...props
+    dismiss: () => {},
+    update: () => {},
   }
 }
 
+// Stub for the useToast hook - returns empty functions
 export const useToast = () => {
-  const { toasts, addToast, removeToast, removeAllToasts } = useToaster()
-
-  // Create a proper toast function that's safe to use in components
-  const toast = React.useCallback(
-    (props: ToastProps) => {
-      const id = crypto.randomUUID()
-      const toastProps = { id, ...props } as ToasterToast
-      addToast(toastProps)
-      
+  return {
+    toast: (props: ToastProps) => {
+      // Toast functionality disabled - do nothing
       return {
-        id,
-        dismiss: () => removeToast(id),
-        update: (props: ToastProps) => {
-          addToast({ id, ...props } as ToasterToast)
-        },
+        id: crypto.randomUUID(),
+        dismiss: () => {},
+        update: () => {},
       }
     },
-    [addToast, removeToast]
-  )
-
-  return {
-    toast,
-    toasts,
-    dismiss: removeToast,
-    dismissAll: removeAllToasts,
+    toasts: [],
+    dismiss: () => {},
+    dismissAll: () => {},
   }
 }
