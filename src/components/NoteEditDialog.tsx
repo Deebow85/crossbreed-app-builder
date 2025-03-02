@@ -55,16 +55,23 @@ const NoteEditDialog = ({
       return;
     }
 
+    // Always set the category to "notes from calendar" for calendar notes
     const noteData: Note = {
       date: date.toISOString(),
       text: noteText,
-      category: "notes from calendar" // Always set the category for calendar notes
+      category: "notes from calendar" 
     };
     
     // Preserve existing category if this is an edit
     if (existingNote && existingNote.category) {
       noteData.category = existingNote.category;
+    } else {
+      // Ensure new notes have the correct category
+      noteData.category = "notes from calendar";
     }
+    
+    // Log before saving to verify category
+    console.log("About to save note with category:", noteData.category);
     
     // Close the dialog immediately before making the save
     onOpenChange(false);
@@ -83,6 +90,7 @@ const NoteEditDialog = ({
     const notesUpdatedEvent = new CustomEvent('notesUpdated', {
       detail: { 
         noteData,
+        action: "save",
         category: "notes from calendar" // Explicitly include the category in the event
       }
     });
@@ -90,12 +98,16 @@ const NoteEditDialog = ({
     
     // Console log to help debug
     console.log("Note saved with category:", noteData.category);
+    console.log("notesUpdated event dispatched with:", JSON.stringify(notesUpdatedEvent.detail));
   };
 
   const handleDelete = () => {
     if (existingNote && onDelete) {
       // Close the dialog immediately before deleting
       onOpenChange(false);
+      
+      // Log deletion to verify
+      console.log("About to delete note with category:", existingNote.category || "notes from calendar");
       
       onDelete(existingNote.date);
       
@@ -108,11 +120,13 @@ const NoteEditDialog = ({
       // Dispatch a custom event to notify that notes have been updated
       const notesUpdatedEvent = new CustomEvent('notesUpdated', {
         detail: { 
-          category: "notes from calendar" // Include the category in the delete event too
+          action: "delete",
+          date: existingNote.date,
+          category: existingNote.category || "notes from calendar" // Include the category in the delete event too
         }
       });
       document.dispatchEvent(notesUpdatedEvent);
-      console.log("Note deleted event dispatched");
+      console.log("Note deleted event dispatched with:", JSON.stringify(notesUpdatedEvent.detail));
     }
   };
 
@@ -125,7 +139,7 @@ const NoteEditDialog = ({
             Note for {date ? format(date, 'MMMM d, yyyy') : ''}
           </DialogTitle>
           <DialogDescription>
-            Add a note for this date. Notes will be shown on the calendar.
+            Add a note for this date. Notes will be shown on the calendar and in the "notes from calendar" folder.
           </DialogDescription>
         </DialogHeader>
 
