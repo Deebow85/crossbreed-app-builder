@@ -1,82 +1,79 @@
 
-import { Link } from "react-router-dom";
-import { 
-  CalendarRange, 
-  Settings as SettingsIcon, 
-  AlertTriangle, 
-  Clipboard, 
-  Calendar as CalendarIcon,
-  StickyNote
-} from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import Calendar from "@/components/Calendar";
+import { useOutletContext } from "react-router-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
+type ContextType = { isSelectingMultiple: boolean };
+
 const Index = () => {
+  const { isSelectingMultiple } = useOutletContext<ContextType>();
+  const [showTutorial, setShowTutorial] = useState(false);
+  
+  useEffect(() => {
+    const hasSeenTutorial = localStorage.getItem("hasSeenTutorial");
+    if (!hasSeenTutorial) {
+      setShowTutorial(true);
+    }
+  }, []);
+
+  const completeTutorial = () => {
+    localStorage.setItem("hasSeenTutorial", "true");
+    setShowTutorial(false);
+  };
+
   return (
-    <div className="container mx-auto p-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Link to="/shift-setup">
-          <Card className="h-full hover:bg-accent/10 transition-colors cursor-pointer">
-            <CardHeader>
-              <CalendarRange className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle>Shift Setup</CardTitle>
-              <CardDescription>Configure your shifts and working patterns</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Create and customize shift types for your schedule</p>
-            </CardContent>
-          </Card>
-        </Link>
+    <>
+      <Calendar isSelectingMultiple={isSelectingMultiple} />
 
-        <Link to="/notes-tracking">
-          <Card className="h-full hover:bg-accent/10 transition-colors cursor-pointer">
-            <CardHeader>
-              <Clipboard className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle>Notes Tracker</CardTitle>
-              <CardDescription>Track your work notes and reminders</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Manage your work notes and keep track of important information</p>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Link to="/calendar-notes">
-          <Card className="h-full hover:bg-accent/10 transition-colors cursor-pointer">
-            <CardHeader>
-              <StickyNote className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle>Calendar Notes</CardTitle>
-              <CardDescription>View all your calendar-specific notes</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Access all notes created from calendar date selections</p>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Link to="/settings">
-          <Card className="h-full hover:bg-accent/10 transition-colors cursor-pointer">
-            <CardHeader>
-              <SettingsIcon className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle>Settings</CardTitle>
-              <CardDescription>Configure app preferences</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Customize the app appearance, notification settings, and more</p>
-            </CardContent>
-          </Card>
-        </Link>
-      </div>
-
-      <div className="mt-12">
-        <Button asChild size="lg" className="w-full">
-          <Link to="/shift-setup">
-            <CalendarIcon className="mr-2 h-5 w-5" />
-            Get Started with Shift Setup
-          </Link>
-        </Button>
-      </div>
-    </div>
+      <Dialog open={showTutorial} onOpenChange={setShowTutorial}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Welcome to your Shift Calendar!</DialogTitle>
+            <DialogDescription>
+              Let's get you started with the key features.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4 text-sm">
+            <div className="space-y-2">
+              <h4 className="font-medium">📅 Adding Shifts</h4>
+              <p>Click on any day to add a shift. Select the shift type from the buttons above the calendar.</p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-medium">⌚ Setting Alarms</h4>
+              <p>Middle-click on a shift to set an alarm. A bell icon will appear when an alarm is set.</p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-medium">📝 Adding Notes</h4>
+              <p>Right-click on any day to add notes or manage shift swaps.</p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-medium">🔄 Shift Patterns</h4>
+              <p>Use the "Set Pattern" button to quickly add recurring shifts.</p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-medium">💡 Pro Tips</h4>
+              <ul className="list-disc pl-4 space-y-1">
+                <li>Click and drag to add multiple shifts at once</li>
+                <li>Use the search bar to find specific notes or swaps</li>
+                <li>Click the gear icon to customize the app's appearance</li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={completeTutorial}>Got it, thanks!</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

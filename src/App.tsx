@@ -10,7 +10,6 @@ import Index from "./pages/Index";
 import Settings from "./pages/Settings";
 import ShiftSetup from "./pages/ShiftSetup";
 import NotesTracking from "./pages/NotesTracking";
-import CalendarNotes from "./pages/CalendarNotes";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
 
@@ -30,7 +29,6 @@ const App = () => (
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/shift-setup" element={<ShiftSetup />} />
                 <Route path="/notes-tracking" element={<NotesTracking />} />
-                <Route path="/calendar-notes" element={<CalendarNotes />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
