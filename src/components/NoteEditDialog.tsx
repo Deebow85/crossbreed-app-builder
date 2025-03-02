@@ -58,7 +58,7 @@ const NoteEditDialog = ({
     const noteData: Note = {
       date: date.toISOString(),
       text: noteText,
-      category: "notes from calendar" // Add category for calendar notes
+      category: "notes from calendar" // Always set the category for calendar notes
     };
     
     // Preserve existing category if this is an edit
@@ -69,11 +69,21 @@ const NoteEditDialog = ({
     // Close the dialog immediately before making the save
     onOpenChange(false);
     
-    // Then save the note and show toast notification
+    // Then save the note
     onSave(noteData);
     
-    // Don't call toast directly here, as it's causing the invalid hook call
     // Use the component's toast function from useToast hook
+    toast({
+      title: "Note saved",
+      description: "Your note has been saved successfully.",
+    });
+    
+    // Dispatch a custom event to notify that notes have been updated
+    // This will allow the NotesTracking page to refresh its data
+    const notesUpdatedEvent = new CustomEvent('notesUpdated', {
+      detail: { noteData }
+    });
+    document.dispatchEvent(notesUpdatedEvent);
   };
 
   const handleDelete = () => {
@@ -88,6 +98,10 @@ const NoteEditDialog = ({
         title: "Note deleted",
         description: "Your note has been deleted.",
       });
+      
+      // Dispatch a custom event to notify that notes have been updated
+      const notesUpdatedEvent = new CustomEvent('notesUpdated');
+      document.dispatchEvent(notesUpdatedEvent);
     }
   };
 
