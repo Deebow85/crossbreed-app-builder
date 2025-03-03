@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Note } from "@/types/calendar";
 import { StickyNote } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface NoteEditDialogProps {
   open: boolean;
@@ -23,56 +24,6 @@ interface NoteEditDialogProps {
   onDelete?: (date: string) => void;
 }
 
-// Helper function to manage notes in localStorage
-const manageLocalStorageNotes = {
-  // Get all notes from localStorage
-  getNotes: (): Note[] => {
-    try {
-      return JSON.parse(localStorage.getItem('notes') || '[]');
-    } catch (error) {
-      console.error("Error reading notes from localStorage:", error);
-      return [];
-    }
-  },
-  
-  // Save a note to localStorage
-  saveNote: (noteData: Note): void => {
-    try {
-      // Get existing notes
-      const existingNotes = manageLocalStorageNotes.getNotes();
-      
-      // Remove any existing note with the same date to avoid duplicates
-      const filteredNotes = existingNotes.filter(note => note.date !== noteData.date);
-      
-      // Add the new note
-      filteredNotes.push(noteData);
-      
-      // Save back to localStorage
-      localStorage.setItem('notes', JSON.stringify(filteredNotes));
-      console.log("Note saved to localStorage successfully");
-    } catch (error) {
-      console.error("Error saving note to localStorage:", error);
-    }
-  },
-  
-  // Delete a note from localStorage
-  deleteNote: (dateString: string): void => {
-    try {
-      // Get existing notes
-      const existingNotes = manageLocalStorageNotes.getNotes();
-      
-      // Filter out the note to delete
-      const filteredNotes = existingNotes.filter(note => note.date !== dateString);
-      
-      // Save back to localStorage
-      localStorage.setItem('notes', JSON.stringify(filteredNotes));
-      console.log("Note removed from localStorage successfully");
-    } catch (error) {
-      console.error("Error removing note from localStorage:", error);
-    }
-  }
-};
-
 const NoteEditDialog = ({ 
   open, 
   onOpenChange, 
@@ -82,6 +33,7 @@ const NoteEditDialog = ({
   onDelete 
 }: NoteEditDialogProps) => {
   const [noteText, setNoteText] = useState("");
+  const { toast } = useToast();
 
   useEffect(() => {
     if (existingNote) {
@@ -95,51 +47,35 @@ const NoteEditDialog = ({
 
   const handleSave = () => {
     if (!noteText.trim()) {
-      return; // Don't save empty notes
+      toast({
+        title: "Note cannot be empty",
+        description: "Please enter some text for your note.",
+        variant: "destructive"
+      });
+      return;
     }
 
-    // Create the note without a specific category
     const noteData: Note = {
       date: date.toISOString(),
-      text: noteText
+      text: noteText,
     };
     
-    // Close the dialog immediately before making the save
-    onOpenChange(false);
-    
-    // Save the note using the callback
     onSave(noteData);
-    
-    // Save to localStorage for the notes tracking page
-    manageLocalStorageNotes.saveNote(noteData);
-    
-    // Notify other components about the note update
-    document.dispatchEvent(new CustomEvent('notesUpdated', {
-      detail: { 
-        noteData,
-        action: "save"
-      }
-    }));
+    toast({
+      title: "Note saved",
+      description: "Your note has been saved successfully.",
+    });
+    onOpenChange(false);
   };
 
   const handleDelete = () => {
     if (existingNote && onDelete) {
-      // Close the dialog immediately before deleting
-      onOpenChange(false);
-      
-      // Call the onDelete function passed as prop
       onDelete(existingNote.date);
-      
-      // Delete from localStorage
-      manageLocalStorageNotes.deleteNote(existingNote.date);
-      
-      // Notify other components about the note deletion
-      document.dispatchEvent(new CustomEvent('notesUpdated', {
-        detail: { 
-          action: "delete",
-          date: existingNote.date
-        }
-      }));
+      toast({
+        title: "Note deleted",
+        description: "Your note has been deleted.",
+      });
+      onOpenChange(false);
     }
   };
 
@@ -152,7 +88,7 @@ const NoteEditDialog = ({
             Note for {date ? format(date, 'MMMM d, yyyy') : ''}
           </DialogTitle>
           <DialogDescription>
-            Add a note for this date. Notes will be shown on the calendar and in the notes section.
+            Add a note for this date. Notes will be shown on the calendar.
           </DialogDescription>
         </DialogHeader>
 
