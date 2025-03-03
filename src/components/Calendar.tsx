@@ -29,7 +29,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useTheme } from "@/lib/theme";
 import CalendarDay from "./CalendarDay";
 import ShiftSelectionDialog from "./ShiftSelectionDialog";
+import NoteEditDialog from "./NoteEditDialog";
 import { getNextPayday, isPayday } from "@/utils/dateUtils";
+import { useToast } from "@/components/ui/use-toast";
 import {
   ShiftType, ShiftAssignment, PaydaySettings, ShiftPattern,
   Note, ShiftSwap, Alarm, PatternCycle
@@ -42,6 +44,7 @@ type CalendarProps = {
 const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const { toast } = useToast();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [shifts, setShifts] = useState<ShiftAssignment[]>(() => {
     const savedShifts = localStorage.getItem('calendarShifts');
@@ -54,10 +57,14 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
     paydayType: "monthly",
     paydayDate: 15
   });
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [notes, setNotes] = useState<Note[]>(() => {
+    const savedNotes = localStorage.getItem('calendarNotes');
+    return savedNotes ? JSON.parse(savedNotes) : [];
+  });
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [calendarSize, setCalendarSize] = useState<'default' | 'large' | 'small'>('default');
   const [showShiftDialog, setShowShiftDialog] = useState(false);
+  const [showNoteDialog, setShowNoteDialog] = useState(false);
   const [selectedDatesForShift, setSelectedDatesForShift] = useState<Date[]>([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const currentYear = currentDate.getFullYear();
@@ -82,6 +89,10 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
   useEffect(() => {
     localStorage.setItem('calendarShifts', JSON.stringify(shifts));
   }, [shifts]);
+
+  useEffect(() => {
+    localStorage.setItem('calendarNotes', JSON.stringify(notes));
+  }, [notes]);
 
   useEffect(() => {
     const loadSettings = () => {
@@ -264,6 +275,13 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
     }
   };
 
+  const handleNoteClick = () => {
+    if (selectedDatesForShift.length > 0) {
+      setShowShiftDialog(false);
+      setShowNoteDialog(true);
+    }
+  };
+
   const handleLongPress = (date: Date) => {
     // setIsSelectingMultiple(true); // This is now handled in the Index page
     setSelectedDatesForShift([date]);
@@ -304,69 +322,39 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
     // setIsSelectingMultiple(false); // This is now handled in the Index page
   };
 
+  const handleSaveNote = (note: Note) => {
+    setNotes(prevNotes => {
+      const existingIndex = prevNotes.findIndex(n => n.date === note.date);
+      if (existingIndex >= 0) {
+        const updatedNotes = [...prevNotes];
+        updatedNotes[existingIndex] = note;
+        return updatedNotes;
+      } else {
+        return [...prevNotes, note];
+      }
+    });
+
+    toast({
+      title: "Note saved",
+      description: "Your note has been saved to the calendar."
+    });
+  };
+
+  const handleDeleteNote = (dateStr: string) => {
+    setNotes(prevNotes => prevNotes.filter(n => n.date !== dateStr));
+    toast({
+      title: "Note deleted",
+      description: "The note has been removed."
+    });
+  };
+
   const getShiftForDate = (date: Date) => {
     return shifts.find(shift => shift.date === date.toISOString());
   };
 
   const addOrEditNote = (date: Date) => {
-    const dateStr = date.toISOString();
-    const existingNote = notes.find(note => note.date === dateStr);
-    
-    const isSwap = window.confirm("Is this a shift swap note?");
-    
-    if (isSwap) {
-      const workerName = window.prompt("Enter worker's name:");
-      if (!workerName) return;
-
-      const type = window.confirm("Is this a shift you owe? (Cancel for payback)") ? "owed" : "payback";
-      
-      const hoursStr = window.prompt("Enter hours:");
-      if (!hoursStr) return;
-      const hours = parseFloat(hoursStr);
-      if (isNaN(hours) || hours <= 0) {
-        alert("Please enter a valid number of hours");
-        return;
-      }
-
-      const monetaryValueStr = window.prompt("Enter monetary value (optional):");
-      const monetaryValue = monetaryValueStr ? parseFloat(monetaryValueStr) : undefined;
-      
-      const noteText = window.prompt("Additional notes (optional):");
-      
-      const swap: ShiftSwap = {
-        date: dateStr,
-        workerName,
-        type,
-        hours,
-        monetaryValue,
-        note: noteText || undefined
-      };
-
-      const formattedNote = `${type === "owed" ? "Owe" : "Owed by"} ${workerName}: ${hours}h` + 
-        (monetaryValue ? ` (${paydaySettings.symbol}${monetaryValue})` : "") +
-        (noteText ? `\n${noteText}` : "");
-
-      setNotes(prevNotes => {
-        const filtered = prevNotes.filter(note => note.date !== dateStr);
-        return [...filtered, { date: dateStr, text: formattedNote, swap }];
-      });
-    } else {
-      const noteText = window.prompt(
-        "Enter note for " + format(date, 'MMM d, yyyy'),
-        existingNote?.text || ""
-      );
-
-      if (noteText === null) return;
-
-      if (noteText.trim() === "") {
-        setNotes(notes.filter(note => note.date !== dateStr));
-      } else {
-        setNotes(prevNotes => {
-          const filtered = prevNotes.filter(note => note.date !== dateStr);
-          return [...filtered, { date: dateStr, text: noteText.trim() }];
-        });
-      }
-    }
+    setSelectedDatesForShift([date]);
+    setShowNoteDialog(true);
   };
 
   const removeAlarm = async (date: Date) => {
@@ -680,6 +668,21 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
             ? { [selectedDatesForShift[0].toISOString()]: getShiftForDate(selectedDatesForShift[0])!.otHours! }
             : undefined
           : undefined}
+        onNoteClick={handleNoteClick}
+        hasNote={selectedDatesForShift.length === 1 && !!getNote(selectedDatesForShift[0])}
+      />
+
+      <NoteEditDialog
+        open={showNoteDialog}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowNoteDialog(false);
+          }
+        }}
+        date={selectedDatesForShift.length > 0 ? selectedDatesForShift[0] : null}
+        existingNote={selectedDatesForShift.length > 0 ? getNote(selectedDatesForShift[0]) : undefined}
+        onSave={handleSaveNote}
+        onDelete={handleDeleteNote}
       />
 
       {isSelectingMultiple && (

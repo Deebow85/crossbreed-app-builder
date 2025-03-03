@@ -1,12 +1,6 @@
 
 import * as React from "react"
 import {
-  Toast,
-  ToastClose,
-  ToastDescription,
-  ToastProvider,
-  ToastTitle,
-  ToastViewport,
   type ToastProps,
   type ToastActionElement,
 } from "@/components/ui/toast"
@@ -45,6 +39,10 @@ function useToaster() {
   return context
 }
 
+/**
+ * Toast provider component.
+ * This is currently disabled but maintains the interface for future re-enabling
+ */
 export function ToasterProvider({
   children,
 }: {
@@ -58,29 +56,20 @@ export function ToasterProvider({
 
   const addToast = React.useCallback(
     (toast: ToasterToast) => {
-      setState((prevState) => {
-        const newToasts = [toast, ...prevState.toasts].slice(0, TOAST_LIMIT)
-        return {
-          ...prevState,
-          toasts: newToasts,
-        }
-      })
+      // Toast functionality disabled - do nothing
+      console.log("Toast would have been shown:", toast.title);
     },
     []
   )
 
   const removeToast = React.useCallback((id: string) => {
-    setState((prevState) => ({
-      ...prevState,
-      toasts: prevState.toasts.filter((toast) => toast.id !== id),
-    }))
+    // Toast functionality disabled - do nothing
+    console.log("Toast would have been removed:", id);
   }, [])
 
   const removeAllToasts = React.useCallback(() => {
-    setState((prevState) => ({
-      ...prevState,
-      toasts: [],
-    }))
+    // Toast functionality disabled - do nothing
+    console.log("All toasts would have been removed");
   }, [])
 
   const value = React.useMemo(
@@ -100,29 +89,37 @@ export function ToasterProvider({
   )
 }
 
-export function toast(props: ToastProps) {
-  const id = crypto.randomUUID()
-  const { addToast, removeToast } = useToaster()
-  
-  const toastProps = { id, ...props } as ToasterToast
-  addToast(toastProps)
-  
+/**
+ * Stub for the toast function
+ * Currently disabled but maintains the interface for future re-enabling
+ */
+export const toast = (props: ToastProps) => {
+  // Toast functionality disabled - do nothing
+  console.log("Toast would have been shown:", props);
   return {
-    id,
-    dismiss: () => removeToast(id),
-    update: (props: ToastProps) => {
-      addToast({ id, ...props } as ToasterToast)
-    },
+    id: crypto.randomUUID(),
+    dismiss: () => {},
+    update: () => {},
   }
 }
 
+/**
+ * Stub for the useToast hook
+ * Currently disabled but maintains the interface for future re-enabling
+ */
 export const useToast = () => {
-  const { toasts, addToast, removeToast, removeAllToasts } = useToaster()
-
   return {
-    toast,
-    toasts,
-    dismiss: removeToast,
-    dismissAll: removeAllToasts,
+    toast: (props: ToastProps) => {
+      // Toast functionality disabled - do nothing
+      console.log("Component toast would have been shown:", props);
+      return {
+        id: crypto.randomUUID(),
+        dismiss: () => {},
+        update: () => {},
+      }
+    },
+    toasts: [],
+    dismiss: () => {},
+    dismissAll: () => {},
   }
 }
