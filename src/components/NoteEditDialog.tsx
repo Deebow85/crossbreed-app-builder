@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/dialog";
 import { Note } from "@/types/calendar";
 import { StickyNote } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
 
 interface NoteEditDialogProps {
   open: boolean;
@@ -33,7 +32,6 @@ const NoteEditDialog = ({
   onDelete 
 }: NoteEditDialogProps) => {
   const [noteText, setNoteText] = useState("");
-  const { toast } = useToast();
 
   useEffect(() => {
     if (existingNote) {
@@ -47,35 +45,82 @@ const NoteEditDialog = ({
 
   const handleSave = () => {
     if (!noteText.trim()) {
-      toast({
-        title: "Note cannot be empty",
-        description: "Please enter some text for your note.",
-        variant: "destructive"
-      });
+      // Instead of showing toast, just return early
       return;
     }
 
+    // Create the note without a specific category
     const noteData: Note = {
       date: date.toISOString(),
-      text: noteText,
+      text: noteText
     };
     
-    onSave(noteData);
-    toast({
-      title: "Note saved",
-      description: "Your note has been saved successfully.",
-    });
+    // Close the dialog immediately before making the save
     onOpenChange(false);
+    
+    // Then save the note
+    onSave(noteData);
+    
+    // Direct localStorage handling - this ensures notes show in the Notes page
+    try {
+      // Get existing notes from localStorage
+      const existingNotes = JSON.parse(localStorage.getItem('notes') || '[]');
+      
+      // Remove any existing note with the same date if it exists to avoid duplicates
+      const filteredNotes = existingNotes.filter((note: Note) => note.date !== noteData.date);
+      
+      // Add the new note without a category
+      filteredNotes.push({
+        date: noteData.date,
+        text: noteData.text
+      });
+      
+      // Save back to localStorage
+      localStorage.setItem('notes', JSON.stringify(filteredNotes));
+      console.log("Note saved directly to localStorage");
+    } catch (error) {
+      console.error("Error saving note to localStorage:", error);
+    }
+    
+    // Dispatch a custom event to notify that notes have been updated
+    const notesUpdatedEvent = new CustomEvent('notesUpdated', {
+      detail: { 
+        noteData: {
+          date: noteData.date,
+          text: noteData.text
+        },
+        action: "save"
+      }
+    });
+    document.dispatchEvent(notesUpdatedEvent);
   };
 
   const handleDelete = () => {
     if (existingNote && onDelete) {
-      onDelete(existingNote.date);
-      toast({
-        title: "Note deleted",
-        description: "Your note has been deleted.",
-      });
+      // Close the dialog immediately before deleting
       onOpenChange(false);
+      
+      // Call the onDelete function passed as prop
+      onDelete(existingNote.date);
+      
+      // Direct localStorage handling for deletion
+      try {
+        const existingNotes = JSON.parse(localStorage.getItem('notes') || '[]');
+        const filteredNotes = existingNotes.filter((note: Note) => note.date !== existingNote.date);
+        localStorage.setItem('notes', JSON.stringify(filteredNotes));
+        console.log("Note removed directly from localStorage");
+      } catch (error) {
+        console.error("Error removing note from localStorage:", error);
+      }
+      
+      // Dispatch a custom event for note deletion
+      const notesUpdatedEvent = new CustomEvent('notesUpdated', {
+        detail: { 
+          action: "delete",
+          date: existingNote.date
+        }
+      });
+      document.dispatchEvent(notesUpdatedEvent);
     }
   };
 
@@ -88,7 +133,7 @@ const NoteEditDialog = ({
             Note for {date ? format(date, 'MMMM d, yyyy') : ''}
           </DialogTitle>
           <DialogDescription>
-            Add a note for this date. Notes will be shown on the calendar.
+            Add a note for this date. Notes will be shown on the calendar and in the notes section.
           </DialogDescription>
         </DialogHeader>
 
