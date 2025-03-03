@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -49,6 +49,7 @@ export function SwapDetailsSection({
             <Button
               variant="outline"
               className="w-full"
+              onClick={() => setShowSwapPopover(true)}
             >
               Record shift swap <ArrowLeftRight className="ml-2 h-4 w-4" />
             </Button>
