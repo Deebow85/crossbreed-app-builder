@@ -121,6 +121,25 @@ const NotesTracking = () => {
       </CardHeader>
       <CardContent>
         <p className="whitespace-pre-wrap">{note.text}</p>
+        
+        {/* TOIL/Overtime tracking info */}
+        {note.toilType && (
+          <div className="mt-2 text-sm">
+            <span className={`inline-block px-2 py-1 rounded ${note.toilType === 'taken' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
+              TOIL {note.toilType === 'taken' ? 'Taken' : 'Done'}
+            </span>
+          </div>
+        )}
+        
+        {/* Shift swap info */}
+        {note.swap && (
+          <div className="mt-2 text-sm">
+            <span className={`inline-block px-2 py-1 rounded ${note.swap.type === 'owed' ? 'bg-yellow-100 text-yellow-800' : 'bg-purple-100 text-purple-800'}`}>
+              Swap: {note.swap.type === 'owed' ? 'Owed to' : 'Payback from'} {note.swap.workerName}
+              {note.swap.hours && ` (${note.swap.hours} hours)`}
+            </span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
