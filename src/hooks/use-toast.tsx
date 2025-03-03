@@ -3,18 +3,20 @@ import * as React from "react"
 import { 
   toast as sonnerToast,
   Toaster as SonnerToaster,
-  ToastT, 
-  type ToastOptions
+  ToastT
 } from "sonner"
 
 import { cn } from "@/lib/utils"
+
+// Import the ToastOptions type directly from the library's type definition
+type SonnerToastOptions = Parameters<typeof sonnerToast>[1]
 
 // Define our ToastProps type with proper properties
 type ToastProps = {
   title?: React.ReactNode
   description?: React.ReactNode
   action?: React.ReactNode
-} & Omit<ToastOptions, "className">
+} & Omit<SonnerToastOptions, "className">
 
 // Create a context to provide toast functionality
 const ToasterContext = React.createContext<
