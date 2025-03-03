@@ -1,18 +1,19 @@
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { format, parseISO } from "date-fns";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Note } from "@/types/calendar";
-import { StickyNote, Folder, Calendar as CalendarIcon, Trash2 } from "lucide-react";
+import { StickyNote, Folder, ChevronDown, Search, Plus, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { format, parseISO } from "date-fns";
 
 const NotesTracking = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [calendarNotes, setCalendarNotes] = useState<Note[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [addNoteOpen, setAddNoteOpen] = useState(false);
 
   // Load notes from localStorage on component mount
   useEffect(() => {
@@ -54,6 +55,21 @@ const NotesTracking = () => {
     }
   };
 
+  // Get count of items in a folder
+  const getItemCount = (items: Note[]) => {
+    return `${items.length} item${items.length !== 1 ? 's' : ''}`;
+  };
+
+  // Filter notes based on search term
+  const filterNotes = (notesToFilter: Note[]) => {
+    if (!searchTerm) return notesToFilter;
+    
+    return notesToFilter.filter(note => 
+      note.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      formatNoteDate(note.date).toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
+
   // Delete a note
   const deleteNote = (noteDate: string, isCalendarNote: boolean) => {
     try {
@@ -90,117 +106,65 @@ const NotesTracking = () => {
     }
   };
 
-  // Filter notes based on search term
-  const filterNotes = (notesToFilter: Note[]) => {
-    if (!searchTerm) return notesToFilter;
-    
-    return notesToFilter.filter(note => 
-      note.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      formatNoteDate(note.date).toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  };
-
-  // Render a note card
-  const renderNote = (note: Note, isCalendarNote: boolean) => (
-    <Card key={note.date} className="mb-4">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-md flex items-center gap-2">
-            <StickyNote className="h-4 w-4" />
-            {formatNoteDate(note.date)}
-          </CardTitle>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => deleteNote(note.date, isCalendarNote)}
-            className="h-8 w-8"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <p className="whitespace-pre-wrap">{note.text}</p>
-        
-        {/* TOIL/Overtime tracking info */}
-        {note.toilType && (
-          <div className="mt-2 text-sm">
-            <span className={`inline-block px-2 py-1 rounded ${note.toilType === 'taken' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
-              TOIL {note.toilType === 'taken' ? 'Taken' : 'Done'}
-            </span>
-          </div>
-        )}
-        
-        {/* Shift swap info */}
-        {note.swap && (
-          <div className="mt-2 text-sm">
-            <span className={`inline-block px-2 py-1 rounded ${note.swap.type === 'owed' ? 'bg-yellow-100 text-yellow-800' : 'bg-purple-100 text-purple-800'}`}>
-              Swap: {note.swap.type === 'owed' ? 'Owed to' : 'Payback from'} {note.swap.workerName}
-              {note.swap.hours && ` (${note.swap.hours} hours)`}
-            </span>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-
-  // Render a folder of notes
-  const renderNoteFolder = (title: string, icon: React.ReactNode, notesToRender: Note[], isCalendarNotes: boolean) => (
-    <Card className="mb-6">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg flex items-center gap-2">
-          {icon}
-          {title}
-        </CardTitle>
-        <CardDescription>
-          {notesToRender.length} note{notesToRender.length !== 1 ? 's' : ''}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {notesToRender.length > 0 ? (
-          notesToRender.map(note => renderNote(note, isCalendarNotes))
-        ) : (
-          <p className="text-muted-foreground text-center py-4">No notes found in this folder</p>
-        )}
-      </CardContent>
-    </Card>
-  );
-
   return (
-    <div className="container py-6">
+    <div className="container py-6 max-w-md mx-auto">
       <h1 className="text-2xl font-bold mb-6">Notes & Tracking</h1>
       
-      <div className="mb-6">
+      <div className="mb-6 relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
         <Input
           type="text"
-          placeholder="Search notes..."
+          placeholder="Search notes or swaps..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-md"
+          className="pl-10"
         />
       </div>
       
-      <Tabs defaultValue="all">
-        <TabsList className="mb-4">
-          <TabsTrigger value="all">All Notes</TabsTrigger>
-          <TabsTrigger value="calendar">Calendar Notes</TabsTrigger>
-          <TabsTrigger value="other">Other Notes</TabsTrigger>
+      <Tabs defaultValue="notes" className="mb-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="notes">Notes</TabsTrigger>
+          <TabsTrigger value="swaps">Shift Swap / TOIL</TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="all" className="space-y-4">
-          {renderNoteFolder("Notes from Calendar", <CalendarIcon className="h-5 w-5" />, filterNotes(calendarNotes), true)}
-          <Separator />
-          {renderNoteFolder("Other Notes", <Folder className="h-5 w-5" />, filterNotes(notes), false)}
-        </TabsContent>
-        
-        <TabsContent value="calendar">
-          {renderNoteFolder("Notes from Calendar", <CalendarIcon className="h-5 w-5" />, filterNotes(calendarNotes), true)}
-        </TabsContent>
-        
-        <TabsContent value="other">
-          {renderNoteFolder("Other Notes", <Folder className="h-5 w-5" />, filterNotes(notes), false)}
-        </TabsContent>
       </Tabs>
+      
+      <Button 
+        variant="ghost" 
+        className="w-full flex justify-between items-center py-4 mb-6 border rounded-md shadow-sm"
+        onClick={() => setAddNoteOpen(!addNoteOpen)}
+      >
+        <div className="flex items-center">
+          <Plus size={16} className="mr-2" />
+          <span>Add Note</span>
+        </div>
+        <ChevronDown size={16} className={`transition-transform ${addNoteOpen ? 'rotate-180' : ''}`} />
+      </Button>
+      
+      <h2 className="text-lg font-semibold mb-4">Your Notes</h2>
+      
+      <Card className="mb-4 hover:bg-muted/50 transition-colors cursor-pointer">
+        <CardHeader className="py-4 px-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              <Folder className="h-5 w-5 mr-2 text-muted-foreground" />
+              <CardTitle className="text-md">Notes</CardTitle>
+            </div>
+            <span className="text-sm text-muted-foreground">{getItemCount(notes)}</span>
+          </div>
+        </CardHeader>
+      </Card>
+      
+      <Card className="mb-4 hover:bg-muted/50 transition-colors cursor-pointer">
+        <CardHeader className="py-4 px-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              <CalendarIcon className="h-5 w-5 mr-2 text-muted-foreground" />
+              <CardTitle className="text-md">Notes From Calendar</CardTitle>
+            </div>
+            <span className="text-sm text-muted-foreground">{getItemCount(calendarNotes)}</span>
+          </div>
+        </CardHeader>
+      </Card>
     </div>
   );
 };
