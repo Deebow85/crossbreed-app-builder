@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +8,7 @@ import { Clock, ArrowLeftRight, UserRound, FileText } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface ShiftSelectionDialogProps {
   open: boolean;
@@ -39,6 +39,7 @@ export default function ShiftSelectionDialog({
   const [showSwapDetails, setShowSwapDetails] = useState<boolean>(false);
   const [workerName, setWorkerName] = useState<string>("");
   const [swapType, setSwapType] = useState<SwapType>("owed");
+  const [showSwapPopover, setShowSwapPopover] = useState(false);
 
   useEffect(() => {
     if (open && initialShiftType) {
@@ -48,7 +49,6 @@ export default function ShiftSelectionDialog({
   }, [open, initialShiftType, initialOvertimeHours]);
 
   useEffect(() => {
-    // Reset swap details when shift type changes
     if (!selectedType?.isSwapOwed && !selectedType?.isSwapDone) {
       setShowSwapDetails(false);
     }
@@ -57,7 +57,6 @@ export default function ShiftSelectionDialog({
   const handleShiftSelect = (shiftType: ShiftType | null) => {
     setSelectedType(shiftType);
     
-    // If clearing the shift or selecting non-special shift and it's a single date selection, submit immediately
     if ((!shiftType || (!shiftType?.isOvertime && !shiftType?.isTOIL && 
         !shiftType?.isSwapDone && !shiftType?.isSwapOwed)) && selectedDates.length === 1) {
       onShiftSelect(shiftType, undefined);
@@ -66,28 +65,24 @@ export default function ShiftSelectionDialog({
       return;
     }
     
-    // For multi-selection or special shifts, we'll collect additional data before submitting
     if (shiftType?.isOvertime || shiftType?.isTOIL || 
         shiftType?.isSwapDone || shiftType?.isSwapOwed) {
-      // Reset bulk hours when changing shift type
       setBulkHoursValue("");
       
-      // If it's a swap type, we might want to show the swap details section
       if (shiftType?.isSwapOwed) {
         setSwapType("owed");
-        // Automatically show swap details for swap types
         setShowSwapDetails(true);
+        setShowSwapPopover(true);
       } else if (shiftType?.isSwapDone) {
         setSwapType("payback");
-        // Automatically show swap details for swap types
         setShowSwapDetails(true);
+        setShowSwapPopover(true);
       }
     }
   };
 
   const handleSubmit = () => {
     if (selectedType) {
-      // For special shifts, validate that hours are set for all dates if needed
       const needsHoursInput = selectedType?.isOvertime || selectedType?.isTOIL || 
                              selectedType?.isSwapDone || selectedType?.isSwapOwed;
       
@@ -106,7 +101,6 @@ export default function ShiftSelectionDialog({
         }
       }
 
-      // If it's a swap and swap details are shown, validate worker name
       if ((selectedType?.isSwapOwed || selectedType?.isSwapDone) && showSwapDetails) {
         if (!workerName.trim()) {
           toast({
@@ -117,17 +111,14 @@ export default function ShiftSelectionDialog({
           return;
         }
         
-        // Submit with swap details
         onShiftSelect(selectedType, overtimeHours, {
           workerName: workerName.trim(),
           type: swapType
         });
       } else {
-        // Submit without swap details
         onShiftSelect(selectedType, overtimeHours);
       }
       
-      // Reset state
       setOvertimeHours({});
       setSelectedType(null);
       setBulkHoursValue("");
@@ -137,9 +128,7 @@ export default function ShiftSelectionDialog({
   };
 
   const handleGoToNotesTracking = () => {
-    // Close the dialog
     onOpenChange(false);
-    // Navigate to notes tracking page
     navigate("/notes-tracking");
   };
 
@@ -153,7 +142,6 @@ export default function ShiftSelectionDialog({
     const numericValue = parseFloat(value);
     
     if (!isNaN(numericValue)) {
-      // Apply the same hours to all selected dates
       const newOvertimeHours = { ...overtimeHours };
       selectedDates.forEach(date => {
         newOvertimeHours[date.toISOString()] = numericValue;
@@ -172,6 +160,7 @@ export default function ShiftSelectionDialog({
           setBulkHoursValue("");
           setShowSwapDetails(false);
           setWorkerName("");
+          setShowSwapPopover(false);
         }
         onOpenChange(isOpen);
       }}
@@ -236,13 +225,77 @@ export default function ShiftSelectionDialog({
           {isSwapType && (
             <div className="space-y-3">
               <div className="mt-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowSwapDetails(!showSwapDetails)}
-                  className="w-full"
-                >
-                  {showSwapDetails ? "Hide" : "Record shift swap"} <ArrowLeftRight className="ml-2 h-4 w-4" />
-                </Button>
+                <Popover open={showSwapPopover} onOpenChange={setShowSwapPopover}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                    >
+                      Record shift swap <ArrowLeftRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-4">
+                    <div className="space-y-3">
+                      <h3 className="font-medium text-sm">Shift swap details</h3>
+                      
+                      <div className="space-y-2">
+                        <label className="text-sm">Worker name:</label>
+                        <Input
+                          placeholder="Enter coworker name"
+                          value={workerName}
+                          onChange={(e) => setWorkerName(e.target.value)}
+                          className="w-full"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-sm">Swap type:</label>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant={swapType === "owed" ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setSwapType("owed")}
+                            className="flex-1"
+                          >
+                            <UserRound className="mr-1 h-4 w-4" /> Owed to you
+                          </Button>
+                          <Button
+                            variant={swapType === "payback" ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setSwapType("payback")}
+                            className="flex-1"
+                          >
+                            <ArrowLeftRight className="mr-1 h-4 w-4" /> You owe them
+                          </Button>
+                        </div>
+                      </div>
+
+                      <Button 
+                        onClick={() => {
+                          if (!workerName.trim()) {
+                            toast({
+                              title: "Missing information",
+                              description: "Please enter the name of the worker",
+                              variant: "destructive"
+                            });
+                            return;
+                          }
+                          
+                          setShowSwapDetails(true);
+                          setShowSwapPopover(false);
+                          
+                          toast({
+                            title: "Swap details saved",
+                            description: `Swap with ${workerName} recorded. Complete by setting hours and submitting.`,
+                          });
+                        }}
+                        className="w-full mt-3"
+                      >
+                        Save details
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
               
               <div className="mt-2">
@@ -259,39 +312,21 @@ export default function ShiftSelectionDialog({
 
           {showSwapDetails && (
             <div className="space-y-3 border rounded-md p-3 bg-muted/20">
-              <h3 className="font-medium text-sm">Shift swap details</h3>
+              <h3 className="font-medium text-sm">Current shift swap details</h3>
               
-              <div className="space-y-2">
-                <label className="text-sm">Worker name:</label>
-                <Input
-                  placeholder="Enter coworker name"
-                  value={workerName}
-                  onChange={(e) => setWorkerName(e.target.value)}
-                  className="w-full"
-                />
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Worker: <strong>{workerName || "Not specified"}</strong></span>
+                <span className="text-sm">Type: <strong>{swapType === "owed" ? "Owed to you" : "You owe them"}</strong></span>
               </div>
               
-              <div className="space-y-2">
-                <label className="text-sm">Swap type:</label>
-                <div className="flex space-x-2">
-                  <Button
-                    variant={swapType === "owed" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSwapType("owed")}
-                    className="flex-1"
-                  >
-                    <UserRound className="mr-1 h-4 w-4" /> Owed to you
-                  </Button>
-                  <Button
-                    variant={swapType === "payback" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSwapType("payback")}
-                    className="flex-1"
-                  >
-                    <ArrowLeftRight className="mr-1 h-4 w-4" /> You owe them
-                  </Button>
-                </div>
-              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowSwapPopover(true)}
+                className="w-full text-xs"
+              >
+                Edit details
+              </Button>
             </div>
           )}
 
