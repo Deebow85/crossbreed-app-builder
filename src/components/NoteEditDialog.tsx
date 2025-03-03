@@ -28,7 +28,7 @@ const manageLocalStorageNotes = {
   // Get all notes from localStorage
   getNotes: (): Note[] => {
     try {
-      return JSON.parse(localStorage.getItem('notes') || '[]');
+      return JSON.parse(localStorage.getItem('notesFromCalendar') || '[]');
     } catch (error) {
       console.error("Error reading notes from localStorage:", error);
       return [];
@@ -48,8 +48,8 @@ const manageLocalStorageNotes = {
       filteredNotes.push(noteData);
       
       // Save back to localStorage
-      localStorage.setItem('notes', JSON.stringify(filteredNotes));
-      console.log("Note saved to localStorage successfully");
+      localStorage.setItem('notesFromCalendar', JSON.stringify(filteredNotes));
+      console.log("Note saved to 'notesFromCalendar' successfully");
     } catch (error) {
       console.error("Error saving note to localStorage:", error);
     }
@@ -65,8 +65,8 @@ const manageLocalStorageNotes = {
       const filteredNotes = existingNotes.filter(note => note.date !== dateString);
       
       // Save back to localStorage
-      localStorage.setItem('notes', JSON.stringify(filteredNotes));
-      console.log("Note removed from localStorage successfully");
+      localStorage.setItem('notesFromCalendar', JSON.stringify(filteredNotes));
+      console.log("Note removed from 'notesFromCalendar' successfully");
     } catch (error) {
       console.error("Error removing note from localStorage:", error);
     }
@@ -117,7 +117,8 @@ const NoteEditDialog = ({
     document.dispatchEvent(new CustomEvent('notesUpdated', {
       detail: { 
         noteData,
-        action: "save"
+        action: "save",
+        source: "calendar"
       }
     }));
   };
@@ -137,7 +138,8 @@ const NoteEditDialog = ({
       document.dispatchEvent(new CustomEvent('notesUpdated', {
         detail: { 
           action: "delete",
-          date: existingNote.date
+          date: existingNote.date,
+          source: "calendar"
         }
       }));
     }
