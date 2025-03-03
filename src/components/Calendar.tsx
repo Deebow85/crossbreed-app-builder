@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -31,7 +30,7 @@ import CalendarDay from "./CalendarDay";
 import ShiftSelectionDialog from "./ShiftSelectionDialog";
 import NoteEditDialog from "./NoteEditDialog";
 import { getNextPayday, isPayday } from "@/utils/dateUtils";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import {
   ShiftType, ShiftAssignment, PaydaySettings, ShiftPattern,
   Note, ShiftSwap, Alarm, PatternCycle
@@ -129,22 +128,7 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
     return () => window.removeEventListener('storage', loadSettings);
   }, []);
 
-  // **************************************************************************
-  // WARNING: DO NOT MODIFY THE PATTERN LOGIC BELOW WITHOUT CAREFUL REVIEW
-  // This pattern algorithm has been carefully tested and validated.
-  //
-  // How the pattern works:
-  // 1. Steps in pattern.sequences are each shift type with its duration in days
-  // 2. The entire sequence is repeated for pattern.repeatTimes 
-  // 3. After ALL repeats are done, pattern.daysOffAfter days are added at the end
-  // 4. This entire super-cycle is repeated enough times to cover the years specified
-  //
-  // IMPORTANT: Days off within sequences (isOff: true) are different from daysOffAfter!
-  // Days off *within* a pattern sequence are regular days off in the rotation.
-  // Days off *after* all repeats (daysOffAfter) are added at the very end of all cycles.
-  // **************************************************************************
   const applyShiftPattern = (patternData: any) => {
-    // Make sure we have valid data
     if (!patternData?.pattern?.sequences || !patternData.startDate) {
       console.error('Invalid pattern data:', patternData);
       return;
@@ -160,49 +144,37 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
         return;
       }
 
-      // Generate shifts based on pattern
       const newShifts: ShiftAssignment[] = [];
       let currentDay = new Date(startDateObj);
       let totalDays = 0;
       
-      // Calculate how many full super-cycles we need for the specified years
-      // A super-cycle is: (sequence repeated X times) + days off after
-      const daysPerYear = 365.25; // Account for leap years
+      const daysPerYear = 365.25;
       const totalDaysNeeded = years * daysPerYear;
       
-      // Calculate days in one super-cycle
       const daysInSequence = pattern.sequences.reduce((sum, seq) => sum + seq.days, 0);
       const daysInRepeatPattern = daysInSequence * pattern.repeatTimes;
       const daysInSuperCycle = daysInRepeatPattern + pattern.daysOffAfter;
       
-      // Calculate how many super-cycles we need
       const superCyclesNeeded = Math.ceil(totalDaysNeeded / daysInSuperCycle);
       
       console.log(`Pattern will be applied for ${superCyclesNeeded} super-cycles to cover ${years} years`);
       
-      // For each super-cycle
       for (let superCycle = 0; superCycle < superCyclesNeeded; superCycle++) {
-        // First, repeat the sequence the specified number of times
         for (let repeatCount = 0; repeatCount < pattern.repeatTimes; repeatCount++) {
-          // Process each sequence in the pattern
           for (const sequence of pattern.sequences) {
-            // Process each day in this sequence
             for (let day = 0; day < sequence.days; day++) {
-              // If this is not a day off and has a shift type, add a shift
               if (!sequence.isOff && sequence.shiftType) {
                 newShifts.push({
                   date: currentDay.toISOString(),
                   shiftType: sequence.shiftType
                 });
               }
-              // Always advance to the next day
               currentDay = addDays(currentDay, 1);
               totalDays++;
             }
           }
         }
         
-        // After completing all the repeated sequences, add the days off
         if (pattern.daysOffAfter > 0) {
           currentDay = addDays(currentDay, pattern.daysOffAfter);
           totalDays += pattern.daysOffAfter;
@@ -211,7 +183,6 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
 
       console.log(`Generated ${newShifts.length} shifts from pattern over ${totalDays} days`);
       
-      // Merge new shifts with existing ones, replacing overlapping dates
       setShifts(prevShifts => {
         const existingShiftDates = new Map(
           prevShifts.map(shift => [shift.date, shift])
@@ -228,9 +199,6 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
       console.error('Error applying shift pattern:', error);
     }
   };
-  // **************************************************************************
-  // END OF PATTERN LOGIC - SEE WARNING ABOVE
-  // **************************************************************************
 
   const handleDayClick = (date: Date) => {
     const dateStr = date.toISOString();
@@ -283,7 +251,6 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
   };
 
   const handleLongPress = (date: Date) => {
-    // setIsSelectingMultiple(true); // This is now handled in the Index page
     setSelectedDatesForShift([date]);
   };
 
@@ -319,7 +286,6 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
     
     setShowShiftDialog(false);
     setSelectedDatesForShift([]);
-    // setIsSelectingMultiple(false); // This is now handled in the Index page
   };
 
   const handleSaveNote = (note: Note) => {
@@ -433,8 +399,7 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
     
     if (!calendarSettings.overtime?.enabled) return total;
 
-    // Check if we should only count shifts marked specifically as "Overtime" type
-    const onlyTrackOvertimeType = parsedSettings.overtime?.onlyTrackOvertimeType !== false; // Default to true if not specified
+    const onlyTrackOvertimeType = parsedSettings.overtime?.onlyTrackOvertimeType !== false;
     if (onlyTrackOvertimeType && !shift.shiftType.isOvertime) {
       return total;
     }
@@ -653,7 +618,6 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
           if (!open) {
             setShowShiftDialog(false);
             setSelectedDatesForShift([]);
-            // setIsSelectingMultiple(false); // This is now handled in the Index page
           }
         }}
         selectedDates={selectedDatesForShift}
@@ -695,7 +659,6 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
               variant="outline"
               size="sm"
               onClick={() => {
-                // setIsSelectingMultiple(false); // This is now handled in the Index page
                 setSelectedDatesForShift([]);
               }}
             >
@@ -725,7 +688,6 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
                 variant={isSelectingMultiple ? "secondary" : "ghost"}
                 size="icon"
                 onClick={() => {
-                  // setIsSelectingMultiple(!isSelectingMultiple); // This is now handled in the Index page
                   if (isSelectingMultiple) {
                     setSelectedDatesForShift([]);
                   }
