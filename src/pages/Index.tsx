@@ -14,16 +14,10 @@ import { Button } from "@/components/ui/button";
 
 type ContextType = { isSelectingMultiple: boolean };
 
-/**
- * Main Index page component that displays the calendar and a tutorial dialog
- * on first visit. Notes created here are saved to localStorage and can be viewed
- * in the notes tracking page.
- */
 const Index = () => {
   const { isSelectingMultiple } = useOutletContext<ContextType>();
   const [showTutorial, setShowTutorial] = useState(false);
   
-  // Show the tutorial dialog on first visit
   useEffect(() => {
     const hasSeenTutorial = localStorage.getItem("hasSeenTutorial");
     if (!hasSeenTutorial) {
@@ -35,27 +29,6 @@ const Index = () => {
     localStorage.setItem("hasSeenTutorial", "true");
     setShowTutorial(false);
   };
-
-  // Set up a listener for notes updates
-  useEffect(() => {
-    const handleNotesUpdated = (event: CustomEvent) => {
-      // Check if this note was created from the calendar
-      if (event.detail?.source === "calendar") {
-        console.log("Notes were updated from calendar");
-        
-        // Additional logic could be added here if needed
-        // For example, you could update a local state if necessary
-      }
-    };
-
-    // Add event listener for notes updates
-    document.addEventListener('notesUpdated', handleNotesUpdated as EventListener);
-    
-    // Clean up the event listener on component unmount
-    return () => {
-      document.removeEventListener('notesUpdated', handleNotesUpdated as EventListener);
-    };
-  }, []);
 
   return (
     <>
@@ -80,7 +53,7 @@ const Index = () => {
             </div>
             <div className="space-y-2">
               <h4 className="font-medium">📝 Adding Notes</h4>
-              <p>Right-click on any day to add notes. Notes will be saved and accessible in the Notes Tracking section.</p>
+              <p>Right-click on any day to add notes or manage shift swaps.</p>
             </div>
             <div className="space-y-2">
               <h4 className="font-medium">🔄 Shift Patterns</h4>

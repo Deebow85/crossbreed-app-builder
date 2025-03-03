@@ -48,7 +48,6 @@ export type ShiftSwap = {
 export type Note = {
   date: string;
   text: string;
-  category?: string; // Add category field for organizing notes
   swap?: ShiftSwap;
   toilType?: TOILType;
   isToilDone?: boolean;
