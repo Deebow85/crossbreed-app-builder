@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -119,21 +118,14 @@ const ShiftSetup = () => {
   }, []);
 
   const saveShiftTypes = (newShiftTypes: ShiftTypeSettings[]) => {
-    // Ensure all shift types have valid color and gradient properties
     const validatedShiftTypes = newShiftTypes.map(type => {
       const updatedType = { ...type };
-      
-      // Make sure we have a valid color
       if (!updatedType.color || updatedType.color === "") {
         updatedType.color = DEFAULT_COLOR;
       }
-      
-      // Make sure we have a valid gradient
       if (!updatedType.gradient || updatedType.gradient === "") {
         updatedType.gradient = `linear-gradient(135deg, ${updatedType.color} 0%, ${updatedType.color} 100%)`;
       }
-      
-      // Remove isNew flag for storage
       const { isNew, ...rest } = updatedType;
       return rest;
     });
@@ -145,7 +137,6 @@ const ShiftSetup = () => {
     settings.shiftTypes = validatedShiftTypes;
     localStorage.setItem('appSettings', JSON.stringify(settings));
     
-    // Log for debugging
     console.log("Saved shift types:", validatedShiftTypes);
   };
 
@@ -171,7 +162,6 @@ const ShiftSetup = () => {
       const color = shiftTypes[selectedIndex].color || DEFAULT_COLOR;
       setStartColor(color);
     } else {
-      // For new shift
       setStartColor(newShift.color || DEFAULT_COLOR);
     }
   };
@@ -191,7 +181,6 @@ const ShiftSetup = () => {
       
       setEndColor(endColorValue || "#6B7280");
     } else {
-      // For new shift
       const color = newShift.color || DEFAULT_COLOR;
       setStartColor(color);
       
@@ -225,12 +214,10 @@ const ShiftSetup = () => {
         };
       }
       
-      // Apply special type if selected
       updateShiftTypeSpecial(selectedIndex, shiftTypeOption, newShiftTypes);
       
       saveShiftTypes(newShiftTypes);
     } else {
-      // For new shift
       if (colorMode === 'solid') {
         setNewShift({
           ...newShift,
@@ -251,7 +238,6 @@ const ShiftSetup = () => {
   };
 
   const addShiftType = () => {
-    // Reset the new shift to default values
     setNewShift({
       name: "New Shift",
       symbol: "",
@@ -264,9 +250,8 @@ const ShiftSetup = () => {
       isSwapOwed: false
     });
     
-    // Show the new shift dialog
     setShowNewShiftDialog(true);
-    setIsEditing(true); // Enter edit mode
+    setIsEditing(true);
   };
 
   const confirmAddShift = () => {
@@ -321,7 +306,6 @@ const ShiftSetup = () => {
       
       setEndColor(endColorValue || "#6B7280");
       
-      // Determine the shift type option
       if (currentType.isOvertime) {
         setShiftTypeOption("overtime");
       } else if (currentType.isTOIL) {
@@ -334,7 +318,6 @@ const ShiftSetup = () => {
         setShiftTypeOption("regular");
       }
     } else {
-      // For new shift
       setStartColor(newShift.color || DEFAULT_COLOR);
       
       let endColorValue;
@@ -346,7 +329,6 @@ const ShiftSetup = () => {
       
       setEndColor(endColorValue || "#6B7280");
       
-      // Determine the shift type option
       if (newShift.isOvertime) {
         setShiftTypeOption("overtime");
       } else if (newShift.isTOIL) {
@@ -365,7 +347,6 @@ const ShiftSetup = () => {
   };
 
   const toggleEditing = () => {
-    // If we're finishing editing mode, mark all shifts as not new
     if (isEditing) {
       const updatedShiftTypes = shiftTypes.map(type => ({
         ...type,
@@ -422,14 +403,8 @@ const ShiftSetup = () => {
       return;
     }
     
-    // Calculate the total days in one complete pattern cycle (including days off after cycle)
     const daysInCycle = currentPattern.reduce((total, step) => total + step.days, 0) * repeatTimes + daysOffAfter;
-    
-    // Calculate how many full cycles we need to fill the specified years
-    // 365.25 days per year (accounting for leap years)
     const totalDaysNeeded = yearsToGenerate * 365.25;
-    
-    // Calculate how many complete cycles we need
     const calculatedCycles = Math.ceil(totalDaysNeeded / daysInCycle);
     
     const pattern: PatternCycle = {
@@ -523,8 +498,7 @@ const ShiftSetup = () => {
 
     setCurrentPattern(defaultPattern);
     
-    // Calculate 52 weeks worth of the pattern for a year
-    const daysInDefaultCycle = 7; // 5 days on + 2 days off
+    const daysInDefaultCycle = 7; 
     const cyclesPerYear = Math.ceil(365.25 / daysInDefaultCycle);
     
     setRepeatTimes(cyclesPerYear);
@@ -534,13 +508,8 @@ const ShiftSetup = () => {
   };
 
   const generateSetDays = () => {
-    // Calculate the total days in one complete pattern cycle
     const daysInCycle = currentPattern.reduce((total, step) => total + step.days, 0);
-    
-    // Calculate how many patterns we need to fill the years specified
     const totalDaysNeeded = yearsToGenerate * 365.25;
-    
-    // Calculate how many complete cycles we need
     const calculatedRepeatTimes = Math.ceil(totalDaysNeeded / daysInCycle);
     
     const pattern: PatternCycle = {
@@ -570,7 +539,6 @@ const ShiftSetup = () => {
     specialType: "regular" | "overtime" | "toil" | "swap-done" | "swap-owed",
     shiftTypesToUpdate = [...shiftTypes]
   ) => {
-    // First, reset all special flags
     shiftTypesToUpdate[index] = {
       ...shiftTypesToUpdate[index],
       isOvertime: false,
@@ -579,7 +547,6 @@ const ShiftSetup = () => {
       isSwapOwed: false
     };
     
-    // Then set the appropriate flag based on the selection
     if (specialType === "overtime") {
       shiftTypesToUpdate[index].isOvertime = true;
     } else if (specialType === "toil") {
@@ -596,7 +563,6 @@ const ShiftSetup = () => {
   };
 
   const updateNewShiftSpecial = (specialType: "regular" | "overtime" | "toil" | "swap-done" | "swap-owed") => {
-    // First, reset all special flags
     setNewShift({
       ...newShift,
       isOvertime: false,
@@ -605,7 +571,6 @@ const ShiftSetup = () => {
       isSwapOwed: false
     });
     
-    // Then set the appropriate flag based on the selection
     if (specialType === "overtime") {
       setNewShift(prev => ({ ...prev, isOvertime: true }));
     } else if (specialType === "toil") {
@@ -617,7 +582,6 @@ const ShiftSetup = () => {
     }
   };
 
-  // Determine if a shift is "new" or actively being edited
   const isShiftBeingEdited = (shiftType: ShiftTypeSettings) => {
     return isEditing || shiftType.isNew === true;
   };
@@ -759,7 +723,6 @@ const ShiftSetup = () => {
                           onCheckedChange={(checked) => {
                             const newShiftTypes = [...shiftTypes];
                             if (checked) {
-                              // Default to overtime when first checked
                               newShiftTypes[index] = {
                                 ...newShiftTypes[index],
                                 isOvertime: true,
@@ -768,7 +731,6 @@ const ShiftSetup = () => {
                                 isSwapOwed: false
                               };
                             } else {
-                              // Clear all special types
                               newShiftTypes[index] = {
                                 ...newShiftTypes[index],
                                 isOvertime: false,
@@ -910,7 +872,6 @@ const ShiftSetup = () => {
         </div>
       </Card>
 
-      {/* New Shift Dialog */}
       <Dialog 
         open={showNewShiftDialog} 
         onOpenChange={(open) => {
@@ -1284,7 +1245,6 @@ const ShiftSetup = () => {
                   onChange={(e) => {
                     const years = Math.min(Math.max(parseInt(e.target.value) || 0, 0), 10);
                     setYearsToGenerate(years);
-                    // If this is a set days pattern (5-2), update repeat times automatically
                     if (currentPattern.length === 2 && currentPattern[0]?.days === 5 && currentPattern[1]?.days === 2) {
                       setRepeatTimes(years * 52);
                     }
@@ -1337,7 +1297,6 @@ const ShiftSetup = () => {
                 </div>
               )}
 
-              {/* Only show the shift type options if this is a new shift or we're not currently editing any shifts */}
               {!isEditing && (
                 <div className="space-y-4">
                   <Label className="block mb-2">Shift Type</Label>
