@@ -253,7 +253,7 @@ const NotesTracking = () => {
                 {record.swap && (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                     <User size={14} />
-                    <span>With: {record.swap.withPerson || 'Not specified'}</span>
+                    <span>With: {record.swap.workerName || 'Not specified'}</span>
                   </div>
                 )}
                 {(record.swap || record.toilType) && (
