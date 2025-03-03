@@ -1,9 +1,8 @@
-
 import { format, isSameMonth, isToday } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Bell } from "lucide-react";
-import { ShiftAssignment, Alarm } from "@/types/calendar";
+import { Bell, StickyNote } from "lucide-react";
+import { ShiftAssignment, Note, Alarm } from "@/types/calendar";
 import { useTheme } from "@/lib/theme";
 import { useEffect, useRef } from "react";
 
@@ -12,6 +11,7 @@ type CalendarDayProps = {
   currentDate: Date;
   shift?: ShiftAssignment;
   isPay: boolean;
+  note?: Note;
   alarm?: Alarm;
   paydaySymbol: string;
   paydayColor: string;
@@ -29,6 +29,7 @@ const CalendarDay = ({
   currentDate,
   shift,
   isPay,
+  note,
   alarm,
   paydaySymbol,
   paydayColor,
@@ -123,6 +124,15 @@ const CalendarDay = ({
         >
           {paydaySymbol}
         </span>
+      )}
+      {note && (
+        <StickyNote 
+          className={cn(
+            "absolute bottom-0.5 left-0.5",
+            calendarSize === 'large' ? "h-5 w-5 sm:h-6 sm:w-6" : "h-2.5 w-2.5 sm:h-3 sm:w-3"
+          )}
+          style={{ color: shift ? textColor : paydayColor }}
+        />
       )}
       {alarm && (
         <Bell 

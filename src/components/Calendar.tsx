@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -637,6 +638,7 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
                   currentDate={currentDate}
                   shift={getShiftForDate(date)}
                   isPay={isPayday(date, calendarSettings)}
+                  note={getNote(date)}
                   alarm={alarms.find(a => a.date === date.toISOString())}
                   paydaySymbol={paydaySettings.symbol}
                   paydayColor={calendarSettings.paydayColor}

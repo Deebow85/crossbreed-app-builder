@@ -100,17 +100,21 @@ export function ToasterProvider({
   )
 }
 
-export function toast(props: ToastProps) {
+export function toast({
+  title,
+  description,
+  ...props
+}: Omit<ToasterToast, "id">) {
   const id = crypto.randomUUID()
   const { addToast, removeToast } = useToaster()
   
-  const toastProps = { id, ...props } as ToasterToast
+  const toastProps = { id, title, description, ...props } as ToasterToast
   addToast(toastProps)
   
   return {
     id,
     dismiss: () => removeToast(id),
-    update: (props: ToastProps) => {
+    update: (props: Omit<ToasterToast, "id">) => {
       addToast({ id, ...props } as ToasterToast)
     },
   }
