@@ -58,61 +58,24 @@ const NoteEditDialog = ({
     const noteData: Note = {
       date: date.toISOString(),
       text: noteText,
-      category: "notes from calendar" // Always set the category for calendar notes
     };
     
-    // Preserve existing category if this is an edit
-    if (existingNote && existingNote.category) {
-      noteData.category = existingNote.category;
-    }
-    
-    // Close the dialog immediately before making the save
-    onOpenChange(false);
-    
-    // Then save the note
     onSave(noteData);
-    
-    // Use the component's toast function from useToast hook
     toast({
       title: "Note saved",
       description: "Your note has been saved successfully.",
     });
-    
-    // Dispatch a custom event to notify that notes have been updated
-    // This will allow the NotesTracking page to refresh its data
-    const notesUpdatedEvent = new CustomEvent('notesUpdated', {
-      detail: { 
-        noteData,
-        category: "notes from calendar" // Explicitly include the category in the event
-      }
-    });
-    document.dispatchEvent(notesUpdatedEvent);
-    
-    // Console log to help debug
-    console.log("Note saved with category:", noteData.category);
+    onOpenChange(false);
   };
 
   const handleDelete = () => {
     if (existingNote && onDelete) {
-      // Close the dialog immediately before deleting
-      onOpenChange(false);
-      
       onDelete(existingNote.date);
-      
-      // Use the component's toast function instead of direct toast call
       toast({
         title: "Note deleted",
         description: "Your note has been deleted.",
       });
-      
-      // Dispatch a custom event to notify that notes have been updated
-      const notesUpdatedEvent = new CustomEvent('notesUpdated', {
-        detail: { 
-          category: "notes from calendar" // Include the category in the delete event too
-        }
-      });
-      document.dispatchEvent(notesUpdatedEvent);
-      console.log("Note deleted event dispatched");
+      onOpenChange(false);
     }
   };
 
