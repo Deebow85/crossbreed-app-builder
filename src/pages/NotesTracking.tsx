@@ -1,7 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus } from "lucide-react";
 
 const NotesTracking = () => {
   const [activeTab, setActiveTab] = useState("notes");
@@ -33,19 +37,49 @@ const NotesTracking = () => {
           </TabsContent>
           
           <TabsContent value="shift-swaps" className="space-y-4">
-            <div className="p-4 border rounded-lg">
-              <h2 className="text-xl font-semibold mb-4">Shift Swaps</h2>
-              <p className="text-muted-foreground">Record and track shift swaps with coworkers.</p>
-              {/* Shift swap content will be implemented here */}
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Shift Swaps</CardTitle>
+                <CardDescription>Record and track shift swaps with coworkers.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <Button className="w-full" variant="outline">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Record New Shift Swap
+                  </Button>
+                  
+                  <div className="border rounded-md p-4 bg-muted/20">
+                    <p className="text-sm text-muted-foreground text-center">
+                      No shift swaps recorded yet.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
           
           <TabsContent value="toil" className="space-y-4">
-            <div className="p-4 border rounded-lg">
-              <h2 className="text-xl font-semibold mb-4">Time Off In Lieu (TOIL)</h2>
-              <p className="text-muted-foreground">Track your TOIL hours here.</p>
-              {/* TOIL content will be implemented here */}
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Time Off In Lieu (TOIL)</CardTitle>
+                <CardDescription>Track your TOIL hours here.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <Button className="w-full" variant="outline">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Record New TOIL
+                  </Button>
+                  
+                  <div className="border rounded-md p-4 bg-muted/20">
+                    <p className="text-sm text-muted-foreground text-center">
+                      No TOIL hours recorded yet.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </ScrollArea>
       </Tabs>
