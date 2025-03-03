@@ -37,21 +37,85 @@ export function SwapDetailsSection({
   if (!isSwapType) return null;
 
   const handleGoToNotesTracking = () => {
-    // Close the dialog and navigate to notes-tracking
     onOpenChange(false);
-    navigate("/notes-tracking", { state: { openShiftSwap: true } });
+    navigate("/notes-tracking");
   };
 
   return (
     <div className="space-y-3">
       <div className="mt-2">
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={handleGoToNotesTracking}
-        >
-          Record shift swap <ArrowLeftRight className="ml-2 h-4 w-4" />
-        </Button>
+        <Popover open={showSwapPopover} onOpenChange={setShowSwapPopover}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setShowSwapPopover(true)}
+            >
+              Record shift swap <ArrowLeftRight className="ml-2 h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-4">
+            <div className="space-y-3">
+              <h3 className="font-medium text-sm">Shift swap details</h3>
+              
+              <div className="space-y-2">
+                <label className="text-sm">Worker name:</label>
+                <Input
+                  placeholder="Enter coworker name"
+                  value={workerName}
+                  onChange={(e) => setWorkerName(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm">Swap type:</label>
+                <div className="flex space-x-2">
+                  <Button
+                    variant={swapType === "owed" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSwapType("owed")}
+                    className="flex-1"
+                  >
+                    <UserRound className="mr-1 h-4 w-4" /> Owed to you
+                  </Button>
+                  <Button
+                    variant={swapType === "payback" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSwapType("payback")}
+                    className="flex-1"
+                  >
+                    <ArrowLeftRight className="mr-1 h-4 w-4" /> You owe them
+                  </Button>
+                </div>
+              </div>
+
+              <Button 
+                onClick={() => {
+                  if (!workerName.trim()) {
+                    toast({
+                      title: "Missing information",
+                      description: "Please enter the name of the worker",
+                      variant: "destructive"
+                    });
+                    return;
+                  }
+                  
+                  setShowSwapDetails(true);
+                  setShowSwapPopover(false);
+                  
+                  toast({
+                    title: "Swap details saved",
+                    description: `Swap with ${workerName} recorded. Complete by setting hours and submitting.`,
+                  });
+                }}
+                className="w-full mt-3"
+              >
+                Save details
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
       
       <div className="mt-2">
@@ -83,70 +147,6 @@ export function SwapDetailsSection({
           </Button>
         </div>
       )}
-
-      <Popover open={showSwapPopover} onOpenChange={setShowSwapPopover}>
-        <PopoverContent className="w-80 p-4">
-          <div className="space-y-3">
-            <h3 className="font-medium text-sm">Shift swap details</h3>
-            
-            <div className="space-y-2">
-              <label className="text-sm">Worker name:</label>
-              <Input
-                placeholder="Enter coworker name"
-                value={workerName}
-                onChange={(e) => setWorkerName(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm">Swap type:</label>
-              <div className="flex space-x-2">
-                <Button
-                  variant={swapType === "owed" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSwapType("owed")}
-                  className="flex-1"
-                >
-                  <UserRound className="mr-1 h-4 w-4" /> Owed to you
-                </Button>
-                <Button
-                  variant={swapType === "payback" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSwapType("payback")}
-                  className="flex-1"
-                >
-                  <ArrowLeftRight className="mr-1 h-4 w-4" /> You owe them
-                </Button>
-              </div>
-            </div>
-
-            <Button 
-              onClick={() => {
-                if (!workerName.trim()) {
-                  toast({
-                    title: "Missing information",
-                    description: "Please enter the name of the worker",
-                    variant: "destructive"
-                  });
-                  return;
-                }
-                
-                setShowSwapDetails(true);
-                setShowSwapPopover(false);
-                
-                toast({
-                  title: "Swap details saved",
-                  description: `Swap with ${workerName} recorded. Complete by setting hours and submitting.`,
-                });
-              }}
-              className="w-full mt-3"
-            >
-              Save details
-            </Button>
-          </div>
-        </PopoverContent>
-      </Popover>
     </div>
   );
 }
