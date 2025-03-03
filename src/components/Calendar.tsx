@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -28,7 +27,7 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/comp
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useTheme } from "@/lib/theme";
 import CalendarDay from "./CalendarDay";
-import ShiftSelectionDialog from "@/components/shift-selection/ShiftSelectionDialog";
+import ShiftSelectionDialog from "./ShiftSelectionDialog";
 import NoteEditDialog from "./NoteEditDialog";
 import { getNextPayday, isPayday } from "@/utils/dateUtils";
 import { useToast } from "@/hooks/use-toast";
@@ -633,7 +632,6 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
             ? { [selectedDatesForShift[0].toISOString()]: getShiftForDate(selectedDatesForShift[0])!.otHours! }
             : undefined
           : undefined}
-        onNoteClick={handleNoteClick}
         hasNote={selectedDatesForShift.length === 1 && !!getNote(selectedDatesForShift[0])}
       />
 
