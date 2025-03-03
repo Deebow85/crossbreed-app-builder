@@ -13,6 +13,10 @@ export type ShiftAssignment = {
   date: string;
   shiftType: ShiftType;
   otHours?: number;
+  swapDetails?: {
+    workerName: string;
+    type: SwapType;
+  };
 };
 
 export type PaydaySettings = {
