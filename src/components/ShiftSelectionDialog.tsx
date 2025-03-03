@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { ShiftType, SwapType } from "@/types/calendar";
 import { useState, useEffect } from "react";
-import { Clock, ArrowLeftRight, UserRound } from "lucide-react";
+import { Clock, ArrowLeftRight, UserRound, FileText } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useNavigate } from "react-router-dom";
 
 interface ShiftSelectionDialogProps {
   open: boolean;
@@ -30,6 +31,7 @@ export default function ShiftSelectionDialog({
   initialShiftType,
   initialOvertimeHours,
 }: ShiftSelectionDialogProps) {
+  const navigate = useNavigate();
   const [overtimeHours, setOvertimeHours] = useState<{ [date: string]: number }>(initialOvertimeHours || {});
   const [selectedType, setSelectedType] = useState<ShiftType | null>(initialShiftType || null);
   const [bulkHoursValue, setBulkHoursValue] = useState<string>("");
@@ -73,8 +75,12 @@ export default function ShiftSelectionDialog({
       // If it's a swap type, we might want to show the swap details section
       if (shiftType?.isSwapOwed) {
         setSwapType("owed");
+        // Automatically show swap details for swap types
+        setShowSwapDetails(true);
       } else if (shiftType?.isSwapDone) {
         setSwapType("payback");
+        // Automatically show swap details for swap types
+        setShowSwapDetails(true);
       }
     }
   };
@@ -128,6 +134,13 @@ export default function ShiftSelectionDialog({
       setShowSwapDetails(false);
       setWorkerName("");
     }
+  };
+
+  const handleGoToNotesTracking = () => {
+    // Close the dialog
+    onOpenChange(false);
+    // Navigate to notes tracking page
+    navigate("/notes-tracking");
   };
 
   const needsHoursInput = selectedType?.isOvertime || selectedType?.isTOIL || 
@@ -221,14 +234,26 @@ export default function ShiftSelectionDialog({
           </div>
 
           {isSwapType && (
-            <div className="mt-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowSwapDetails(!showSwapDetails)}
-                className="w-full"
-              >
-                {showSwapDetails ? "Hide" : "Record shift swap"} <ArrowLeftRight className="ml-2 h-4 w-4" />
-              </Button>
+            <div className="space-y-3">
+              <div className="mt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowSwapDetails(!showSwapDetails)}
+                  className="w-full"
+                >
+                  {showSwapDetails ? "Hide" : "Record shift swap"} <ArrowLeftRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="mt-2">
+                <Button
+                  variant="outline"
+                  onClick={handleGoToNotesTracking}
+                  className="w-full"
+                >
+                  View all shift swaps <FileText className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
             </div>
           )}
 
