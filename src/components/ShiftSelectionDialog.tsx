@@ -6,6 +6,8 @@ import { format } from "date-fns";
 import { ShiftType } from "@/types/calendar";
 import { useState, useEffect } from "react";
 import { Clock, ArrowLeftRight } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ShiftSelectionDialogProps {
   open: boolean;
@@ -30,6 +32,8 @@ export default function ShiftSelectionDialog({
 }: ShiftSelectionDialogProps) {
   const [overtimeHours, setOvertimeHours] = useState<{ [date: string]: number }>(initialOvertimeHours || {});
   const [selectedType, setSelectedType] = useState<ShiftType | null>(initialShiftType || null);
+  const [bulkHoursValue, setBulkHoursValue] = useState<string>("");
+  const [applyMode, setApplyMode] = useState<"individual" | "same">("individual");
 
   useEffect(() => {
     if (open && initialShiftType) {
@@ -41,25 +45,68 @@ export default function ShiftSelectionDialog({
   const handleShiftSelect = (shiftType: ShiftType | null) => {
     setSelectedType(shiftType);
     
-    // If the shift type doesn't have overtime/TOIL/swap, or clearing the shift, submit immediately
-    if (!shiftType?.isOvertime && !shiftType?.isTOIL && !shiftType?.isSwapDone && !shiftType?.isSwapOwed) {
+    // If clearing the shift or selecting non-special shift and it's a single date selection, submit immediately
+    if ((!shiftType || (!shiftType?.isOvertime && !shiftType?.isTOIL && 
+        !shiftType?.isSwapDone && !shiftType?.isSwapOwed)) && selectedDates.length === 1) {
       onShiftSelect(shiftType, undefined);
       setOvertimeHours({});
       setSelectedType(null);
+      return;
+    }
+    
+    // For multi-selection or special shifts, we'll collect additional data before submitting
+    if (shiftType?.isOvertime || shiftType?.isTOIL || 
+        shiftType?.isSwapDone || shiftType?.isSwapOwed) {
+      // Reset bulk hours when changing shift type
+      setBulkHoursValue("");
     }
   };
 
   const handleSubmit = () => {
     if (selectedType) {
+      // For special shifts, validate that hours are set for all dates if needed
+      const needsHoursInput = selectedType?.isOvertime || selectedType?.isTOIL || 
+                             selectedType?.isSwapDone || selectedType?.isSwapOwed;
+      
+      if (needsHoursInput && showOvertimeInput) {
+        const missingHours = selectedDates.some(date => 
+          !overtimeHours[date.toISOString()] && overtimeHours[date.toISOString()] !== 0
+        );
+        
+        if (missingHours) {
+          toast({
+            title: "Missing hours",
+            description: "Please enter hours for all selected dates",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+      
       onShiftSelect(selectedType, overtimeHours);
       setOvertimeHours({});
       setSelectedType(null);
+      setBulkHoursValue("");
     }
   };
 
   const needsHoursInput = selectedType?.isOvertime || selectedType?.isTOIL || 
-                          selectedType?.isSwapDone || selectedType?.isSwapOwed;
+                         selectedType?.isSwapDone || selectedType?.isSwapOwed;
   const showHoursInput = needsHoursInput && showOvertimeInput;
+
+  const handleBulkHoursChange = (value: string) => {
+    setBulkHoursValue(value);
+    const numericValue = parseFloat(value);
+    
+    if (!isNaN(numericValue)) {
+      // Apply the same hours to all selected dates
+      const newOvertimeHours = { ...overtimeHours };
+      selectedDates.forEach(date => {
+        newOvertimeHours[date.toISOString()] = numericValue;
+      });
+      setOvertimeHours(newOvertimeHours);
+    }
+  };
 
   return (
     <Dialog 
@@ -68,6 +115,7 @@ export default function ShiftSelectionDialog({
         if (!isOpen) {
           setSelectedType(null);
           setOvertimeHours({});
+          setBulkHoursValue("");
         }
         onOpenChange(isOpen);
       }}
@@ -129,7 +177,48 @@ export default function ShiftSelectionDialog({
             ))}
           </div>
 
-          {showHoursInput && selectedDates.map(date => (
+          {showHoursInput && selectedDates.length > 1 && (
+            <div className="space-y-2 border p-3 rounded-md bg-muted/20">
+              <div className="flex justify-between items-center">
+                <label className="text-sm font-medium">
+                  Bulk hours setting:
+                </label>
+                <Select
+                  value={applyMode}
+                  onValueChange={(value) => setApplyMode(value as "individual" | "same")}
+                >
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue placeholder="Select option" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="same">Same for all dates</SelectItem>
+                    <SelectItem value="individual">Set individually</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {applyMode === "same" && (
+                <div className="space-y-2">
+                  <label className="text-sm">
+                    {selectedType?.isOvertime ? "Overtime" : 
+                     selectedType?.isTOIL ? "TOIL" : 
+                     selectedType?.isSwapDone ? "Swap (Done)" : 
+                     selectedType?.isSwapOwed ? "Swap (Owed)" : ""} hours for all dates:
+                  </label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    value={bulkHoursValue}
+                    onChange={(e) => handleBulkHoursChange(e.target.value)}
+                    placeholder="Enter hours for all dates"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {showHoursInput && (applyMode === "individual" || selectedDates.length === 1) && selectedDates.map(date => (
             <div key={date.toISOString()} className="space-y-2">
               <label className="text-sm">
                 {selectedType?.isOvertime ? "Overtime" : 
@@ -156,6 +245,12 @@ export default function ShiftSelectionDialog({
           {showHoursInput && (
             <Button onClick={handleSubmit} className="mt-2">
               {initialOvertimeHours ? "Update" : "Set"} Hours
+            </Button>
+          )}
+
+          {!showHoursInput && selectedType && (
+            <Button onClick={handleSubmit} className="mt-2">
+              {initialShiftType ? "Update" : "Set"} Shift
             </Button>
           )}
 
