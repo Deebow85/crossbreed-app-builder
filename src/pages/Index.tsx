@@ -38,18 +38,22 @@ const Index = () => {
 
   // Set up a listener for notes updates
   useEffect(() => {
-    const handleNotesUpdated = () => {
-      // This component just needs to know updates happened
-      // but doesn't need to take action
-      console.log("Notes were updated");
+    const handleNotesUpdated = (event: CustomEvent) => {
+      // Check if this note was created from the calendar
+      if (event.detail?.source === "calendar") {
+        console.log("Notes were updated from calendar");
+        
+        // Additional logic could be added here if needed
+        // For example, you could update a local state if necessary
+      }
     };
 
     // Add event listener for notes updates
-    document.addEventListener('notesUpdated', handleNotesUpdated);
+    document.addEventListener('notesUpdated', handleNotesUpdated as EventListener);
     
     // Clean up the event listener on component unmount
     return () => {
-      document.removeEventListener('notesUpdated', handleNotesUpdated);
+      document.removeEventListener('notesUpdated', handleNotesUpdated as EventListener);
     };
   }, []);
 
