@@ -86,21 +86,6 @@ const CalendarDay = ({
                           shift?.shiftType.isSwapDone || 
                           shift?.shiftType.isSwapOwed;
 
-  // Get special shift indicator text
-  const getSpecialShiftIndicator = () => {
-    if (shift?.shiftType.isOvertime) return "OT";
-    if (shift?.shiftType.isTOIL) return "T";
-    if (shift?.shiftType.isSwapDone) return "SD";
-    if (shift?.shiftType.isSwapOwed) return "SO";
-    return "";
-  };
-
-  // Get hours display for special shifts if available
-  const getHoursDisplay = () => {
-    if (!isSpecialShift || shift?.otHours === undefined) return "";
-    return `: ${shift.otHours}h`;
-  };
-
   return (
     <Button
       key={date.toISOString()}
@@ -168,7 +153,10 @@ const CalendarDay = ({
           {shift.shiftType.name}
           {isSpecialShift && (
             <span className="ml-1 text-[0.7em] opacity-80">
-              {getSpecialShiftIndicator()}{getHoursDisplay()}
+              {shift.shiftType.isOvertime ? "OT" : 
+               shift.shiftType.isTOIL ? "T" : 
+               shift.shiftType.isSwapDone ? "SD" : 
+               shift.shiftType.isSwapOwed ? "SO" : ""}
             </span>
           )}
         </span>
