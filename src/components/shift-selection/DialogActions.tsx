@@ -52,15 +52,6 @@ export function DialogActions({
         }
       }
 
-      if ((selectedType?.isSwapOwed || selectedType?.isSwapDone) && !showSwapDetails) {
-        toast({
-          title: "Missing information",
-          description: "Please record shift swap details first",
-          variant: "destructive"
-        });
-        return;
-      }
-      
       if ((selectedType?.isSwapOwed || selectedType?.isSwapDone) && showSwapDetails) {
         if (!workerName.trim()) {
           toast({
