@@ -106,8 +106,7 @@ const NotesTracking = () => {
     "swap-done": false,
     "swap-owed": false,
     "toil": false,
-    "notes": false,
-    "calendar-notes": false
+    "notes": false
   });
   
   // For edit and delete functionality
@@ -912,7 +911,7 @@ const NotesTracking = () => {
       const text = getNoteText(note);
       return !text.toLowerCase().includes("toil") && !note.toilHours && !text.toLowerCase().includes("swap") && !note.swap;
     }),
-    "calendar-notes": filteredNotes.filter(note => note.swap)
+    // "calendar-notes": filteredNotes.filter(note => note.swap)
   };
 
   // When searching, open folders with matching results
