@@ -290,6 +290,16 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
   const handleShiftSelection = (selectedType: ShiftType | null, overtimeHours?: { [date: string]: number }) => {
     if (selectedDatesForShift.length === 0) return;
     
+    // Handle swap owed shifts
+    if (selectedType?.isSwapOwed && selectedDatesForShift.length === 1) {
+      const selectedDate = selectedDatesForShift[0];
+      // Store the date in sessionStorage for the NotesTracking page
+      sessionStorage.setItem('selectedSwapDate', selectedDate.toISOString());
+      sessionStorage.setItem('swapType', 'owed');
+      navigate('/notes-tracking');
+      return;
+    }
+
     setShifts(prevShifts => {
       const newShifts = [...prevShifts];
       selectedDatesForShift.forEach(date => {

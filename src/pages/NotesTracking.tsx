@@ -95,6 +95,22 @@ const NotesTracking = () => {
   const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string>("");
 
+  useEffect(() => {
+    // Check for selected swap date from calendar
+    const selectedDate = sessionStorage.getItem('selectedSwapDate');
+    const swapType = sessionStorage.getItem('swapType');
+    
+    if (selectedDate) {
+      setSelectedSwapDate(new Date(selectedDate));
+      setSwapFormOpen(true);
+      setActiveTab('tracking'); // Set the active tab to tracking
+      setSwapType('owed'); // Always set to 'owed' by default
+      // Clear the session storage
+      sessionStorage.removeItem('selectedSwapDate');
+      sessionStorage.removeItem('swapType');
+    }
+  }, []);
+
   // For image preview collapsibles
   const [expandedImageSections, setExpandedImageSections] = useState<Record<string, boolean>>({});
   
