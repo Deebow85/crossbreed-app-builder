@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Note } from "@/types/calendar";
 import { StickyNote } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface NoteEditDialogProps {
   open: boolean;
@@ -32,6 +33,7 @@ const NoteEditDialog = ({
   onDelete 
 }: NoteEditDialogProps) => {
   const [noteText, setNoteText] = useState("");
+  const { toast } = useToast();
 
   useEffect(() => {
     if (existingNote) {
@@ -45,7 +47,11 @@ const NoteEditDialog = ({
 
   const handleSave = () => {
     if (!noteText.trim()) {
-      // Instead of showing toast, just return early
+      toast({
+        title: "Note cannot be empty",
+        description: "Please enter some text for your note.",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -60,6 +66,12 @@ const NoteEditDialog = ({
     
     // Then save the note
     onSave(noteData);
+    
+    // Use the component's toast function from useToast hook
+    toast({
+      title: "Note saved",
+      description: "Your note has been saved successfully.",
+    });
     
     // Direct localStorage handling - this ensures notes show in the Notes page
     try {
@@ -102,6 +114,12 @@ const NoteEditDialog = ({
       
       // Call the onDelete function passed as prop
       onDelete(existingNote.date);
+      
+      // Use the component's toast function
+      toast({
+        title: "Note deleted",
+        description: "Your note has been deleted.",
+      });
       
       // Direct localStorage handling for deletion
       try {

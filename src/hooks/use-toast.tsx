@@ -1,6 +1,12 @@
 
 import * as React from "react"
 import {
+  Toast,
+  ToastClose,
+  ToastDescription,
+  ToastProvider,
+  ToastTitle,
+  ToastViewport,
   type ToastProps,
   type ToastActionElement,
 } from "@/components/ui/toast"
@@ -52,17 +58,29 @@ export function ToasterProvider({
 
   const addToast = React.useCallback(
     (toast: ToasterToast) => {
-      // Toast functionality disabled - do nothing
+      setState((prevState) => {
+        const newToasts = [toast, ...prevState.toasts].slice(0, TOAST_LIMIT)
+        return {
+          ...prevState,
+          toasts: newToasts,
+        }
+      })
     },
     []
   )
 
   const removeToast = React.useCallback((id: string) => {
-    // Toast functionality disabled - do nothing
+    setState((prevState) => ({
+      ...prevState,
+      toasts: prevState.toasts.filter((toast) => toast.id !== id),
+    }))
   }, [])
 
   const removeAllToasts = React.useCallback(() => {
-    // Toast functionality disabled - do nothing
+    setState((prevState) => ({
+      ...prevState,
+      toasts: [],
+    }))
   }, [])
 
   const value = React.useMemo(
@@ -82,29 +100,53 @@ export function ToasterProvider({
   )
 }
 
-// Stub for the toast function - does nothing
-export const toast = (props: ToastProps) => {
-  // Toast functionality disabled - do nothing
+export const useToast = () => {
+  const { toasts, addToast, removeToast, removeAllToasts } = useToaster()
+
+  const toast = React.useCallback(
+    (props: ToastProps) => {
+      const id = crypto.randomUUID()
+      const toastProps = { id, ...props } as ToasterToast
+      addToast(toastProps)
+      
+      return {
+        id,
+        dismiss: () => removeToast(id),
+        update: (props: ToastProps) => {
+          addToast({ id, ...props } as ToasterToast)
+        },
+      }
+    },
+    [addToast, removeToast]
+  )
+
   return {
-    id: crypto.randomUUID(),
-    dismiss: () => {},
-    update: () => {},
+    toast,
+    toasts,
+    dismiss: removeToast,
+    dismissAll: removeAllToasts,
   }
 }
 
-// Stub for the useToast hook - returns empty functions
-export const useToast = () => {
+// Create a standalone toast function that can be imported directly
+export const toast = (props: ToastProps) => {
+  const id = crypto.randomUUID();
+  const toastProps = { id, ...props } as ToasterToast;
+  
+  // This is a workaround for direct imports
+  // It will dispatch a custom event that the ToastProvider will listen for
+  const event = new CustomEvent('toast', { detail: toastProps });
+  document.dispatchEvent(event);
+  
   return {
-    toast: (props: ToastProps) => {
-      // Toast functionality disabled - do nothing
-      return {
-        id: crypto.randomUUID(),
-        dismiss: () => {},
-        update: () => {},
-      }
+    id,
+    dismiss: () => {
+      document.dispatchEvent(new CustomEvent('toast-dismiss', { detail: { id } }));
     },
-    toasts: [],
-    dismiss: () => {},
-    dismissAll: () => {},
-  }
-}
+    update: (props: ToastProps) => {
+      document.dispatchEvent(
+        new CustomEvent('toast-update', { detail: { id, ...props } })
+      );
+    },
+  };
+};
