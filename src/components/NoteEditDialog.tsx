@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Note } from "@/types/calendar";
 import { StickyNote } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 interface NoteEditDialogProps {
   open: boolean;
@@ -55,11 +55,16 @@ const NoteEditDialog = ({
       return;
     }
 
-    // Create the note without a specific category
     const noteData: Note = {
       date: date.toISOString(),
-      text: noteText
+      text: noteText,
+      category: "notes from calendar" // Always set the category for calendar notes
     };
+    
+    // Preserve existing category if this is an edit
+    if (existingNote && existingNote.category) {
+      noteData.category = existingNote.category;
+    }
     
     // Close the dialog immediately before making the save
     onOpenChange(false);
@@ -73,38 +78,18 @@ const NoteEditDialog = ({
       description: "Your note has been saved successfully.",
     });
     
-    // Direct localStorage handling - this ensures notes show in the Notes page
-    try {
-      // Get existing notes from localStorage
-      const existingNotes = JSON.parse(localStorage.getItem('notes') || '[]');
-      
-      // Remove any existing note with the same date if it exists to avoid duplicates
-      const filteredNotes = existingNotes.filter((note: Note) => note.date !== noteData.date);
-      
-      // Add the new note without a category
-      filteredNotes.push({
-        date: noteData.date,
-        text: noteData.text
-      });
-      
-      // Save back to localStorage
-      localStorage.setItem('notes', JSON.stringify(filteredNotes));
-      console.log("Note saved directly to localStorage");
-    } catch (error) {
-      console.error("Error saving note to localStorage:", error);
-    }
-    
     // Dispatch a custom event to notify that notes have been updated
+    // This will allow the NotesTracking page to refresh its data
     const notesUpdatedEvent = new CustomEvent('notesUpdated', {
       detail: { 
-        noteData: {
-          date: noteData.date,
-          text: noteData.text
-        },
-        action: "save"
+        noteData,
+        category: "notes from calendar" // Explicitly include the category in the event
       }
     });
     document.dispatchEvent(notesUpdatedEvent);
+    
+    // Console log to help debug
+    console.log("Note saved with category:", noteData.category);
   };
 
   const handleDelete = () => {
@@ -112,33 +97,22 @@ const NoteEditDialog = ({
       // Close the dialog immediately before deleting
       onOpenChange(false);
       
-      // Call the onDelete function passed as prop
       onDelete(existingNote.date);
       
-      // Use the component's toast function
+      // Use the component's toast function instead of direct toast call
       toast({
         title: "Note deleted",
         description: "Your note has been deleted.",
       });
       
-      // Direct localStorage handling for deletion
-      try {
-        const existingNotes = JSON.parse(localStorage.getItem('notes') || '[]');
-        const filteredNotes = existingNotes.filter((note: Note) => note.date !== existingNote.date);
-        localStorage.setItem('notes', JSON.stringify(filteredNotes));
-        console.log("Note removed directly from localStorage");
-      } catch (error) {
-        console.error("Error removing note from localStorage:", error);
-      }
-      
-      // Dispatch a custom event for note deletion
+      // Dispatch a custom event to notify that notes have been updated
       const notesUpdatedEvent = new CustomEvent('notesUpdated', {
         detail: { 
-          action: "delete",
-          date: existingNote.date
+          category: "notes from calendar" // Include the category in the delete event too
         }
       });
       document.dispatchEvent(notesUpdatedEvent);
+      console.log("Note deleted event dispatched");
     }
   };
 
@@ -151,7 +125,7 @@ const NoteEditDialog = ({
             Note for {date ? format(date, 'MMMM d, yyyy') : ''}
           </DialogTitle>
           <DialogDescription>
-            Add a note for this date. Notes will be shown on the calendar and in the notes section.
+            Add a note for this date. Notes will be shown on the calendar.
           </DialogDescription>
         </DialogHeader>
 

@@ -100,9 +100,23 @@ export function ToasterProvider({
   )
 }
 
+// We need to refactor this to avoid direct hook calls outside of components
+export const toast = ({title, description, variant, action, ...props}: ToastProps) => {
+  // Do not call hooks directly here - this was causing the invalid hook call error
+  return {
+    id: crypto.randomUUID(),
+    title,
+    description,
+    variant,
+    action,
+    ...props
+  }
+}
+
 export const useToast = () => {
   const { toasts, addToast, removeToast, removeAllToasts } = useToaster()
 
+  // Create a proper toast function that's safe to use in components
   const toast = React.useCallback(
     (props: ToastProps) => {
       const id = crypto.randomUUID()
@@ -127,26 +141,3 @@ export const useToast = () => {
     dismissAll: removeAllToasts,
   }
 }
-
-// Create a standalone toast function that can be imported directly
-export const toast = (props: ToastProps) => {
-  const id = crypto.randomUUID();
-  const toastProps = { id, ...props } as ToasterToast;
-  
-  // This is a workaround for direct imports
-  // It will dispatch a custom event that the ToastProvider will listen for
-  const event = new CustomEvent('toast', { detail: toastProps });
-  document.dispatchEvent(event);
-  
-  return {
-    id,
-    dismiss: () => {
-      document.dispatchEvent(new CustomEvent('toast-dismiss', { detail: { id } }));
-    },
-    update: (props: ToastProps) => {
-      document.dispatchEvent(
-        new CustomEvent('toast-update', { detail: { id, ...props } })
-      );
-    },
-  };
-};
