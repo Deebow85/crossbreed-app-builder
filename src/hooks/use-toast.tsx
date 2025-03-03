@@ -1,6 +1,12 @@
 
 import * as React from "react"
 import {
+  Toast,
+  ToastClose,
+  ToastDescription,
+  ToastProvider,
+  ToastTitle,
+  ToastViewport,
   type ToastProps,
   type ToastActionElement,
 } from "@/components/ui/toast"
@@ -52,17 +58,29 @@ export function ToasterProvider({
 
   const addToast = React.useCallback(
     (toast: ToasterToast) => {
-      // Toast functionality disabled - do nothing
+      setState((prevState) => {
+        const newToasts = [toast, ...prevState.toasts].slice(0, TOAST_LIMIT)
+        return {
+          ...prevState,
+          toasts: newToasts,
+        }
+      })
     },
     []
   )
 
   const removeToast = React.useCallback((id: string) => {
-    // Toast functionality disabled - do nothing
+    setState((prevState) => ({
+      ...prevState,
+      toasts: prevState.toasts.filter((toast) => toast.id !== id),
+    }))
   }, [])
 
   const removeAllToasts = React.useCallback(() => {
-    // Toast functionality disabled - do nothing
+    setState((prevState) => ({
+      ...prevState,
+      toasts: [],
+    }))
   }, [])
 
   const value = React.useMemo(
@@ -82,29 +100,29 @@ export function ToasterProvider({
   )
 }
 
-// Stub for the toast function - does nothing
-export const toast = (props: ToastProps) => {
-  // Toast functionality disabled - do nothing
+export function toast(props: ToastProps) {
+  const id = crypto.randomUUID()
+  const { addToast, removeToast } = useToaster()
+  
+  const toastProps = { id, ...props } as ToasterToast
+  addToast(toastProps)
+  
   return {
-    id: crypto.randomUUID(),
-    dismiss: () => {},
-    update: () => {},
+    id,
+    dismiss: () => removeToast(id),
+    update: (props: ToastProps) => {
+      addToast({ id, ...props } as ToasterToast)
+    },
   }
 }
 
-// Stub for the useToast hook - returns empty functions
 export const useToast = () => {
+  const { toasts, addToast, removeToast, removeAllToasts } = useToaster()
+
   return {
-    toast: (props: ToastProps) => {
-      // Toast functionality disabled - do nothing
-      return {
-        id: crypto.randomUUID(),
-        dismiss: () => {},
-        update: () => {},
-      }
-    },
-    toasts: [],
-    dismiss: () => {},
-    dismissAll: () => {},
+    toast,
+    toasts,
+    dismiss: removeToast,
+    dismissAll: removeAllToasts,
   }
 }
