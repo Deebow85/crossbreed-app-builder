@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -118,14 +119,21 @@ const ShiftSetup = () => {
   }, []);
 
   const saveShiftTypes = (newShiftTypes: ShiftTypeSettings[]) => {
+    // Ensure all shift types have valid color and gradient properties
     const validatedShiftTypes = newShiftTypes.map(type => {
       const updatedType = { ...type };
+      
+      // Make sure we have a valid color
       if (!updatedType.color || updatedType.color === "") {
         updatedType.color = DEFAULT_COLOR;
       }
+      
+      // Make sure we have a valid gradient
       if (!updatedType.gradient || updatedType.gradient === "") {
         updatedType.gradient = `linear-gradient(135deg, ${updatedType.color} 0%, ${updatedType.color} 100%)`;
       }
+      
+      // Remove isNew flag for storage
       const { isNew, ...rest } = updatedType;
       return rest;
     });
@@ -137,6 +145,7 @@ const ShiftSetup = () => {
     settings.shiftTypes = validatedShiftTypes;
     localStorage.setItem('appSettings', JSON.stringify(settings));
     
+    // Log for debugging
     console.log("Saved shift types:", validatedShiftTypes);
   };
 
@@ -162,6 +171,7 @@ const ShiftSetup = () => {
       const color = shiftTypes[selectedIndex].color || DEFAULT_COLOR;
       setStartColor(color);
     } else {
+      // For new shift
       setStartColor(newShift.color || DEFAULT_COLOR);
     }
   };
@@ -181,6 +191,7 @@ const ShiftSetup = () => {
       
       setEndColor(endColorValue || "#6B7280");
     } else {
+      // For new shift
       const color = newShift.color || DEFAULT_COLOR;
       setStartColor(color);
       
@@ -214,10 +225,12 @@ const ShiftSetup = () => {
         };
       }
       
+      // Apply special type if selected
       updateShiftTypeSpecial(selectedIndex, shiftTypeOption, newShiftTypes);
       
       saveShiftTypes(newShiftTypes);
     } else {
+      // For new shift
       if (colorMode === 'solid') {
         setNewShift({
           ...newShift,
@@ -238,6 +251,7 @@ const ShiftSetup = () => {
   };
 
   const addShiftType = () => {
+    // Reset the new shift to default values
     setNewShift({
       name: "New Shift",
       symbol: "",
@@ -250,16 +264,15 @@ const ShiftSetup = () => {
       isSwapOwed: false
     });
     
+    // Show the new shift dialog
     setShowNewShiftDialog(true);
-    setIsEditing(true);
+    setIsEditing(true); // Enter edit mode
   };
 
   const confirmAddShift = () => {
     const newShiftTypes = [...shiftTypes, newShift];
     saveShiftTypes(newShiftTypes);
     setShowNewShiftDialog(false);
-    
-    // Fix the toast call to use the correct format
     toast({
       title: "New shift added",
       description: `${newShift.name} has been added to your shift types.`,
@@ -308,6 +321,7 @@ const ShiftSetup = () => {
       
       setEndColor(endColorValue || "#6B7280");
       
+      // Determine the shift type option
       if (currentType.isOvertime) {
         setShiftTypeOption("overtime");
       } else if (currentType.isTOIL) {
@@ -320,6 +334,7 @@ const ShiftSetup = () => {
         setShiftTypeOption("regular");
       }
     } else {
+      // For new shift
       setStartColor(newShift.color || DEFAULT_COLOR);
       
       let endColorValue;
@@ -331,6 +346,7 @@ const ShiftSetup = () => {
       
       setEndColor(endColorValue || "#6B7280");
       
+      // Determine the shift type option
       if (newShift.isOvertime) {
         setShiftTypeOption("overtime");
       } else if (newShift.isTOIL) {
@@ -349,6 +365,7 @@ const ShiftSetup = () => {
   };
 
   const toggleEditing = () => {
+    // If we're finishing editing mode, mark all shifts as not new
     if (isEditing) {
       const updatedShiftTypes = shiftTypes.map(type => ({
         ...type,
@@ -405,8 +422,14 @@ const ShiftSetup = () => {
       return;
     }
     
+    // Calculate the total days in one complete pattern cycle (including days off after cycle)
     const daysInCycle = currentPattern.reduce((total, step) => total + step.days, 0) * repeatTimes + daysOffAfter;
+    
+    // Calculate how many full cycles we need to fill the specified years
+    // 365.25 days per year (accounting for leap years)
     const totalDaysNeeded = yearsToGenerate * 365.25;
+    
+    // Calculate how many complete cycles we need
     const calculatedCycles = Math.ceil(totalDaysNeeded / daysInCycle);
     
     const pattern: PatternCycle = {
@@ -500,7 +523,8 @@ const ShiftSetup = () => {
 
     setCurrentPattern(defaultPattern);
     
-    const daysInDefaultCycle = 7; 
+    // Calculate 52 weeks worth of the pattern for a year
+    const daysInDefaultCycle = 7; // 5 days on + 2 days off
     const cyclesPerYear = Math.ceil(365.25 / daysInDefaultCycle);
     
     setRepeatTimes(cyclesPerYear);
@@ -510,8 +534,13 @@ const ShiftSetup = () => {
   };
 
   const generateSetDays = () => {
+    // Calculate the total days in one complete pattern cycle
     const daysInCycle = currentPattern.reduce((total, step) => total + step.days, 0);
+    
+    // Calculate how many patterns we need to fill the years specified
     const totalDaysNeeded = yearsToGenerate * 365.25;
+    
+    // Calculate how many complete cycles we need
     const calculatedRepeatTimes = Math.ceil(totalDaysNeeded / daysInCycle);
     
     const pattern: PatternCycle = {
@@ -541,6 +570,7 @@ const ShiftSetup = () => {
     specialType: "regular" | "overtime" | "toil" | "swap-done" | "swap-owed",
     shiftTypesToUpdate = [...shiftTypes]
   ) => {
+    // First, reset all special flags
     shiftTypesToUpdate[index] = {
       ...shiftTypesToUpdate[index],
       isOvertime: false,
@@ -549,6 +579,7 @@ const ShiftSetup = () => {
       isSwapOwed: false
     };
     
+    // Then set the appropriate flag based on the selection
     if (specialType === "overtime") {
       shiftTypesToUpdate[index].isOvertime = true;
     } else if (specialType === "toil") {
@@ -565,6 +596,7 @@ const ShiftSetup = () => {
   };
 
   const updateNewShiftSpecial = (specialType: "regular" | "overtime" | "toil" | "swap-done" | "swap-owed") => {
+    // First, reset all special flags
     setNewShift({
       ...newShift,
       isOvertime: false,
@@ -573,6 +605,7 @@ const ShiftSetup = () => {
       isSwapOwed: false
     });
     
+    // Then set the appropriate flag based on the selection
     if (specialType === "overtime") {
       setNewShift(prev => ({ ...prev, isOvertime: true }));
     } else if (specialType === "toil") {
@@ -584,6 +617,7 @@ const ShiftSetup = () => {
     }
   };
 
+  // Determine if a shift is "new" or actively being edited
   const isShiftBeingEdited = (shiftType: ShiftTypeSettings) => {
     return isEditing || shiftType.isNew === true;
   };
@@ -725,6 +759,7 @@ const ShiftSetup = () => {
                           onCheckedChange={(checked) => {
                             const newShiftTypes = [...shiftTypes];
                             if (checked) {
+                              // Default to overtime when first checked
                               newShiftTypes[index] = {
                                 ...newShiftTypes[index],
                                 isOvertime: true,
@@ -733,6 +768,7 @@ const ShiftSetup = () => {
                                 isSwapOwed: false
                               };
                             } else {
+                              // Clear all special types
                               newShiftTypes[index] = {
                                 ...newShiftTypes[index],
                                 isOvertime: false,
@@ -874,6 +910,7 @@ const ShiftSetup = () => {
         </div>
       </Card>
 
+      {/* New Shift Dialog */}
       <Dialog 
         open={showNewShiftDialog} 
         onOpenChange={(open) => {
@@ -894,4 +931,530 @@ const ShiftSetup = () => {
               <Input
                 id="new-shift-name"
                 value={newShift.name}
-                onChange={(e)
+                onChange={(e) => updateNewShift('name', e.target.value)}
+                placeholder="e.g., Morning Shift"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="new-shift-symbol">Symbol</Label>
+              <Input
+                id="new-shift-symbol"
+                value={newShift.symbol}
+                onChange={(e) => updateNewShift('symbol', e.target.value.toUpperCase())}
+                placeholder="e.g., M"
+                className="uppercase"
+                maxLength={5}
+              />
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <div
+                className="w-16 h-16 rounded-md border"
+                style={{ background: newShift.gradient || DEFAULT_GRADIENT }}
+              />
+              <Button 
+                variant="outline" 
+                onClick={() => handleDialogOpen(null)}
+              >
+                Select Color
+              </Button>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="new-special-type-switch"
+                  checked={newShift.isOvertime || newShift.isTOIL || newShift.isSwapDone || newShift.isSwapOwed || false}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setNewShift({
+                        ...newShift,
+                        isOvertime: true,
+                        isTOIL: false,
+                        isSwapDone: false,
+                        isSwapOwed: false
+                      });
+                    } else {
+                      setNewShift({
+                        ...newShift,
+                        isOvertime: false,
+                        isTOIL: false,
+                        isSwapDone: false,
+                        isSwapOwed: false
+                      });
+                    }
+                  }}
+                />
+                <Label htmlFor="new-special-type-switch">Special Type</Label>
+              </div>
+              
+              {(newShift.isOvertime || newShift.isTOIL || newShift.isSwapDone || newShift.isSwapOwed) && (
+                <RadioGroup
+                  value={
+                    newShift.isOvertime ? "overtime" : 
+                    newShift.isTOIL ? "toil" : 
+                    newShift.isSwapDone ? "swap-done" : 
+                    newShift.isSwapOwed ? "swap-owed" : "regular"
+                  }
+                  onValueChange={(value: "regular" | "overtime" | "toil" | "swap-done" | "swap-owed") => {
+                    updateNewShiftSpecial(value);
+                  }}
+                  className="grid grid-cols-2 gap-2 mt-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="overtime" id="new-overtime" />
+                    <Label htmlFor="new-overtime">Overtime</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="toil" id="new-toil" />
+                    <Label htmlFor="new-toil">TOIL</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="swap-done" id="new-swap-done" />
+                    <Label htmlFor="new-swap-done">Swap (Done)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="swap-owed" id="new-swap-owed" />
+                    <Label htmlFor="new-swap-owed">Swap (Owed)</Label>
+                  </div>
+                </RadioGroup>
+              )}
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowNewShiftDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={confirmAddShift}>
+              Save Shift
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog 
+        open={showSetDaysDialog} 
+        onOpenChange={(open) => {
+          if (!open) setShowSetDaysDialog(false);
+        }}
+      >
+        <DialogContent className="flex h-[85vh] flex-col overflow-hidden">
+          <DialogHeader className="flex-none p-4 pb-2">
+            <DialogTitle>Set Working Days Pattern</DialogTitle>
+            <DialogDescription>
+              Configure your working days and off days pattern
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4 space-y-4">
+              <div className="space-y-2">
+                <Label>Pattern Name</Label>
+                <Input
+                  type="text"
+                  value={patternName}
+                  onChange={(e) => setPatternName(e.target.value)}
+                  placeholder="Enter pattern name"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Start Date</Label>
+                <Input
+                  type="date"
+                  value={patternStartDate}
+                  onChange={(e) => setPatternStartDate(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-4">
+                <Label>Working Pattern</Label>
+                <div className="p-3 border rounded bg-muted/50 space-y-4">
+                  <div className="space-y-2">
+                    <Label>Working Days</Label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        value={currentPattern[0]?.shiftType?.name || ""}
+                        onChange={(e) => {
+                          const selectedType = shiftTypes.find(t => t.name === e.target.value);
+                          const newPattern = [...currentPattern];
+                          newPattern[0] = { ...newPattern[0], shiftType: selectedType || null };
+                          setCurrentPattern(newPattern);
+                        }}
+                      >
+                        {shiftTypes.map((type) => (
+                          <option key={type.name} value={type.name}>
+                            {type.name}
+                          </option>
+                        ))}
+                      </select>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="7"
+                        value={currentPattern[0]?.days || 5}
+                        onChange={(e) => {
+                          const days = Math.min(Math.max(parseInt(e.target.value) || 1, 1), 7);
+                          const newPattern = [...currentPattern];
+                          newPattern[0] = { ...newPattern[0], days };
+                          setCurrentPattern(newPattern);
+                        }}
+                        className="w-20"
+                      />
+                      <span className="text-sm">days</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Off Days</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min="1"
+                        max="7"
+                        value={currentPattern[1]?.days || 2}
+                        onChange={(e) => {
+                          const days = Math.min(Math.max(parseInt(e.target.value) || 1, 1), 7);
+                          const newPattern = [...currentPattern];
+                          newPattern[1] = { ...newPattern[1], days, isOff: true, shiftType: null };
+                          setCurrentPattern(newPattern);
+                        }}
+                        className="w-20"
+                      />
+                      <span className="text-sm">days off</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Generate Pattern For</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="10"
+                  value={yearsToGenerate}
+                  onChange={(e) => {
+                    const years = Math.min(Math.max(parseInt(e.target.value) || 0, 0), 10);
+                    setYearsToGenerate(years);
+                    const totalDays = (currentPattern[0]?.days || 5) + (currentPattern[1]?.days || 2);
+                    setRepeatTimes(Math.floor(years * 365.25 / totalDays));
+                  }}
+                />
+                <span className="text-sm text-muted-foreground">years (0-10)</span>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex-none p-4 bg-background border-t mt-auto">
+            <Button onClick={generateSetDays} className="w-full">
+              Generate Set Days Pattern
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog 
+        open={showPatternDialog} 
+        onOpenChange={(open) => {
+          if (!open) closePatternDialog();
+        }}
+      >
+        <DialogContent className="flex h-[85vh] flex-col overflow-hidden">
+          <DialogHeader className="flex-none p-4 pb-2">
+            <DialogTitle>
+              {editingPattern ? 'Edit Shift Pattern' : 'Generate Custom Pattern'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4 space-y-4">
+              <div className="space-y-2">
+                <Label>Pattern Name</Label>
+                <Input
+                  type="text"
+                  value={patternName}
+                  onChange={(e) => setPatternName(e.target.value)}
+                  placeholder="Enter pattern name"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Start Date</Label>
+                <Input
+                  type="date"
+                  value={patternStartDate}
+                  onChange={(e) => setPatternStartDate(e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label>Pattern Sequence</Label>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={addToPattern}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Step
+                  </Button>
+                </div>
+                
+                {currentPattern.map((step, index) => (
+                  <div key={index} className="flex items-center gap-2 p-2 border rounded">
+                    <select
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      value={step.isOff ? "off" : (step.shiftType?.name || "")}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === "off") {
+                          updatePattern(index, 'shiftType', null);
+                        } else {
+                          const selectedType = shiftTypes.find(t => t.name === value);
+                          updatePattern(index, 'shiftType', selectedType || null);
+                        }
+                      }}
+                    >
+                      <option value="off">Days Off</option>
+                      {shiftTypes.map((type) => (
+                        <option key={type.name} value={type.name}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </select>
+                    
+                    <Input
+                      type="number"
+                      min="1"
+                      value={step.days}
+                      onChange={(e) => updatePattern(index, 'days', parseInt(e.target.value))}
+                      className="w-20"
+                    />
+                    <span className="text-sm text-muted-foreground">days</span>
+                    
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeFromPattern(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Repeat Pattern</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={repeatTimes}
+                    onChange={(e) => setRepeatTimes(parseInt(e.target.value))}
+                    readOnly={currentPattern.length === 2 && currentPattern[0].days === 5 && currentPattern[1].days === 2}
+                  />
+                  <span className="text-sm text-muted-foreground">times</span>
+                </div>
+                
+                {currentPattern.length !== 2 || currentPattern[0]?.days !== 5 || currentPattern[1]?.days !== 2 ? (
+                  <div className="space-y-2">
+                    <Label>Days Off After Cycle</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={daysOffAfter}
+                      onChange={(e) => setDaysOffAfter(parseInt(e.target.value))}
+                    />
+                    <span className="text-sm text-muted-foreground">days</span>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Generate Pattern For</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="10"
+                  value={yearsToGenerate}
+                  onChange={(e) => {
+                    const years = Math.min(Math.max(parseInt(e.target.value) || 0, 0), 10);
+                    setYearsToGenerate(years);
+                    // If this is a set days pattern (5-2), update repeat times automatically
+                    if (currentPattern.length === 2 && currentPattern[0]?.days === 5 && currentPattern[1]?.days === 2) {
+                      setRepeatTimes(years * 52);
+                    }
+                  }}
+                />
+                <span className="text-sm text-muted-foreground">years (0-10)</span>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex-none p-4 bg-background border-t mt-auto">
+            <Button onClick={generateShifts} className="w-full">
+              {editingPattern ? 'Update Pattern' : 'Generate Pattern'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select Colour Type</DialogTitle>
+          </DialogHeader>
+          {!colorMode ? (
+            <div className="flex justify-center gap-4 pt-4">
+              <Button onClick={handleSolidColor}>Solid Colour</Button>
+              <Button onClick={handleGradient}>Gradient</Button>
+            </div>
+          ) : (
+            <div className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label>{colorMode === 'solid' ? 'Colour' : 'Start Colour'}</Label>
+                <Input
+                  type="color"
+                  value={startColor}
+                  onChange={(e) => setStartColor(e.target.value)}
+                  className="w-full h-10"
+                />
+              </div>
+              
+              {colorMode === 'gradient' && (
+                <div className="space-y-2">
+                  <Label>End Colour</Label>
+                  <Input
+                    type="color"
+                    value={endColor}
+                    onChange={(e) => setEndColor(e.target.value)}
+                    className="w-full h-10"
+                  />
+                </div>
+              )}
+
+              {/* Only show the shift type options if this is a new shift or we're not currently editing any shifts */}
+              {!isEditing && (
+                <div className="space-y-4">
+                  <Label className="block mb-2">Shift Type</Label>
+                  <RadioGroup
+                    value={shiftTypeOption}
+                    onValueChange={(value: "regular" | "overtime" | "toil" | "swap-done" | "swap-owed") => {
+                      setShiftTypeOption(value);
+                    }}
+                    className="grid grid-cols-2 gap-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="regular" id="r1" />
+                      <Label htmlFor="r1">Regular</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="overtime" id="r2" />
+                      <Label htmlFor="r2">Overtime</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="toil" id="r3" />
+                      <Label htmlFor="r3">TOIL</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="swap-done" id="r4" />
+                      <Label htmlFor="r4">Swap (Done)</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="swap-owed" id="r5" />
+                      <Label htmlFor="r5">Swap (Owed)</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
+              
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setColorMode(null)}>Back</Button>
+                <Button onClick={handleColorConfirm}>
+                  Confirm
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isRemoveDialogOpen} onOpenChange={setIsRemoveDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remove Shift Types</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-2 py-4">
+            {shiftTypes.map((type, index) => (
+              <div 
+                key={index} 
+                className={`flex items-center justify-between p-2 border rounded-lg cursor-pointer ${
+                  selectedToRemove.includes(index) ? 'border-destructive bg-destructive/10' : ''
+                }`}
+                onClick={() => toggleShiftToRemove(index)}
+              >
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-8 h-8 rounded border flex items-center justify-center font-semibold"
+                    style={{ background: type.gradient || DEFAULT_GRADIENT }}
+                  >
+                    {type.symbol}
+                  </div>
+                  <span>{type.name}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {selectedToRemove.includes(index) && (
+                    <Check className="h-4 w-4 text-destructive" />
+                  )}
+                </div>
+              </div>
+            ))}
+            {selectedToRemove.length > 0 && (
+              <Button
+                variant="destructive"
+                onClick={removeSelectedShiftTypes}
+                className="mt-2"
+              >
+                Remove Selected ({selectedToRemove.length})
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t py-4">
+        <div className="container max-w-md mx-auto flex items-center justify-between px-4">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="hover:bg-accent"
+            onClick={() => navigate("/")}
+          >
+            <CalendarDays className="h-8 w-8" />
+          </Button>
+          
+          <div className="relative">
+            <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg">
+              <span className="text-primary-foreground font-semibold text-xl">S</span>
+            </div>
+          </div>
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="hover:bg-accent"
+            onClick={() => navigate("/settings")}
+          >
+            <Settings className="h-8 w-8" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ShiftSetup;
