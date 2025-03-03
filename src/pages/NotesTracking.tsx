@@ -1211,7 +1211,7 @@ const NotesTracking = () => {
                     {notesByMonth[month]
                       .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime())
                       .map((note) => (
-                        <Card key={note.date} className="overflow-hidden shadow-none border relative">
+                        <Card key={note.date} className="overflow-hidden shadow-none border">
                           <CardHeader className="bg-muted/30 pb-2 pt-3">
                             <CardTitle className="text-sm flex items-center gap-2">
                               <CalendarDays className="h-4 w-4" />
@@ -1221,16 +1221,6 @@ const NotesTracking = () => {
                           <CardContent className="pt-3 pb-3">
                             <p className="whitespace-pre-wrap text-sm">{note.text}</p>
                           </CardContent>
-                          <div className="absolute top-2 right-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteNote(note.date)}
-                              className="h-6 w-6"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
                         </Card>
                       ))}
                   </div>
