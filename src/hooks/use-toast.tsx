@@ -1,128 +1,71 @@
 
 import * as React from "react"
-import {
-  Toast,
-  ToastClose,
-  ToastDescription,
-  ToastProvider,
-  ToastTitle,
-  ToastViewport,
-  type ToastProps,
-  type ToastActionElement,
-} from "@/components/ui/toast"
+import { 
+  toast as sonnerToast,
+  Toaster as SonnerToaster, 
+  type ToastT, 
+  type ToastOptions 
+} from "sonner"
 
-export type ToasterToast = ToastProps & {
-  id: string
+import { cn } from "@/lib/utils"
+
+const ToasterContext = React.createContext<
+  | {
+      toast: (props: ToastProps) => void
+    }
+  | undefined
+>(undefined)
+
+type ToastProps = {
   title?: React.ReactNode
   description?: React.ReactNode
-  action?: ToastActionElement
-}
-
-const TOAST_LIMIT = 5
-const TOAST_REMOVE_DELAY = 1000
-
-type ToasterState = {
-  toasts: ToasterToast[]
-}
-
-const ToasterContext = React.createContext<{
-  toasts: ToasterToast[]
-  addToast: (toast: ToasterToast) => void
-  removeToast: (id: string) => void
-  removeAllToasts: () => void
-}>({
-  toasts: [],
-  addToast: () => {},
-  removeToast: () => {},
-  removeAllToasts: () => {},
-})
-
-function useToaster() {
-  const context = React.useContext(ToasterContext)
-  if (!context) {
-    throw new Error("useToaster must be used within a ToasterProvider")
-  }
-  return context
-}
+  action?: React.ReactNode
+} & ToastOptions
 
 export function ToasterProvider({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const [state, setState] = React.useState<ToasterState>({
-    toasts: [],
-  })
-
-  const { toasts } = state
-
-  const addToast = React.useCallback(
-    (toast: ToasterToast) => {
-      setState((prevState) => {
-        const newToasts = [toast, ...prevState.toasts].slice(0, TOAST_LIMIT)
-        return {
-          ...prevState,
-          toasts: newToasts,
-        }
-      })
-    },
-    []
-  )
-
-  const removeToast = React.useCallback((id: string) => {
-    setState((prevState) => ({
-      ...prevState,
-      toasts: prevState.toasts.filter((toast) => toast.id !== id),
-    }))
-  }, [])
-
-  const removeAllToasts = React.useCallback(() => {
-    setState((prevState) => ({
-      ...prevState,
-      toasts: [],
-    }))
-  }, [])
-
-  const value = React.useMemo(
-    () => ({
-      toasts,
-      addToast,
-      removeToast,
-      removeAllToasts,
-    }),
-    [toasts, addToast, removeToast, removeAllToasts]
-  )
+  const toast = ({ title, description, action, ...props }: ToastProps) => {
+    sonnerToast(
+      <div className="grid gap-1">
+        {title && <p className="font-semibold">{title}</p>}
+        {description && <p className="text-sm opacity-90">{description}</p>}
+        {action && <div className="mt-2">{action}</div>}
+      </div>,
+      {
+        classNames: {
+          toast: cn(
+            "group toast group-[.toast]:bg-background group-[.toast]:text-foreground group-[.toast]:border-border group-[.toast]:shadow-lg"
+          ),
+          description: "group-[.toast]:text-muted-foreground",
+          actionButton:
+            "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
+          cancelButton:
+            "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+        },
+        ...props,
+      }
+    )
+  }
 
   return (
-    <ToasterContext.Provider value={value}>
+    <ToasterContext.Provider value={{ toast }}>
       {children}
     </ToasterContext.Provider>
   )
 }
 
-export function toast(props: ToastProps) {
-  const id = crypto.randomUUID()
-  const { addToast, removeToast } = useToaster()
-  
-  const toastProps = { id, ...props } as ToasterToast
-  addToast(toastProps)
-  
-  return {
-    id,
-    dismiss: () => removeToast(id),
-    update: (props: ToastProps) => {
-      addToast({ id, ...props } as ToasterToast)
-    },
+export function useToast() {
+  const context = React.useContext(ToasterContext)
+
+  if (!context) {
+    throw new Error("useToast must be used within a ToasterProvider")
   }
+
+  return context
 }
 
-export const useToast = () => {
-  const { toasts, addToast, removeToast, removeAllToasts } = useToaster()
-
-  return {
-    toast,
-    toasts,
-    dismiss: removeToast,
-    dismissAll: removeAllToasts,
-  }
-}
+// Re-export toast from sonner for direct usage
+export { sonnerToast as toast }
