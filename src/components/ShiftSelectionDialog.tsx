@@ -3,9 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { ShiftType } from "@/types/calendar";
+import { ShiftType, SwapType } from "@/types/calendar";
 import { useState, useEffect } from "react";
-import { Clock, ArrowLeftRight } from "lucide-react";
+import { Clock, ArrowLeftRight, UserRound } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -14,7 +14,7 @@ interface ShiftSelectionDialogProps {
   onOpenChange: (open: boolean) => void;
   selectedDates: Date[];
   shiftTypes: ShiftType[];
-  onShiftSelect: (selectedType: ShiftType | null, overtimeHours?: { [date: string]: number }) => void;
+  onShiftSelect: (selectedType: ShiftType | null, overtimeHours?: { [date: string]: number }, swapDetails?: { workerName: string, type: SwapType }) => void;
   showOvertimeInput?: boolean;
   initialShiftType?: ShiftType;
   initialOvertimeHours?: { [date: string]: number };
@@ -34,6 +34,9 @@ export default function ShiftSelectionDialog({
   const [selectedType, setSelectedType] = useState<ShiftType | null>(initialShiftType || null);
   const [bulkHoursValue, setBulkHoursValue] = useState<string>("");
   const [applyMode, setApplyMode] = useState<"individual" | "same">("individual");
+  const [showSwapDetails, setShowSwapDetails] = useState<boolean>(false);
+  const [workerName, setWorkerName] = useState<string>("");
+  const [swapType, setSwapType] = useState<SwapType>("owed");
 
   useEffect(() => {
     if (open && initialShiftType) {
@@ -41,6 +44,13 @@ export default function ShiftSelectionDialog({
       setOvertimeHours(initialOvertimeHours || {});
     }
   }, [open, initialShiftType, initialOvertimeHours]);
+
+  useEffect(() => {
+    // Reset swap details when shift type changes
+    if (!selectedType?.isSwapOwed && !selectedType?.isSwapDone) {
+      setShowSwapDetails(false);
+    }
+  }, [selectedType]);
 
   const handleShiftSelect = (shiftType: ShiftType | null) => {
     setSelectedType(shiftType);
@@ -59,6 +69,13 @@ export default function ShiftSelectionDialog({
         shiftType?.isSwapDone || shiftType?.isSwapOwed) {
       // Reset bulk hours when changing shift type
       setBulkHoursValue("");
+      
+      // If it's a swap type, we might want to show the swap details section
+      if (shiftType?.isSwapOwed) {
+        setSwapType("owed");
+      } else if (shiftType?.isSwapDone) {
+        setSwapType("payback");
+      }
     }
   };
 
@@ -82,17 +99,41 @@ export default function ShiftSelectionDialog({
           return;
         }
       }
+
+      // If it's a swap and swap details are shown, validate worker name
+      if ((selectedType?.isSwapOwed || selectedType?.isSwapDone) && showSwapDetails) {
+        if (!workerName.trim()) {
+          toast({
+            title: "Missing information",
+            description: "Please enter the name of the worker",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        // Submit with swap details
+        onShiftSelect(selectedType, overtimeHours, {
+          workerName: workerName.trim(),
+          type: swapType
+        });
+      } else {
+        // Submit without swap details
+        onShiftSelect(selectedType, overtimeHours);
+      }
       
-      onShiftSelect(selectedType, overtimeHours);
+      // Reset state
       setOvertimeHours({});
       setSelectedType(null);
       setBulkHoursValue("");
+      setShowSwapDetails(false);
+      setWorkerName("");
     }
   };
 
   const needsHoursInput = selectedType?.isOvertime || selectedType?.isTOIL || 
                          selectedType?.isSwapDone || selectedType?.isSwapOwed;
   const showHoursInput = needsHoursInput && showOvertimeInput;
+  const isSwapType = selectedType?.isSwapOwed || selectedType?.isSwapDone;
 
   const handleBulkHoursChange = (value: string) => {
     setBulkHoursValue(value);
@@ -116,6 +157,8 @@ export default function ShiftSelectionDialog({
           setSelectedType(null);
           setOvertimeHours({});
           setBulkHoursValue("");
+          setShowSwapDetails(false);
+          setWorkerName("");
         }
         onOpenChange(isOpen);
       }}
@@ -176,6 +219,56 @@ export default function ShiftSelectionDialog({
               </Button>
             ))}
           </div>
+
+          {isSwapType && (
+            <div className="mt-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowSwapDetails(!showSwapDetails)}
+                className="w-full"
+              >
+                {showSwapDetails ? "Hide" : "Record shift swap"} <ArrowLeftRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          )}
+
+          {showSwapDetails && (
+            <div className="space-y-3 border rounded-md p-3 bg-muted/20">
+              <h3 className="font-medium text-sm">Shift swap details</h3>
+              
+              <div className="space-y-2">
+                <label className="text-sm">Worker name:</label>
+                <Input
+                  placeholder="Enter coworker name"
+                  value={workerName}
+                  onChange={(e) => setWorkerName(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm">Swap type:</label>
+                <div className="flex space-x-2">
+                  <Button
+                    variant={swapType === "owed" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSwapType("owed")}
+                    className="flex-1"
+                  >
+                    <UserRound className="mr-1 h-4 w-4" /> Owed to you
+                  </Button>
+                  <Button
+                    variant={swapType === "payback" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSwapType("payback")}
+                    className="flex-1"
+                  >
+                    <ArrowLeftRight className="mr-1 h-4 w-4" /> You owe them
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {showHoursInput && selectedDates.length > 1 && (
             <div className="space-y-2 border p-3 rounded-md bg-muted/20">
