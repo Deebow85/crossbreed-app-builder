@@ -2,9 +2,9 @@
 import * as React from "react"
 import { 
   toast as sonnerToast,
-  Toaster as SonnerToaster, 
-  type Toast, 
-  ToastOptions as SonnerToastOptions
+  Toaster as SonnerToaster,
+  ToastT, // Import the correct type for Toast
+  ToastOptions as SonnerToastOptions // Import ToastOptions with an alias
 } from "sonner"
 
 import { cn } from "@/lib/utils"
@@ -20,7 +20,7 @@ type ToastProps = {
 const ToasterContext = React.createContext<
   | {
       toast: (props: ToastProps) => void
-      toasts?: Toast[] // Add this for compatibility
+      toasts?: ToastT[] // Use the ToastT type from sonner
     }
   | undefined
 >(undefined)
