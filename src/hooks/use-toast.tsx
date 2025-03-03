@@ -3,24 +3,27 @@ import * as React from "react"
 import { 
   toast as sonnerToast,
   Toaster as SonnerToaster, 
-  type ToastT, 
-  type ToastOptions 
+  type Toast, 
+  ToastOptions as SonnerToastOptions
 } from "sonner"
 
 import { cn } from "@/lib/utils"
 
-const ToasterContext = React.createContext<
-  | {
-      toast: (props: ToastProps) => void
-    }
-  | undefined
->(undefined)
-
+// Define our ToastProps type with proper properties
 type ToastProps = {
   title?: React.ReactNode
   description?: React.ReactNode
   action?: React.ReactNode
-} & ToastOptions
+} & Omit<SonnerToastOptions, "className">
+
+// Create a context to provide toast functionality
+const ToasterContext = React.createContext<
+  | {
+      toast: (props: ToastProps) => void
+      toasts?: Toast[] // Add this for compatibility
+    }
+  | undefined
+>(undefined)
 
 export function ToasterProvider({
   children,
