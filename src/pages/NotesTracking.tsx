@@ -1153,18 +1153,7 @@ const NotesTracking = () => {
 
   return (
     <div className="container max-w-md mx-auto p-4 pb-20">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">Notes & Tracking</h1>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => navigate('/calendar')}
-          className="flex items-center gap-2"
-        >
-          <Calendar className="h-4 w-4" />
-          Back to Calendar
-        </Button>
-      </div>
+      <h1 className="text-2xl font-bold mb-4">Notes & Tracking</h1>
       
       <div className="mb-4">
         <div className="relative">
