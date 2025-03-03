@@ -124,26 +124,30 @@ const ShiftSelectionDialog = ({
           </div>
 
           {showOvertimeInput &&
-            selectedShiftType?.isOvertime &&
-            selectedDates.length === 1 && (
-              <div className="space-y-2">
-                <Label htmlFor="overtime-hours">Overtime Hours</Label>
-                <Input
-                  id="overtime-hours"
-                  type="number"
-                  min="0.5"
-                  step="0.5"
-                  value={
-                    overtimeHours[selectedDates[0].toISOString()] || ""
-                  }
-                  onChange={(e) =>
-                    handleOvertimeChange(
-                      selectedDates[0].toISOString(),
-                      parseFloat(e.target.value) || 0
-                    )
-                  }
-                  placeholder="Enter overtime hours"
-                />
+            selectedShiftType?.isOvertime && (
+              <div className="space-y-4">
+                <Label>Overtime Hours</Label>
+                {selectedDates.map(date => (
+                  <div key={date.toISOString()} className="space-y-2">
+                    <Label htmlFor={`overtime-hours-${date.toISOString()}`} className="text-sm text-muted-foreground">
+                      {format(date, "MMMM d, yyyy")}
+                    </Label>
+                    <Input
+                      id={`overtime-hours-${date.toISOString()}`}
+                      type="number"
+                      min="0.5"
+                      step="0.5"
+                      value={overtimeHours[date.toISOString()] || ""}
+                      onChange={(e) =>
+                        handleOvertimeChange(
+                          date.toISOString(),
+                          parseFloat(e.target.value) || 0
+                        )
+                      }
+                      placeholder="Enter overtime hours"
+                    />
+                  </div>
+                ))}
               </div>
             )}
 
