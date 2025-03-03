@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -28,9 +29,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useTheme } from "@/lib/theme";
 import CalendarDay from "./CalendarDay";
 import ShiftSelectionDialog from "./ShiftSelectionDialog";
-import NoteEditDialog from "./NoteEditDialog";
 import { getNextPayday, isPayday } from "@/utils/dateUtils";
-import { useToast } from "@/hooks/use-toast";
 import {
   ShiftType, ShiftAssignment, PaydaySettings, ShiftPattern,
   Note, ShiftSwap, Alarm, PatternCycle
@@ -43,7 +42,6 @@ type CalendarProps = {
 const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
   const navigate = useNavigate();
   const { theme } = useTheme();
-  const { toast } = useToast();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [shifts, setShifts] = useState<ShiftAssignment[]>(() => {
     const savedShifts = localStorage.getItem('calendarShifts');
@@ -56,14 +54,10 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
     paydayType: "monthly",
     paydayDate: 15
   });
-  const [notes, setNotes] = useState<Note[]>(() => {
-    const savedNotes = localStorage.getItem('calendarNotes');
-    return savedNotes ? JSON.parse(savedNotes) : [];
-  });
+  const [notes, setNotes] = useState<Note[]>([]);
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [calendarSize, setCalendarSize] = useState<'default' | 'large' | 'small'>('default');
   const [showShiftDialog, setShowShiftDialog] = useState(false);
-  const [showNoteDialog, setShowNoteDialog] = useState(false);
   const [selectedDatesForShift, setSelectedDatesForShift] = useState<Date[]>([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const currentYear = currentDate.getFullYear();
@@ -88,10 +82,6 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
   useEffect(() => {
     localStorage.setItem('calendarShifts', JSON.stringify(shifts));
   }, [shifts]);
-
-  useEffect(() => {
-    localStorage.setItem('calendarNotes', JSON.stringify(notes));
-  }, [notes]);
 
   useEffect(() => {
     const loadSettings = () => {
@@ -128,7 +118,22 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
     return () => window.removeEventListener('storage', loadSettings);
   }, []);
 
+  // **************************************************************************
+  // WARNING: DO NOT MODIFY THE PATTERN LOGIC BELOW WITHOUT CAREFUL REVIEW
+  // This pattern algorithm has been carefully tested and validated.
+  //
+  // How the pattern works:
+  // 1. Steps in pattern.sequences are each shift type with its duration in days
+  // 2. The entire sequence is repeated for pattern.repeatTimes 
+  // 3. After ALL repeats are done, pattern.daysOffAfter days are added at the end
+  // 4. This entire super-cycle is repeated enough times to cover the years specified
+  //
+  // IMPORTANT: Days off within sequences (isOff: true) are different from daysOffAfter!
+  // Days off *within* a pattern sequence are regular days off in the rotation.
+  // Days off *after* all repeats (daysOffAfter) are added at the very end of all cycles.
+  // **************************************************************************
   const applyShiftPattern = (patternData: any) => {
+    // Make sure we have valid data
     if (!patternData?.pattern?.sequences || !patternData.startDate) {
       console.error('Invalid pattern data:', patternData);
       return;
@@ -144,37 +149,49 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
         return;
       }
 
+      // Generate shifts based on pattern
       const newShifts: ShiftAssignment[] = [];
       let currentDay = new Date(startDateObj);
       let totalDays = 0;
       
-      const daysPerYear = 365.25;
+      // Calculate how many full super-cycles we need for the specified years
+      // A super-cycle is: (sequence repeated X times) + days off after
+      const daysPerYear = 365.25; // Account for leap years
       const totalDaysNeeded = years * daysPerYear;
       
+      // Calculate days in one super-cycle
       const daysInSequence = pattern.sequences.reduce((sum, seq) => sum + seq.days, 0);
       const daysInRepeatPattern = daysInSequence * pattern.repeatTimes;
       const daysInSuperCycle = daysInRepeatPattern + pattern.daysOffAfter;
       
+      // Calculate how many super-cycles we need
       const superCyclesNeeded = Math.ceil(totalDaysNeeded / daysInSuperCycle);
       
       console.log(`Pattern will be applied for ${superCyclesNeeded} super-cycles to cover ${years} years`);
       
+      // For each super-cycle
       for (let superCycle = 0; superCycle < superCyclesNeeded; superCycle++) {
+        // First, repeat the sequence the specified number of times
         for (let repeatCount = 0; repeatCount < pattern.repeatTimes; repeatCount++) {
+          // Process each sequence in the pattern
           for (const sequence of pattern.sequences) {
+            // Process each day in this sequence
             for (let day = 0; day < sequence.days; day++) {
+              // If this is not a day off and has a shift type, add a shift
               if (!sequence.isOff && sequence.shiftType) {
                 newShifts.push({
                   date: currentDay.toISOString(),
                   shiftType: sequence.shiftType
                 });
               }
+              // Always advance to the next day
               currentDay = addDays(currentDay, 1);
               totalDays++;
             }
           }
         }
         
+        // After completing all the repeated sequences, add the days off
         if (pattern.daysOffAfter > 0) {
           currentDay = addDays(currentDay, pattern.daysOffAfter);
           totalDays += pattern.daysOffAfter;
@@ -183,6 +200,7 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
 
       console.log(`Generated ${newShifts.length} shifts from pattern over ${totalDays} days`);
       
+      // Merge new shifts with existing ones, replacing overlapping dates
       setShifts(prevShifts => {
         const existingShiftDates = new Map(
           prevShifts.map(shift => [shift.date, shift])
@@ -199,6 +217,9 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
       console.error('Error applying shift pattern:', error);
     }
   };
+  // **************************************************************************
+  // END OF PATTERN LOGIC - SEE WARNING ABOVE
+  // **************************************************************************
 
   const handleDayClick = (date: Date) => {
     const dateStr = date.toISOString();
@@ -243,14 +264,8 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
     }
   };
 
-  const handleNoteClick = () => {
-    if (selectedDatesForShift.length > 0) {
-      setShowShiftDialog(false);
-      setShowNoteDialog(true);
-    }
-  };
-
   const handleLongPress = (date: Date) => {
+    // setIsSelectingMultiple(true); // This is now handled in the Index page
     setSelectedDatesForShift([date]);
   };
 
@@ -286,32 +301,7 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
     
     setShowShiftDialog(false);
     setSelectedDatesForShift([]);
-  };
-
-  const handleSaveNote = (note: Note) => {
-    setNotes(prevNotes => {
-      const existingIndex = prevNotes.findIndex(n => n.date === note.date);
-      if (existingIndex >= 0) {
-        const updatedNotes = [...prevNotes];
-        updatedNotes[existingIndex] = note;
-        return updatedNotes;
-      } else {
-        return [...prevNotes, note];
-      }
-    });
-
-    toast({
-      title: "Note saved",
-      description: "Your note has been saved to the calendar."
-    });
-  };
-
-  const handleDeleteNote = (dateStr: string) => {
-    setNotes(prevNotes => prevNotes.filter(n => n.date !== dateStr));
-    toast({
-      title: "Note deleted",
-      description: "The note has been removed."
-    });
+    // setIsSelectingMultiple(false); // This is now handled in the Index page
   };
 
   const getShiftForDate = (date: Date) => {
@@ -319,8 +309,64 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
   };
 
   const addOrEditNote = (date: Date) => {
-    setSelectedDatesForShift([date]);
-    setShowNoteDialog(true);
+    const dateStr = date.toISOString();
+    const existingNote = notes.find(note => note.date === dateStr);
+    
+    const isSwap = window.confirm("Is this a shift swap note?");
+    
+    if (isSwap) {
+      const workerName = window.prompt("Enter worker's name:");
+      if (!workerName) return;
+
+      const type = window.confirm("Is this a shift you owe? (Cancel for payback)") ? "owed" : "payback";
+      
+      const hoursStr = window.prompt("Enter hours:");
+      if (!hoursStr) return;
+      const hours = parseFloat(hoursStr);
+      if (isNaN(hours) || hours <= 0) {
+        alert("Please enter a valid number of hours");
+        return;
+      }
+
+      const monetaryValueStr = window.prompt("Enter monetary value (optional):");
+      const monetaryValue = monetaryValueStr ? parseFloat(monetaryValueStr) : undefined;
+      
+      const noteText = window.prompt("Additional notes (optional):");
+      
+      const swap: ShiftSwap = {
+        date: dateStr,
+        workerName,
+        type,
+        hours,
+        monetaryValue,
+        note: noteText || undefined
+      };
+
+      const formattedNote = `${type === "owed" ? "Owe" : "Owed by"} ${workerName}: ${hours}h` + 
+        (monetaryValue ? ` (${paydaySettings.symbol}${monetaryValue})` : "") +
+        (noteText ? `\n${noteText}` : "");
+
+      setNotes(prevNotes => {
+        const filtered = prevNotes.filter(note => note.date !== dateStr);
+        return [...filtered, { date: dateStr, text: formattedNote, swap }];
+      });
+    } else {
+      const noteText = window.prompt(
+        "Enter note for " + format(date, 'MMM d, yyyy'),
+        existingNote?.text || ""
+      );
+
+      if (noteText === null) return;
+
+      if (noteText.trim() === "") {
+        setNotes(notes.filter(note => note.date !== dateStr));
+      } else {
+        setNotes(prevNotes => {
+          const filtered = prevNotes.filter(note => note.date !== dateStr);
+          return [...filtered, { date: dateStr, text: noteText.trim() }];
+        });
+      }
+    }
   };
 
   const removeAlarm = async (date: Date) => {
@@ -399,7 +445,8 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
     
     if (!calendarSettings.overtime?.enabled) return total;
 
-    const onlyTrackOvertimeType = parsedSettings.overtime?.onlyTrackOvertimeType !== false;
+    // Check if we should only count shifts marked specifically as "Overtime" type
+    const onlyTrackOvertimeType = parsedSettings.overtime?.onlyTrackOvertimeType !== false; // Default to true if not specified
     if (onlyTrackOvertimeType && !shift.shiftType.isOvertime) {
       return total;
     }
@@ -618,6 +665,7 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
           if (!open) {
             setShowShiftDialog(false);
             setSelectedDatesForShift([]);
+            // setIsSelectingMultiple(false); // This is now handled in the Index page
           }
         }}
         selectedDates={selectedDatesForShift}
@@ -632,20 +680,6 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
             ? { [selectedDatesForShift[0].toISOString()]: getShiftForDate(selectedDatesForShift[0])!.otHours! }
             : undefined
           : undefined}
-        hasNote={selectedDatesForShift.length === 1 && !!getNote(selectedDatesForShift[0])}
-      />
-
-      <NoteEditDialog
-        open={showNoteDialog}
-        onOpenChange={(open) => {
-          if (!open) {
-            setShowNoteDialog(false);
-          }
-        }}
-        date={selectedDatesForShift.length > 0 ? selectedDatesForShift[0] : null}
-        existingNote={selectedDatesForShift.length > 0 ? getNote(selectedDatesForShift[0]) : undefined}
-        onSave={handleSaveNote}
-        onDelete={handleDeleteNote}
       />
 
       {isSelectingMultiple && (
@@ -658,6 +692,7 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
               variant="outline"
               size="sm"
               onClick={() => {
+                // setIsSelectingMultiple(false); // This is now handled in the Index page
                 setSelectedDatesForShift([]);
               }}
             >
@@ -687,6 +722,7 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
                 variant={isSelectingMultiple ? "secondary" : "ghost"}
                 size="icon"
                 onClick={() => {
+                  // setIsSelectingMultiple(!isSelectingMultiple); // This is now handled in the Index page
                   if (isSelectingMultiple) {
                     setSelectedDatesForShift([]);
                   }
