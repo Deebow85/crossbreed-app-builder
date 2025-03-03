@@ -11,7 +11,9 @@ import {
   Calendar as CalendarIcon,
   Clock,
   ArrowLeftRight,
-  Check
+  Check,
+  User,
+  Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +29,7 @@ const NotesTracking = () => {
   const [addNoteOpen, setAddNoteOpen] = useState(false);
   const [editNoteDialogOpen, setEditNoteDialogOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   // Load notes from localStorage on component mount
   useEffect(() => {
@@ -185,6 +188,98 @@ const NotesTracking = () => {
     return note.swap.type === 'owed' ? 'You owe shift' : 'Shift owed to you';
   };
 
+  // Handle card click
+  const handleCardClick = (category: string) => {
+    if (activeCategory === category) {
+      setActiveCategory(null);
+    } else {
+      setActiveCategory(category);
+    }
+  };
+
+  // Get filtered records based on active category
+  const getFilteredRecords = () => {
+    switch (activeCategory) {
+      case 'shiftSwaps':
+        return filterNotes(getShiftSwapRecords());
+      case 'toilTaken':
+        return filterNotes(getToilRecords().filter(isToilTaken));
+      case 'toilDone':
+        return filterNotes(getToilRecords().filter(isToilDone));
+      case 'notes':
+        return filterNotes(notes);
+      case 'calendarNotes':
+        return filterNotes(calendarNotes);
+      default:
+        return [];
+    }
+  };
+
+  const renderNoteList = () => {
+    const records = getFilteredRecords();
+    
+    if (records.length === 0) {
+      return (
+        <div className="text-center py-8 text-muted-foreground">
+          No records found.
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4 mt-4">
+        {records.map((record) => (
+          <Card key={record.date} className="bg-muted/30">
+            <CardContent className="p-4">
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between items-center">
+                  <div className="text-sm font-medium">{formatNoteDate(record.date)}</div>
+                  {record.swap && (
+                    <div className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded-full">
+                      {getSwapTypeDisplay(record)}
+                    </div>
+                  )}
+                  {record.toilType && (
+                    <div className={`text-xs px-2 py-1 rounded-full ${
+                      isToilTaken(record) 
+                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' 
+                        : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                    }`}>
+                      {isToilTaken(record) ? 'TOIL Taken' : 'TOIL Done'}
+                    </div>
+                  )}
+                </div>
+                <p className="text-sm">{record.text}</p>
+                {record.swap && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                    <User size={14} />
+                    <span>With: {record.swap.withPerson || 'Not specified'}</span>
+                  </div>
+                )}
+                {(record.swap || record.toilType) && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Calendar size={14} />
+                    <span>Date: {formatNoteDate(record.date)}</span>
+                  </div>
+                )}
+                <div className="flex justify-end mt-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => deleteNote(record.date, activeCategory === 'calendarNotes')}
+                    className="text-xs"
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="container py-6 max-w-md mx-auto">
       <h1 className="text-2xl font-bold mb-6">Notes & Tracking</h1>
@@ -221,7 +316,10 @@ const NotesTracking = () => {
           
           <h2 className="text-lg font-semibold mb-4">Your Notes</h2>
           
-          <Card className="mb-4 hover:bg-muted/50 transition-colors cursor-pointer">
+          <Card 
+            className={`mb-4 hover:bg-muted/50 transition-colors cursor-pointer ${activeCategory === 'notes' ? 'border-primary' : ''}`}
+            onClick={() => handleCardClick('notes')}
+          >
             <CardHeader className="py-4 px-4">
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
@@ -233,7 +331,10 @@ const NotesTracking = () => {
             </CardHeader>
           </Card>
           
-          <Card className="mb-4 hover:bg-muted/50 transition-colors cursor-pointer">
+          <Card 
+            className={`mb-4 hover:bg-muted/50 transition-colors cursor-pointer ${activeCategory === 'calendarNotes' ? 'border-primary' : ''}`}
+            onClick={() => handleCardClick('calendarNotes')}
+          >
             <CardHeader className="py-4 px-4">
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
@@ -244,6 +345,8 @@ const NotesTracking = () => {
               </div>
             </CardHeader>
           </Card>
+          
+          {activeCategory === 'notes' || activeCategory === 'calendarNotes' ? renderNoteList() : null}
         </TabsContent>
         
         <TabsContent value="swaps" className="space-y-4">
@@ -259,7 +362,10 @@ const NotesTracking = () => {
             <ChevronDown size={16} />
           </Button>
           
-          <Card className="mb-4 hover:bg-muted/50 transition-colors cursor-pointer">
+          <Card 
+            className={`mb-4 hover:bg-muted/50 transition-colors cursor-pointer ${activeCategory === 'shiftSwaps' ? 'border-primary' : ''}`}
+            onClick={() => handleCardClick('shiftSwaps')}
+          >
             <CardHeader className="py-4 px-4">
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
@@ -273,7 +379,10 @@ const NotesTracking = () => {
             </CardHeader>
           </Card>
           
-          <Card className="mb-4 hover:bg-muted/50 transition-colors cursor-pointer">
+          <Card 
+            className={`mb-4 hover:bg-muted/50 transition-colors cursor-pointer ${activeCategory === 'toilTaken' ? 'border-primary' : ''}`}
+            onClick={() => handleCardClick('toilTaken')}
+          >
             <CardHeader className="py-4 px-4">
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
@@ -287,7 +396,10 @@ const NotesTracking = () => {
             </CardHeader>
           </Card>
           
-          <Card className="mb-4 hover:bg-muted/50 transition-colors cursor-pointer">
+          <Card 
+            className={`mb-4 hover:bg-muted/50 transition-colors cursor-pointer ${activeCategory === 'toilDone' ? 'border-primary' : ''}`}
+            onClick={() => handleCardClick('toilDone')}
+          >
             <CardHeader className="py-4 px-4">
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
@@ -300,6 +412,8 @@ const NotesTracking = () => {
               </div>
             </CardHeader>
           </Card>
+          
+          {activeCategory === 'shiftSwaps' || activeCategory === 'toilTaken' || activeCategory === 'toilDone' ? renderNoteList() : null}
         </TabsContent>
       </Tabs>
       
