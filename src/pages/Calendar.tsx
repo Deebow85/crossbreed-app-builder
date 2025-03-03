@@ -1,17 +1,14 @@
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { CalendarDays, Banknote, Clock } from "lucide-react";
-import { format, differenceInDays } from 'date-fns';
-import { Calendar as CalendarUI } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { addDays } from 'date-fns';
-import { useToast } from "@/components/ui/use-toast";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Banknote, ChevronLeft, ChevronRight, Clock, Settings } from "lucide-react";
+import { format, addDays, differenceInDays } from "date-fns";
 import { getNextPayday } from "@/utils/dateUtils";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Calendar as CalendarUI } from "@/components/ui/calendar";
 import { AppSettings, defaultSettings } from "@/types/settings";
+import { useToast } from "@/components/ui/use-toast";
 
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -60,7 +57,7 @@ const Calendar = () => {
       <Card className="w-full mx-auto px-2 sm:px-4 py-4 flex-1">
         <div className="flex items-center justify-between mb-6">
           <Button variant="ghost" size="icon" onClick={handlePrevMonth}>
-            <CalendarDays className="h-5 w-5" />
+            <ChevronLeft className="h-5 w-5" />
           </Button>
 
           <div className="text-center flex-1 mx-4">
@@ -103,7 +100,7 @@ const Calendar = () => {
           </div>
 
           <Button variant="ghost" size="icon" onClick={handleNextMonth}>
-            <CalendarDays className="h-5 w-5" />
+            <ChevronRight className="h-5 w-5" />
           </Button>
         </div>
 
@@ -124,7 +121,7 @@ const Calendar = () => {
             className="hover:bg-accent"
             onClick={() => navigate("/")}
           >
-            <CalendarDays className="h-8 w-8" />
+            <ChevronLeft className="h-8 w-8" />
           </Button>
 
           <Button
@@ -143,7 +140,7 @@ const Calendar = () => {
             className="hover:bg-accent"
             onClick={() => navigate("/settings")}
           >
-            <CalendarDays className="h-8 w-8" />
+            <Settings className="h-8 w-8" />
           </Button>
         </div>
       </div>

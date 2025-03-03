@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { format } from "date-fns";
-import { Search, Plus, Clock, ArrowLeftRight, CalendarDays, FolderOpen, Pencil, Trash2, Image, Camera, ChevronDown, CheckCircle2, X } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { Search, Plus, Clock, ArrowLeftRight, CalendarDays, FolderOpen, Pencil, Trash2, Image, Camera, ChevronDown, CheckCircle2, X, Calendar, StickyNote } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Note, ShiftSwap, SwapType, TOILType } from "@/types/calendar";
+import { useNavigate } from "react-router-dom";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   AlertDialog,
@@ -30,7 +31,7 @@ import {
   DialogTitle,
   DialogClose
 } from "@/components/ui/dialog";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
@@ -64,10 +65,12 @@ type RecordType = 'swap' | 'toil';
 
 const NotesTracking = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("notes");
   const [noteHeader, setNoteHeader] = useState("");
   const [noteText, setNoteText] = useState("");
   const [notes, setNotes] = useState<ExtendedNote[]>([]);
+  const [calendarNotes, setCalendarNotes] = useState<Note[]>([]);
   const [noteContent, setNoteContent] = useState<ContentBlock[]>([{type: 'text', content: ''}]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const swapFileInputRef = useRef<HTMLInputElement>(null);
@@ -182,6 +185,16 @@ const NotesTracking = () => {
         setSwaps(JSON.parse(savedSwaps));
       } catch (e) {
         console.error("Error loading swaps:", e);
+      }
+    }
+    
+    // Load calendar notes
+    const savedCalendarNotes = localStorage.getItem("calendarNotes");
+    if (savedCalendarNotes) {
+      try {
+        setCalendarNotes(JSON.parse(savedCalendarNotes));
+      } catch (e) {
+        console.error("Error loading calendar notes:", e);
       }
     }
   }, []);
@@ -1119,9 +1132,40 @@ const NotesTracking = () => {
     );
   };
 
+  // Group calendar notes by month
+  const notesByMonth = calendarNotes.reduce((groups, note) => {
+    const date = parseISO(note.date);
+    const monthYear = format(date, 'MMMM yyyy');
+    
+    if (!groups[monthYear]) {
+      groups[monthYear] = [];
+    }
+    
+    groups[monthYear].push(note);
+    return groups;
+  }, {} as Record<string, Note[]>);
+
+  // Sort months in reverse chronological order
+  const sortedMonths = Object.keys(notesByMonth).sort((a, b) => {
+    const dateA = parseISO(notesByMonth[a][0].date);
+    const dateB = parseISO(notesByMonth[b][0].date);
+    return dateB.getTime() - dateA.getTime();
+  });
+
   return (
     <div className="container max-w-md mx-auto p-4 pb-20">
-      <h1 className="text-2xl font-bold mb-4">Notes & Tracking</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold">Notes & Tracking</h1>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => navigate('/calendar')}
+          className="flex items-center gap-2"
+        >
+          <Calendar className="h-4 w-4" />
+          Back to Calendar
+        </Button>
+      </div>
       
       <div className="mb-4">
         <div className="relative">
@@ -1137,10 +1181,55 @@ const NotesTracking = () => {
       </div>
       
       <Tabs defaultValue="notes" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2 mb-2 h-12">
+        <TabsList className="grid w-full grid-cols-3 mb-2 h-12">
           <TabsTrigger value="notes" className="py-3">Notes</TabsTrigger>
+          <TabsTrigger value="calendar" className="py-3">Calendar Notes</TabsTrigger>
           <TabsTrigger value="tracking" className="py-3">Shift Swap / TOIL</TabsTrigger>
         </TabsList>
+        
+        <TabsContent value="calendar" className="space-y-4 mt-4">
+          {calendarNotes.length === 0 ? (
+            <div className="text-center py-12">
+              <StickyNote className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <p className="text-muted-foreground">No calendar notes found. Add notes by clicking on dates in the calendar.</p>
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => navigate('/calendar')}
+              >
+                Go to Calendar
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {sortedMonths.map((month) => (
+                <div key={month}>
+                  <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    {month}
+                  </h2>
+                  <div className="space-y-3">
+                    {notesByMonth[month]
+                      .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime())
+                      .map((note) => (
+                        <Card key={note.date} className="overflow-hidden shadow-none border">
+                          <CardHeader className="bg-muted/30 pb-2 pt-3">
+                            <CardTitle className="text-sm flex items-center gap-2">
+                              <CalendarDays className="h-4 w-4" />
+                              {format(parseISO(note.date), 'EEEE, MMMM d, yyyy')}
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="pt-3 pb-3">
+                            <p className="whitespace-pre-wrap text-sm">{note.text}</p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
         
         <TabsContent value="notes" className="space-y-4 mt-4">
           {/* Collapsible Note Form */}
@@ -1385,7 +1474,7 @@ const NotesTracking = () => {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
-                      <Calendar
+                      <CalendarComponent
                         mode="single"
                         selected={selectedSwapDate}
                         onSelect={(date) => date && setSelectedSwapDate(date)}
