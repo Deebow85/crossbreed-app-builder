@@ -23,6 +23,56 @@ interface NoteEditDialogProps {
   onDelete?: (date: string) => void;
 }
 
+// Helper function to manage notes in localStorage
+const manageLocalStorageNotes = {
+  // Get all notes from localStorage
+  getNotes: (): Note[] => {
+    try {
+      return JSON.parse(localStorage.getItem('notes') || '[]');
+    } catch (error) {
+      console.error("Error reading notes from localStorage:", error);
+      return [];
+    }
+  },
+  
+  // Save a note to localStorage
+  saveNote: (noteData: Note): void => {
+    try {
+      // Get existing notes
+      const existingNotes = manageLocalStorageNotes.getNotes();
+      
+      // Remove any existing note with the same date to avoid duplicates
+      const filteredNotes = existingNotes.filter(note => note.date !== noteData.date);
+      
+      // Add the new note
+      filteredNotes.push(noteData);
+      
+      // Save back to localStorage
+      localStorage.setItem('notes', JSON.stringify(filteredNotes));
+      console.log("Note saved to localStorage successfully");
+    } catch (error) {
+      console.error("Error saving note to localStorage:", error);
+    }
+  },
+  
+  // Delete a note from localStorage
+  deleteNote: (dateString: string): void => {
+    try {
+      // Get existing notes
+      const existingNotes = manageLocalStorageNotes.getNotes();
+      
+      // Filter out the note to delete
+      const filteredNotes = existingNotes.filter(note => note.date !== dateString);
+      
+      // Save back to localStorage
+      localStorage.setItem('notes', JSON.stringify(filteredNotes));
+      console.log("Note removed from localStorage successfully");
+    } catch (error) {
+      console.error("Error removing note from localStorage:", error);
+    }
+  }
+};
+
 const NoteEditDialog = ({ 
   open, 
   onOpenChange, 
@@ -45,8 +95,7 @@ const NoteEditDialog = ({
 
   const handleSave = () => {
     if (!noteText.trim()) {
-      // Instead of showing toast, just return early
-      return;
+      return; // Don't save empty notes
     }
 
     // Create the note without a specific category
@@ -58,41 +107,19 @@ const NoteEditDialog = ({
     // Close the dialog immediately before making the save
     onOpenChange(false);
     
-    // Then save the note
+    // Save the note using the callback
     onSave(noteData);
     
-    // Direct localStorage handling - this ensures notes show in the Notes page
-    try {
-      // Get existing notes from localStorage
-      const existingNotes = JSON.parse(localStorage.getItem('notes') || '[]');
-      
-      // Remove any existing note with the same date if it exists to avoid duplicates
-      const filteredNotes = existingNotes.filter((note: Note) => note.date !== noteData.date);
-      
-      // Add the new note without a category
-      filteredNotes.push({
-        date: noteData.date,
-        text: noteData.text
-      });
-      
-      // Save back to localStorage
-      localStorage.setItem('notes', JSON.stringify(filteredNotes));
-      console.log("Note saved directly to localStorage");
-    } catch (error) {
-      console.error("Error saving note to localStorage:", error);
-    }
+    // Save to localStorage for the notes tracking page
+    manageLocalStorageNotes.saveNote(noteData);
     
-    // Dispatch a custom event to notify that notes have been updated
-    const notesUpdatedEvent = new CustomEvent('notesUpdated', {
+    // Notify other components about the note update
+    document.dispatchEvent(new CustomEvent('notesUpdated', {
       detail: { 
-        noteData: {
-          date: noteData.date,
-          text: noteData.text
-        },
+        noteData,
         action: "save"
       }
-    });
-    document.dispatchEvent(notesUpdatedEvent);
+    }));
   };
 
   const handleDelete = () => {
@@ -103,24 +130,16 @@ const NoteEditDialog = ({
       // Call the onDelete function passed as prop
       onDelete(existingNote.date);
       
-      // Direct localStorage handling for deletion
-      try {
-        const existingNotes = JSON.parse(localStorage.getItem('notes') || '[]');
-        const filteredNotes = existingNotes.filter((note: Note) => note.date !== existingNote.date);
-        localStorage.setItem('notes', JSON.stringify(filteredNotes));
-        console.log("Note removed directly from localStorage");
-      } catch (error) {
-        console.error("Error removing note from localStorage:", error);
-      }
+      // Delete from localStorage
+      manageLocalStorageNotes.deleteNote(existingNote.date);
       
-      // Dispatch a custom event for note deletion
-      const notesUpdatedEvent = new CustomEvent('notesUpdated', {
+      // Notify other components about the note deletion
+      document.dispatchEvent(new CustomEvent('notesUpdated', {
         detail: { 
           action: "delete",
           date: existingNote.date
         }
-      });
-      document.dispatchEvent(notesUpdatedEvent);
+      }));
     }
   };
 

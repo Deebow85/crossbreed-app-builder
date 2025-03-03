@@ -39,6 +39,10 @@ function useToaster() {
   return context
 }
 
+/**
+ * Toast provider component.
+ * This is currently disabled but maintains the interface for future re-enabling
+ */
 export function ToasterProvider({
   children,
 }: {
@@ -53,16 +57,19 @@ export function ToasterProvider({
   const addToast = React.useCallback(
     (toast: ToasterToast) => {
       // Toast functionality disabled - do nothing
+      console.log("Toast would have been shown:", toast.title);
     },
     []
   )
 
   const removeToast = React.useCallback((id: string) => {
     // Toast functionality disabled - do nothing
+    console.log("Toast would have been removed:", id);
   }, [])
 
   const removeAllToasts = React.useCallback(() => {
     // Toast functionality disabled - do nothing
+    console.log("All toasts would have been removed");
   }, [])
 
   const value = React.useMemo(
@@ -82,9 +89,13 @@ export function ToasterProvider({
   )
 }
 
-// Stub for the toast function - does nothing
+/**
+ * Stub for the toast function
+ * Currently disabled but maintains the interface for future re-enabling
+ */
 export const toast = (props: ToastProps) => {
   // Toast functionality disabled - do nothing
+  console.log("Toast would have been shown:", props);
   return {
     id: crypto.randomUUID(),
     dismiss: () => {},
@@ -92,11 +103,15 @@ export const toast = (props: ToastProps) => {
   }
 }
 
-// Stub for the useToast hook - returns empty functions
+/**
+ * Stub for the useToast hook
+ * Currently disabled but maintains the interface for future re-enabling
+ */
 export const useToast = () => {
   return {
     toast: (props: ToastProps) => {
       // Toast functionality disabled - do nothing
+      console.log("Component toast would have been shown:", props);
       return {
         id: crypto.randomUUID(),
         dismiss: () => {},
