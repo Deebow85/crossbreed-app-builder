@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -28,7 +27,7 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/comp
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useTheme } from "@/lib/theme";
 import CalendarDay from "./CalendarDay";
-import ShiftSelectionDialog from "./ShiftSelectionDialog";
+import ShiftSelectionDialog from "./shift-selection/ShiftSelectionDialog";
 import { getNextPayday, isPayday } from "@/utils/dateUtils";
 import {
   ShiftType, ShiftAssignment, PaydaySettings, ShiftPattern,

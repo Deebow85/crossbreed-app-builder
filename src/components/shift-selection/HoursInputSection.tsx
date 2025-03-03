@@ -104,10 +104,13 @@ export function HoursInputSection({
             value={overtimeHours[date.toISOString()] || ""}
             onChange={(e) => {
               const value = parseFloat(e.target.value);
-              setOvertimeHours(prev => ({
-                ...prev,
-                [date.toISOString()]: isNaN(value) ? 0 : value
-              }));
+              const newHours = {...overtimeHours};
+              if (isNaN(value)) {
+                delete newHours[date.toISOString()];
+              } else {
+                newHours[date.toISOString()] = value;
+              }
+              setOvertimeHours(newHours);
             }}
           />
         </div>
