@@ -759,6 +759,16 @@ const NotesTracking = () => {
       setNotes(updatedNotes);
       localStorage.setItem("notes", JSON.stringify(updatedNotes));
       
+      // Remove TOIL from calendar shifts if it's a TOIL note
+      const deletedNote = notes[selectedItem.index];
+      if (deletedNote.toilType) {
+        const calendarShifts = JSON.parse(localStorage.getItem('calendarShifts') || '[]');
+        const updatedCalendarShifts = calendarShifts.filter((shift) => 
+          shift.date !== new Date(deletedNote.date).toISOString()
+        );
+        localStorage.setItem('calendarShifts', JSON.stringify(updatedCalendarShifts));
+      }
+      
       toast({
         title: "Note deleted",
         description: "Note has been permanently removed",
@@ -768,6 +778,14 @@ const NotesTracking = () => {
       updatedSwaps.splice(selectedItem.index, 1);
       setSwaps(updatedSwaps);
       localStorage.setItem("swaps", JSON.stringify(updatedSwaps));
+      
+      // Remove swap from calendar shifts
+      const deletedSwap = swaps[selectedItem.index];
+      const calendarShifts = JSON.parse(localStorage.getItem('calendarShifts') || '[]');
+      const updatedCalendarShifts = calendarShifts.filter((shift) => 
+        shift.date !== new Date(deletedSwap.date).toISOString()
+      );
+      localStorage.setItem('calendarShifts', JSON.stringify(updatedCalendarShifts));
       
       toast({
         title: "Shift swap deleted",
