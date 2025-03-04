@@ -148,19 +148,42 @@ const NotesTracking = () => {
     }));
   };
   
-  // Load notes and swaps from localStorage on component mount
+  // Check for session storage data on mount
   useEffect(() => {
-    // Check for swap type in sessionStorage
-    const swapType = sessionStorage.getItem('swapType');
-    if (swapType === 'owed') {
-      setActiveTab('tracking');
-      setRecordType('swap');
-      setSwapType('owed');
-      // Clear the sessionStorage
-      sessionStorage.removeItem('swapType');
+    const storedDate = sessionStorage.getItem('selectedSwapDate');
+    const storedRecordType = sessionStorage.getItem('recordType');
+    const storedSwapType = sessionStorage.getItem('swapType');
+    const storedActiveTab = sessionStorage.getItem('activeTab');
+
+    if (storedDate) {
+      setSelectedSwapDate(new Date(storedDate));
     }
+
+    if (storedRecordType) {
+      setRecordType(storedRecordType as RecordType);
+    }
+
+    if (storedSwapType) {
+      setSwapType(storedSwapType as SwapType);
+    }
+
+    if (storedActiveTab) {
+      setActiveTab(storedActiveTab);
+    }
+
+    // If we have session storage data, open the form
+    if (storedDate && storedRecordType) {
+      setSwapFormOpen(true);
+    }
+
+    // Clear session storage
+    sessionStorage.removeItem('selectedSwapDate');
+    sessionStorage.removeItem('recordType');
+    sessionStorage.removeItem('swapType');
+    sessionStorage.removeItem('activeTab');
   }, []);
 
+  // Load notes and swaps from localStorage on component mount
   useEffect(() => {
     const savedNotes = localStorage.getItem("notes");
     if (savedNotes) {
