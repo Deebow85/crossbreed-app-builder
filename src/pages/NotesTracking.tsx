@@ -150,6 +150,18 @@ const NotesTracking = () => {
   
   // Load notes and swaps from localStorage on component mount
   useEffect(() => {
+    // Check for swap type in sessionStorage
+    const swapType = sessionStorage.getItem('swapType');
+    if (swapType === 'owed') {
+      setActiveTab('tracking');
+      setRecordType('swap');
+      setSwapType('owed');
+      // Clear the sessionStorage
+      sessionStorage.removeItem('swapType');
+    }
+  }, []);
+
+  useEffect(() => {
     const savedNotes = localStorage.getItem("notes");
     if (savedNotes) {
       try {
