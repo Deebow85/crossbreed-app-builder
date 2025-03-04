@@ -365,8 +365,62 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
     });
   };
 
+  const [swaps, setSwaps] = useState<ShiftSwap[]>(() => {
+    const savedSwaps = localStorage.getItem('swaps');
+    return savedSwaps ? JSON.parse(savedSwaps) : [];
+  });
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const savedSwaps = localStorage.getItem('swaps');
+      const savedNotes = localStorage.getItem('notes');
+      if (savedSwaps) {
+        setSwaps(JSON.parse(savedSwaps));
+      }
+      if (savedNotes) {
+        setNotes(JSON.parse(savedNotes));
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   const getShiftForDate = (date: Date) => {
-    return shifts.find(shift => shift.date === date.toISOString());
+    const dateStr = date.toISOString();
+    const regularShift = shifts.find(shift => shift.date === dateStr);
+    if (regularShift) return regularShift;
+
+    // Check for swaps and TOIL
+    const swap = swaps.find(s => s.date === format(date, "yyyy-MM-dd"));
+    const toilNote = notes.find(n => n.date === format(date, "yyyy-MM-dd") && n.toilType);
+
+    if (swap) {
+      return {
+        date: dateStr,
+        shiftType: {
+          name: `Swap ${swap.type === 'owed' ? 'Owed' : 'Done'}`,
+          color: swap.type === 'owed' ? '#FF6B6B' : '#4CAF50',
+          gradient: swap.type === 'owed' ? 'linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%)' : 'linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%)',
+          isSwapOwed: swap.type === 'owed',
+          isSwapDone: swap.type === 'payback'
+        }
+      };
+    }
+
+    if (toilNote) {
+      return {
+        date: dateStr,
+        shiftType: {
+          name: `TOIL ${toilNote.toilType === 'taken' ? 'Taken' : 'Done'}`,
+          color: '#9C27B0',
+          gradient: 'linear-gradient(135deg, #9C27B0 0%, #BA68C8 100%)',
+          isTOIL: true
+        }
+      };
+    }
+
+    return undefined;
   };
 
   const addOrEditNote = (date: Date) => {
