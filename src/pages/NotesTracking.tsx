@@ -259,7 +259,7 @@ const NotesTracking = () => {
       };
       
       // Save to localStorage
-      localStorage.setItem("notes", JSON.stringify(updatedNotes));
+      localStorage.setItem("calendarNotes", JSON.stringify(updatedNotes));
       
       // We'll show a toast directly in the component
       return updatedNotes;
@@ -276,7 +276,7 @@ const NotesTracking = () => {
       };
       
       // Save to localStorage
-      localStorage.setItem("notes", JSON.stringify(updatedNotes));
+      localStorage.setItem("calendarNotes", JSON.stringify(updatedNotes));
       
       // We'll show a toast directly in the component
       return updatedNotes;
@@ -722,7 +722,7 @@ const NotesTracking = () => {
 
       const updatedNotes = [...notes, newNote];
       setNotes(updatedNotes);
-      localStorage.setItem("notes", JSON.stringify(updatedNotes));
+      localStorage.setItem("calendarNotes", JSON.stringify(updatedNotes));
       
       // Reset form
       setToilHours("");
@@ -757,7 +757,7 @@ const NotesTracking = () => {
       const updatedNotes = [...notes];
       updatedNotes.splice(selectedItem.index, 1);
       setNotes(updatedNotes);
-      localStorage.setItem("notes", JSON.stringify(updatedNotes));
+      localStorage.setItem("calendarNotes", JSON.stringify(updatedNotes));
       
       // Remove TOIL from calendar shifts if it's a TOIL note
       const deletedNote = notes[selectedItem.index];
@@ -879,7 +879,7 @@ const NotesTracking = () => {
       };
       
       setNotes(updatedNotes);
-      localStorage.setItem("notes", JSON.stringify(updatedNotes));
+      localStorage.setItem("calendarNotes", JSON.stringify(updatedNotes));
       
       toast({
         title: "Note updated",
