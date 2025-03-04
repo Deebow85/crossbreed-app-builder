@@ -167,13 +167,12 @@ const NotesTracking = () => {
       setSwapType(storedSwapType as SwapType);
     }
 
-    if (storedActiveTab) {
-      setActiveTab(storedActiveTab);
-    }
-
-    // If we have session storage data, open the form
+    // Always set to shift-swap-toil tab when coming from calendar
     if (storedDate && storedRecordType) {
+      setActiveTab('tracking');
       setSwapFormOpen(true);
+    } else if (storedActiveTab) {
+      setActiveTab(storedActiveTab);
     }
 
     // Clear session storage
