@@ -692,7 +692,10 @@ const NotesTracking = () => {
         return;
       }
 
-      const dateString = format(selectedSwapDate, "yyyy-MM-dd");
+      // Ensure we're using the selected date from sessionStorage if available
+      const storedDate = sessionStorage.getItem('selectedSwapDate');
+      const dateToUse = storedDate ? new Date(storedDate) : selectedSwapDate;
+      const dateString = format(dateToUse, "yyyy-MM-dd");
       
       // Create a TOIL note
       const toilContent: ContentBlock[] = [
@@ -714,8 +717,8 @@ const NotesTracking = () => {
         text: `TOIL: ${toilHours} hours\n\n${toilNote.trim()}`,
         header: `TOIL Hours: ${toilHours}`,
         content: toilContent,
-        toilHours: parseFloat(toilHours), // Store TOIL hours for easier reference
-        toilType: toilType, // Store TOIL type
+        toilHours: parseFloat(toilHours),
+        toilType: toilType,
         isToilDone: false,
         isToilTaken: false,
       };
@@ -724,7 +727,7 @@ const NotesTracking = () => {
       setNotes(updatedNotes);
       localStorage.setItem("calendarNotes", JSON.stringify(updatedNotes));
       
-      // Reset form
+      // Reset form and clear sessionStorage
       setToilHours("");
       setToilNote("");
       setSelectedSwapDate(new Date());
@@ -733,6 +736,7 @@ const NotesTracking = () => {
       setIsToilDone(false);
       setIsToilTaken(false);
       setSwapFormOpen(false);
+      sessionStorage.removeItem('selectedSwapDate');
       
       toast({
         title: "TOIL hours recorded",
