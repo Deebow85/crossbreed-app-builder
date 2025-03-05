@@ -31,7 +31,7 @@ import CalendarDay from "./CalendarDay";
 import ShiftSelectionDialog from "./ShiftSelectionDialog";
 import NoteEditDialog from "./NoteEditDialog";
 import { getNextPayday, isPayday } from "@/utils/dateUtils";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import {
   ShiftType, ShiftAssignment, PaydaySettings, ShiftPattern,
   Note, ShiftSwap, Alarm, PatternCycle

@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,9 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { format, parseISO } from "date-fns";
 import { Search, Plus, Clock, ArrowLeftRight, CalendarDays, FolderOpen, Pencil, Trash2, Image, Camera, ChevronDown, CheckCircle2, X, Calendar, StickyNote } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Note, ShiftSwap, SwapType, TOILType } from "@/types/calendar";
+import { useNavigate } from "react-router-dom";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   AlertDialog,
@@ -259,7 +260,7 @@ export default function NotesTracking() {
       };
       
       // Save to localStorage
-      localStorage.setItem("notes", JSON.stringify(updatedNotes));
+      localStorage.setItem("calendarNotes", JSON.stringify(updatedNotes));
       
       // We'll show a toast directly in the component
       return updatedNotes;
@@ -276,7 +277,7 @@ export default function NotesTracking() {
       };
       
       // Save to localStorage
-      localStorage.setItem("notes", JSON.stringify(updatedNotes));
+      localStorage.setItem("calendarNotes", JSON.stringify(updatedNotes));
       
       // We'll show a toast directly in the component
       return updatedNotes;
@@ -692,7 +693,10 @@ export default function NotesTracking() {
         return;
       }
 
-      const dateString = format(selectedSwapDate, "yyyy-MM-dd");
+      // Ensure we're using the selected date from sessionStorage if available
+      const storedDate = sessionStorage.getItem('selectedSwapDate');
+      const dateToUse = storedDate ? new Date(storedDate) : selectedSwapDate;
+      const dateString = format(dateToUse, "yyyy-MM-dd");
       
       // Create a TOIL note
       const toilContent: ContentBlock[] = [
@@ -714,17 +718,17 @@ export default function NotesTracking() {
         text: `TOIL: ${toilHours} hours\n\n${toilNote.trim()}`,
         header: `TOIL Hours: ${toilHours}`,
         content: toilContent,
-        toilHours: parseFloat(toilHours), // Store TOIL hours for easier reference
-        toilType: toilType, // Store TOIL type
+        toilHours: parseFloat(toilHours),
+        toilType: toilType,
         isToilDone: false,
         isToilTaken: false,
       };
 
       const updatedNotes = [...notes, newNote];
       setNotes(updatedNotes);
-      localStorage.setItem("notes", JSON.stringify(updatedNotes));
+      localStorage.setItem("calendarNotes", JSON.stringify(updatedNotes));
       
-      // Reset form
+      // Reset form and clear sessionStorage
       setToilHours("");
       setToilNote("");
       setSelectedSwapDate(new Date());
@@ -733,6 +737,7 @@ export default function NotesTracking() {
       setIsToilDone(false);
       setIsToilTaken(false);
       setSwapFormOpen(false);
+      sessionStorage.removeItem('selectedSwapDate');
       
       toast({
         title: "TOIL hours recorded",
@@ -757,7 +762,26 @@ export default function NotesTracking() {
       const updatedNotes = [...notes];
       updatedNotes.splice(selectedItem.index, 1);
       setNotes(updatedNotes);
-      localStorage.setItem("notes", JSON.stringify(updatedNotes));
+      localStorage.setItem("calendarNotes", JSON.stringify(updatedNotes));
+      
+      // Remove TOIL from calendar shifts if it's a TOIL note
+      const deletedNote = notes[selectedItem.index];
+      if (deletedNote.toilType) {
+        try {
+          const calendarShifts = JSON.parse(localStorage.getItem('calendarShifts') || '[]');
+          // Format the date consistently for comparison
+          const noteDate = new Date(deletedNote.date);
+          noteDate.setHours(0, 0, 0, 0);
+          const updatedCalendarShifts = calendarShifts.filter((shift) => {
+            const shiftDate = new Date(shift.date);
+            shiftDate.setHours(0, 0, 0, 0);
+            return shiftDate.getTime() !== noteDate.getTime();
+          });
+          localStorage.setItem('calendarShifts', JSON.stringify(updatedCalendarShifts));
+        } catch (error) {
+          console.error('Error removing TOIL from calendar shifts:', error);
+          // Continue with note deletion even if calendar shift removal fails
+        }
       
       toast({
         title: "Note deleted",
@@ -768,6 +792,14 @@ export default function NotesTracking() {
       updatedSwaps.splice(selectedItem.index, 1);
       setSwaps(updatedSwaps);
       localStorage.setItem("swaps", JSON.stringify(updatedSwaps));
+      
+      // Remove swap from calendar shifts
+      const deletedSwap = swaps[selectedItem.index];
+      const calendarShifts = JSON.parse(localStorage.getItem('calendarShifts') || '[]');
+      const updatedCalendarShifts = calendarShifts.filter((shift) => 
+        shift.date !== new Date(deletedSwap.date).toISOString()
+      );
+      localStorage.setItem('calendarShifts', JSON.stringify(updatedCalendarShifts));
       
       toast({
         title: "Shift swap deleted",
@@ -861,7 +893,7 @@ export default function NotesTracking() {
       };
       
       setNotes(updatedNotes);
-      localStorage.setItem("notes", JSON.stringify(updatedNotes));
+      localStorage.setItem("calendarNotes", JSON.stringify(updatedNotes));
       
       toast({
         title: "Note updated",
@@ -945,7 +977,7 @@ export default function NotesTracking() {
       const text = getNoteText(note);
       return !text.toLowerCase().includes("toil") && !note.toilHours && !text.toLowerCase().includes("swap") && !note.swap;
     }),
-    "calendar-notes": filteredNotes.filter(note => note.swap)
+    // "calendar-notes": filteredNotes.filter(note => note.swap)
   };
 
   // When searching, open folders with matching results
@@ -980,6 +1012,7 @@ export default function NotesTracking() {
       case "swap-owed": return "Shift Swap (Owed)";
       case "toil": return "TOIL";
       case "notes": return "Notes";
+      case "calendar-notes": return "Notes From Calendar";
       default: return key;
     }
   };
@@ -1164,6 +1197,26 @@ export default function NotesTracking() {
     );
   };
 
+  // Group calendar notes by month
+  const notesByMonth = calendarNotes.reduce((groups, note) => {
+    const date = parseISO(note.date);
+    const monthYear = format(date, 'MMMM yyyy');
+    
+    if (!groups[monthYear]) {
+      groups[monthYear] = [];
+    }
+    
+    groups[monthYear].push(note);
+    return groups;
+  }, {} as Record<string, Note[]>);
+
+  // Sort months in reverse chronological order
+  const sortedMonths = Object.keys(notesByMonth).sort((a, b) => {
+    const dateA = parseISO(notesByMonth[a][0].date);
+    const dateB = parseISO(notesByMonth[b][0].date);
+    return dateB.getTime() - dateA.getTime();
+  });
+
   return (
     <div className="container max-w-md mx-auto p-4 pb-20">
       <h1 className="text-2xl font-bold mb-4">Notes & Tracking</h1>
@@ -1182,10 +1235,55 @@ export default function NotesTracking() {
       </div>
       
       <Tabs defaultValue="notes" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2 mb-2 h-12">
+        <TabsList className="grid w-full grid-cols-3 mb-2 h-12">
           <TabsTrigger value="notes" className="py-3">Notes</TabsTrigger>
+          <TabsTrigger value="calendar" className="py-3">Calendar Notes</TabsTrigger>
           <TabsTrigger value="tracking" className="py-3">Shift Swap / TOIL</TabsTrigger>
         </TabsList>
+        
+        <TabsContent value="calendar" className="space-y-4 mt-4">
+          {calendarNotes.length === 0 ? (
+            <div className="text-center py-12">
+              <StickyNote className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <p className="text-muted-foreground">No calendar notes found. Add notes by clicking on dates in the calendar.</p>
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => navigate('/calendar')}
+              >
+                Go to Calendar
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {sortedMonths.map((month) => (
+                <div key={month}>
+                  <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    {month}
+                  </h2>
+                  <div className="space-y-3">
+                    {notesByMonth[month]
+                      .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime())
+                      .map((note) => (
+                        <Card key={note.date} className="overflow-hidden shadow-none border">
+                          <CardHeader className="bg-muted/30 pb-2 pt-3">
+                            <CardTitle className="text-sm flex items-center gap-2">
+                              <CalendarDays className="h-4 w-4" />
+                              {format(parseISO(note.date), 'EEEE, MMMM d, yyyy')}
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="pt-3 pb-3">
+                            <p className="whitespace-pre-wrap text-sm">{note.text}</p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
         
         <TabsContent value="notes" className="space-y-4 mt-4">
           {/* Collapsible Note Form */}
@@ -2218,4 +2316,4 @@ export default function NotesTracking() {
       </Dialog>
     </div>
   );
-};
+}
