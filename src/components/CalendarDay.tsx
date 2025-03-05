@@ -23,6 +23,7 @@ type CalendarDayProps = {
   onContextMenu: (e: React.MouseEvent, date: Date) => void;
   isSelected?: boolean;
   showPayday?: boolean;
+  visualizerTypes?: ('colour' | 'text' | 'label')[];
 };
 
 const CalendarDay = ({
@@ -98,7 +99,7 @@ const CalendarDay = ({
         isSelected && "ring-2 ring-primary",
         theme === 'dark' && !shift && "hover:bg-accent/50 data-[state=open]:bg-accent/50"
       )}
-      style={shift ? {
+      style={shift && visualizerTypes?.includes('colour') ? {
         background: shift.shiftType.gradient,
         color: theme === 'dark' ? textColor : 'inherit'
       } : undefined}
@@ -144,7 +145,7 @@ const CalendarDay = ({
           style={{ color: shift ? textColor : paydayColor }}
         />
       )}
-      {shift && (
+      {shift && visualizerTypes?.includes('text') && (
         <span className={cn(
           "absolute bottom-0.5 font-medium",
           calendarSize === 'large' ? "text-sm sm:text-base" : "text-[8px] sm:text-xs",
@@ -159,6 +160,15 @@ const CalendarDay = ({
                shift.shiftType.isSwapOwed ? "SO" : ""}
             </span>
           )}
+        </span>
+      )}
+      {shift && visualizerTypes?.includes('label') && (
+        <span className={cn(
+          "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-bold",
+          calendarSize === 'large' ? "text-2xl sm:text-3xl" : "text-base sm:text-lg",
+          "text-white"
+        )}>
+          {shift.shiftType.name.charAt(0)}
         </span>
       )}
     </Button>

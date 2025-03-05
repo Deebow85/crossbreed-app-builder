@@ -711,6 +711,7 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
                   }}
                   isSelected={selectedDatesForShift.some(d => d.getTime() === date.getTime())}
                   showPayday={calendarSettings.paydayEnabled}
+                  visualizerTypes={calendarSettings.shiftVisualizerTypes || [calendarSettings.shiftVisualizerType || 'colour']}
                 />
               );
             });
