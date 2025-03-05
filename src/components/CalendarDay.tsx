@@ -42,6 +42,7 @@ const CalendarDay = ({
   onContextMenu,
   isSelected,
   showPayday = true,
+  visualizerTypes = ['colour'],
 }: CalendarDayProps) => {
   const { theme } = useTheme();
   const longPressTimer = useRef<NodeJS.Timeout>();
@@ -77,16 +78,13 @@ const CalendarDay = ({
     'top-left': 'left-1',
     'top-right': 'right-1'
   }[numberLayout];
-
-  // Set text color for shift name and labels based on shift type
-  const textColor = 'white';
-
+  // Set text color for shift name and labels based on shift type and theme
+  const textColor = theme === 'dark' ? 'white' : 'black';
   // Determine the proper styling for special types
   const isSpecialShift = shift?.shiftType.isOvertime || 
                           shift?.shiftType.isTOIL || 
                           shift?.shiftType.isSwapDone || 
                           shift?.shiftType.isSwapOwed;
-
   return (
     <Button
       key={date.toISOString()}
@@ -99,7 +97,7 @@ const CalendarDay = ({
         isSelected && "ring-2 ring-primary",
         theme === 'dark' && !shift && "hover:bg-accent/50 data-[state=open]:bg-accent/50"
       )}
-      style={shift && visualizerTypes?.includes('colour') ? {
+      style={shift && visualizerTypes && visualizerTypes.includes('colour') ? {
         background: shift.shiftType.gradient,
         color: theme === 'dark' ? textColor : 'inherit'
       } : undefined}
@@ -112,7 +110,7 @@ const CalendarDay = ({
         "absolute top-0.5",
         numberPositionClasses,
         calendarSize === 'large' ? "text-base sm:text-lg" : "text-[10px] sm:text-xs",
-        shift ? "text-white" : "text-foreground"
+        shift && visualizerTypes?.includes('colour') ? "text-white" : "text-foreground"
       )}>
         {format(date, 'd')}
       </span>
@@ -145,11 +143,11 @@ const CalendarDay = ({
           style={{ color: shift ? textColor : paydayColor }}
         />
       )}
-      {shift && visualizerTypes?.includes('text') && (
+      {shift && visualizerTypes && visualizerTypes.includes('text') && (
         <span className={cn(
           "absolute bottom-0.5 font-medium",
           calendarSize === 'large' ? "text-sm sm:text-base" : "text-[8px] sm:text-xs",
-          "text-white"
+          visualizerTypes.includes('colour') ? "text-white" : theme === 'dark' ? "text-white" : "text-black"
         )}>
           {shift.shiftType.name}
           {isSpecialShift && (
@@ -162,11 +160,11 @@ const CalendarDay = ({
           )}
         </span>
       )}
-      {shift && visualizerTypes?.includes('label') && (
+      {shift && visualizerTypes && visualizerTypes.includes('label') && (
         <span className={cn(
           "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-bold",
           calendarSize === 'large' ? "text-2xl sm:text-3xl" : "text-base sm:text-lg",
-          "text-white"
+          visualizerTypes.includes('colour') ? "text-white" : theme === 'dark' ? "text-white" : "text-black"
         )}>
           {shift.shiftType.name.charAt(0)}
         </span>

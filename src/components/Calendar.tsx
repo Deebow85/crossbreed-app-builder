@@ -496,7 +496,9 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
     paydayDate: getSettingValue('paydayDate', 15),
     paydayColor: getSettingValue('paydayColor', '#F97316'),
     calendarNumberLayout: getSettingValue('calendarNumberLayout', 'centre'),
-    showOverlappingDates: getSettingValue('showOverlappingDates', true)
+    showOverlappingDates: getSettingValue('showOverlappingDates', true),
+    shiftVisualizerType: getSettingValue('shiftVisualizerType', 'colour'),
+    shiftVisualizerTypes: Array.isArray(parsedSettings.shiftVisualizerTypes) ? parsedSettings.shiftVisualizerTypes : ['colour']
   } as const;
   
   const totalOvertimeHours = shifts.reduce((total, shift) => {
@@ -711,7 +713,9 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
                   }}
                   isSelected={selectedDatesForShift.some(d => d.getTime() === date.getTime())}
                   showPayday={calendarSettings.paydayEnabled}
-                  visualizerTypes={calendarSettings.shiftVisualizerTypes || [calendarSettings.shiftVisualizerType || 'colour']}
+                  visualizerTypes={Array.isArray(calendarSettings.shiftVisualizerTypes) && calendarSettings.shiftVisualizerTypes.length > 0 
+                    ? calendarSettings.shiftVisualizerTypes 
+                    : [calendarSettings.shiftVisualizerType || 'colour']}
                 />
               );
             });
