@@ -13,6 +13,9 @@ export interface AppSettings {
   longPressEnabled: boolean;
   showOverlappingDates: boolean;
   showIconTitles: boolean;
+  shiftHighlighter: boolean;
+  shiftVisualizerType?: 'colour' | 'text' | 'label';
+  shiftVisualizerTypes?: ('colour' | 'text' | 'label')[];
   notifications?: {
     enabled: boolean;
     defaultReminderTime: string;
@@ -50,6 +53,7 @@ export const defaultSettings: AppSettings = {
   longPressEnabled: true,
   showOverlappingDates: true,
   showIconTitles: true,
+  shiftVisualizerType: 'colour',
   notifications: {
     enabled: true,
     defaultReminderTime: "01:00",
