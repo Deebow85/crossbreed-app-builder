@@ -145,19 +145,11 @@ const CalendarDay = ({
       )}
       {shift && visualizerTypes && visualizerTypes.includes('text') && (
         <span className={cn(
-          "absolute bottom-0.5 font-medium",
+          "absolute bottom-0.5 font-medium max-w-[90%] truncate text-center",
           calendarSize === 'large' ? "text-sm sm:text-base" : "text-[8px] sm:text-xs",
           visualizerTypes.includes('colour') ? "text-white" : theme === 'dark' ? "text-white" : "text-black"
-        )}>
+        )} title={shift.shiftType.name}>
           {shift.shiftType.name}
-          {isSpecialShift && (
-            <span className="ml-1 text-[0.7em] opacity-80">
-              {shift.shiftType.isOvertime ? "OT" : 
-               shift.shiftType.isTOIL ? "T" : 
-               shift.shiftType.isSwapDone ? "SD" : 
-               shift.shiftType.isSwapOwed ? "SO" : ""}
-            </span>
-          )}
         </span>
       )}
       {shift && visualizerTypes && visualizerTypes.includes('label') && (
@@ -166,7 +158,16 @@ const CalendarDay = ({
           calendarSize === 'large' ? "text-2xl sm:text-3xl" : "text-base sm:text-lg",
           visualizerTypes.includes('colour') ? "text-white" : theme === 'dark' ? "text-white" : "text-black"
         )}>
-          {shift.shiftType.name.charAt(0)}
+          {isSpecialShift ? (
+            <>
+              {shift.shiftType.isOvertime ? (shift.shiftType.symbol || "OT") : 
+               shift.shiftType.isTOIL ? (shift.shiftType.symbol || "T") : 
+               shift.shiftType.isSwapDone ? (shift.shiftType.symbol || "SD") : 
+               shift.shiftType.isSwapOwed ? (shift.shiftType.symbol || "SO") : ""}
+            </>
+          ) : (
+            shift.shiftType.symbol || shift.shiftType.name.charAt(0)
+          )}
         </span>
       )}
     </Button>

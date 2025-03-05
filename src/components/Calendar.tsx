@@ -396,28 +396,54 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
     const toilNote = notes.find(n => n.date === format(date, "yyyy-MM-dd") && n.toilType);
 
     if (swap) {
-      return {
-        date: dateStr,
-        shiftType: {
-          name: `Swap ${swap.type === 'owed' ? 'Owed' : 'Done'}`,
-          color: swap.type === 'owed' ? '#FF6B6B' : '#4CAF50',
-          gradient: swap.type === 'owed' ? 'linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%)' : 'linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%)',
-          isSwapOwed: swap.type === 'owed',
-          isSwapDone: swap.type === 'payback'
-        }
-      };
+      // Find the appropriate shift type from user settings
+      const swapShiftType = shiftTypes.find(type => 
+        swap.type === 'owed' ? type.isSwapOwed : type.isSwapDone
+      );
+      
+      if (swapShiftType) {
+        return {
+          date: dateStr,
+          shiftType: swapShiftType
+        };
+      } else {
+        // Fallback to default if no custom shift type is found
+        return {
+          date: dateStr,
+          shiftType: {
+            name: `Swap ${swap.type === 'owed' ? 'Owed' : 'Done'}`,
+            color: swap.type === 'owed' ? '#FF6B6B' : '#4CAF50',
+            gradient: swap.type === 'owed' ? 'linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%)' : 'linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%)',
+            isSwapOwed: swap.type === 'owed',
+            isSwapDone: swap.type === 'payback',
+            symbol: swap.type === 'owed' ? 'SO' : 'SD'
+          }
+        };
+      }
     }
 
     if (toilNote) {
-      return {
-        date: dateStr,
-        shiftType: {
-          name: `TOIL ${toilNote.toilType === 'taken' ? 'Taken' : 'Done'}`,
-          color: '#9C27B0',
-          gradient: 'linear-gradient(135deg, #9C27B0 0%, #BA68C8 100%)',
-          isTOIL: true
-        }
-      };
+      // Find the appropriate TOIL shift type from user settings
+      const toilShiftType = shiftTypes.find(type => type.isTOIL);
+      
+      if (toilShiftType) {
+        return {
+          date: dateStr,
+          shiftType: toilShiftType
+        };
+      } else {
+        // Fallback to default if no custom shift type is found
+        return {
+          date: dateStr,
+          shiftType: {
+            name: `TOIL ${toilNote.toilType === 'taken' ? 'Taken' : 'Done'}`,
+            color: '#9C27B0',
+            gradient: 'linear-gradient(135deg, #9C27B0 0%, #BA68C8 100%)',
+            isTOIL: true,
+            symbol: 'T'
+          }
+        };
+      }
     }
 
     return undefined;

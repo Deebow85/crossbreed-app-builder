@@ -1,6 +1,7 @@
 
 export type ShiftType = {
   name: string;
+  symbol?: string;
   color: string;
   gradient: string;
   isOvertime?: boolean;

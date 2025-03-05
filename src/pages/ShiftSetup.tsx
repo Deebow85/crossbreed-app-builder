@@ -145,6 +145,9 @@ const ShiftSetup = () => {
     settings.shiftTypes = validatedShiftTypes;
     localStorage.setItem('appSettings', JSON.stringify(settings));
     
+    // Dispatch storage event to notify other components of the change
+    window.dispatchEvent(new Event('storage'));
+    
     // Log for debugging
     console.log("Saved shift types:", validatedShiftTypes);
   };
