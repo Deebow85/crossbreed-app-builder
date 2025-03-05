@@ -158,16 +158,7 @@ const CalendarDay = ({
           calendarSize === 'large' ? "text-2xl sm:text-3xl" : "text-base sm:text-lg",
           visualizerTypes.includes('colour') ? "text-white" : theme === 'dark' ? "text-white" : "text-black"
         )}>
-          {isSpecialShift ? (
-            <>
-              {shift.shiftType.isOvertime ? (shift.shiftType.symbol || "OT") : 
-               shift.shiftType.isTOIL ? (shift.shiftType.symbol || "T") : 
-               shift.shiftType.isSwapDone ? (shift.shiftType.symbol || "SD") : 
-               shift.shiftType.isSwapOwed ? (shift.shiftType.symbol || "SO") : ""}
-            </>
-          ) : (
-            shift.shiftType.symbol || shift.shiftType.name.charAt(0)
-          )}
+          {shift.shiftType.symbol || shift.shiftType.name.charAt(0)}
         </span>
       )}
     </Button>

@@ -48,7 +48,19 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [shifts, setShifts] = useState<ShiftAssignment[]>(() => {
     const savedShifts = localStorage.getItem('calendarShifts');
-    return savedShifts ? JSON.parse(savedShifts) : [];
+    const savedSettings = localStorage.getItem('appSettings');
+    const settings = savedSettings ? JSON.parse(savedSettings) : {};
+    const currentShiftTypes = settings.shiftTypes || [];
+    
+    if (savedShifts) {
+      const parsedShifts = JSON.parse(savedShifts);
+      // Update existing shifts with latest shift type data
+      return parsedShifts.map((shift: ShiftAssignment) => {
+        const updatedShiftType = currentShiftTypes.find((type: ShiftType) => type.name === shift.shiftType.name);
+        return updatedShiftType ? { ...shift, shiftType: updatedShiftType } : shift;
+      });
+    }
+    return [];
   });
   const [shiftTypes, setShiftTypes] = useState<ShiftType[]>([]);
   const [paydaySettings, setPaydaySettings] = useState<PaydaySettings>({
@@ -374,11 +386,19 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
     const handleStorageChange = () => {
       const savedSwaps = localStorage.getItem('swaps');
       const savedNotes = localStorage.getItem('notes');
+      const savedSettings = localStorage.getItem('appSettings');
+
       if (savedSwaps) {
         setSwaps(JSON.parse(savedSwaps));
       }
       if (savedNotes) {
         setNotes(JSON.parse(savedNotes));
+      }
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        if (settings.shiftTypes) {
+          setShiftTypes(settings.shiftTypes);
+        }
       }
     };
 
