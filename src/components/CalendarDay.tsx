@@ -98,7 +98,7 @@ const CalendarDay = ({
         theme === 'dark' && !shift && "hover:bg-accent/50 data-[state=open]:bg-accent/50"
       )}
       style={shift && visualizerTypes && visualizerTypes.includes('colour') ? {
-        background: shift.shiftType.gradient,
+        background: shift.shiftType.visualTags?.color || shift.shiftType.gradient,
         color: theme === 'dark' ? textColor : 'inherit'
       } : undefined}
       onClick={() => onDayClick(date)}
@@ -149,7 +149,7 @@ const CalendarDay = ({
           calendarSize === 'large' ? "text-sm sm:text-base" : "text-[8px] sm:text-xs",
           visualizerTypes.includes('colour') ? "text-white" : theme === 'dark' ? "text-white" : "text-black"
         )} title={shift.shiftType.name}>
-          {shift.shiftType.name}
+          {shift.shiftType.visualTags?.text || shift.shiftType.name}
         </span>
       )}
       {shift && visualizerTypes && visualizerTypes.includes('label') && (
@@ -158,7 +158,7 @@ const CalendarDay = ({
           calendarSize === 'large' ? "text-2xl sm:text-3xl" : "text-base sm:text-lg",
           visualizerTypes.includes('colour') ? "text-white" : theme === 'dark' ? "text-white" : "text-black"
         )}>
-          {shift.shiftType.symbol || shift.shiftType.name.charAt(0)}
+          {shift.shiftType.visualTags?.label || shift.shiftType.symbol || shift.shiftType.name.charAt(0)}
         </span>
       )}
     </Button>

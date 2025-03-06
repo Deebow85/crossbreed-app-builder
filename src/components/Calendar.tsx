@@ -48,19 +48,7 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [shifts, setShifts] = useState<ShiftAssignment[]>(() => {
     const savedShifts = localStorage.getItem('calendarShifts');
-    const savedSettings = localStorage.getItem('appSettings');
-    const settings = savedSettings ? JSON.parse(savedSettings) : {};
-    const currentShiftTypes = settings.shiftTypes || [];
-    
-    if (savedShifts) {
-      const parsedShifts = JSON.parse(savedShifts);
-      // Update existing shifts with latest shift type data
-      return parsedShifts.map((shift: ShiftAssignment) => {
-        const updatedShiftType = currentShiftTypes.find((type: ShiftType) => type.name === shift.shiftType.name);
-        return updatedShiftType ? { ...shift, shiftType: updatedShiftType } : shift;
-      });
-    }
-    return [];
+    return savedShifts ? JSON.parse(savedShifts) : [];
   });
   const [shiftTypes, setShiftTypes] = useState<ShiftType[]>([]);
   const [paydaySettings, setPaydaySettings] = useState<PaydaySettings>({
@@ -107,13 +95,24 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
   }, [notes]);
 
   useEffect(() => {
-    const loadSettings = () => {
+    const handleStorageChange = () => {
       const savedSettings = localStorage.getItem('appSettings');
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
         setCalendarSize(settings.calendarSize || 'small');
         if (settings.shiftTypes) {
           setShiftTypes(settings.shiftTypes);
+          
+          // Update existing shifts with new shift type data
+          const savedShifts = localStorage.getItem('calendarShifts');
+          if (savedShifts) {
+            const parsedShifts = JSON.parse(savedShifts);
+            const updatedShifts = parsedShifts.map((shift: ShiftAssignment) => {
+              const updatedShiftType = settings.shiftTypes.find((type: ShiftType) => type.name === shift.shiftType.name);
+              return updatedShiftType ? { ...shift, shiftType: updatedShiftType } : shift;
+            });
+            setShifts(updatedShifts);
+          }
         }
         if (settings.paydayDate !== undefined) {
           setPaydaySettings(prev => ({
@@ -123,10 +122,23 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
           }));
         }
       }
+
+      const savedSwaps = localStorage.getItem('swaps');
+      if (savedSwaps) {
+        setSwaps(JSON.parse(savedSwaps));
+      }
+
+      const savedNotes = localStorage.getItem('notes');
+      if (savedNotes) {
+        setNotes(JSON.parse(savedNotes));
+      }
     };
 
-    loadSettings();
-    window.addEventListener('storage', loadSettings);
+    // Initial load
+    handleStorageChange();
+    
+    // Set up storage event listener
+    window.addEventListener('storage', handleStorageChange);
     
     // Check for pattern data and apply if present
     const patternData = sessionStorage.getItem('patternData');
@@ -138,7 +150,7 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
       sessionStorage.removeItem('patternData');
     }
     
-    return () => window.removeEventListener('storage', loadSettings);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   // **************************************************************************

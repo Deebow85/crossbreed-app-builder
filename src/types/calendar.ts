@@ -8,6 +8,11 @@ export type ShiftType = {
   isTOIL?: boolean;
   isSwapDone?: boolean;
   isSwapOwed?: boolean;
+  visualTags?: {
+    text?: string;      // For text visualization (defaults to name)
+    color?: string;     // For color visualization (defaults to color)
+    label?: string;     // For label visualization (defaults to symbol or first char of name)
+  };
 };
 
 export type ShiftAssignment = {

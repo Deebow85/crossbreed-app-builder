@@ -34,6 +34,11 @@ interface ShiftTypeSettings {
   isTOIL?: boolean;
   isSwapDone?: boolean;
   isSwapOwed?: boolean;
+  visualTags?: {
+    text?: string;      // For text visualization (defaults to name)
+    color?: string;     // For color visualization (defaults to color)
+    label?: string;     // For label visualization (defaults to symbol or first char of name)
+  };
 }
 
 interface ShiftPattern {
@@ -154,10 +159,24 @@ const ShiftSetup = () => {
 
   const updateShiftType = (index: number, field: keyof ShiftTypeSettings, value: string) => {
     const newShiftTypes = [...shiftTypes];
-    newShiftTypes[index] = {
-      ...newShiftTypes[index],
-      [field]: value
-    };
+    
+    // Handle nested visualTags properties
+    if (field.toString().startsWith('visualTags.')) {
+      const tagField = field.toString().split('.')[1];
+      newShiftTypes[index] = {
+        ...newShiftTypes[index],
+        visualTags: {
+          ...newShiftTypes[index].visualTags,
+          [tagField]: value
+        }
+      };
+    } else {
+      newShiftTypes[index] = {
+        ...newShiftTypes[index],
+        [field]: value
+      };
+    }
+    
     saveShiftTypes(newShiftTypes);
   };
 
@@ -951,6 +970,77 @@ const ShiftSetup = () => {
               />
             </div>
             
+            <div className="space-y-4 mt-4">
+              <h3 className="text-sm font-medium">Visualization Tags</h3>
+              <div className="space-y-2">
+                <Label htmlFor="new-visual-text">Text Display (optional)</Label>
+                <Input
+                  id="new-visual-text"
+                  value={newShift.visualTags?.text || ''}
+                  onChange={(e) => setNewShift({
+                    ...newShift,
+                    visualTags: {
+                      ...newShift.visualTags,
+                      text: e.target.value
+                    }
+                  })}
+                  className="w-full"
+                  placeholder={newShift.name}
+                />
+                <p className="text-xs text-muted-foreground">Leave empty to use shift name</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-visual-label">Label Display (optional)</Label>
+                <Input
+                  id="new-visual-label"
+                  value={newShift.visualTags?.label || ''}
+                  onChange={(e) => setNewShift({
+                    ...newShift,
+                    visualTags: {
+                      ...newShift.visualTags,
+                      label: e.target.value
+                    }
+                  })}
+                  className="w-full"
+                  maxLength={2}
+                  placeholder={newShift.symbol || newShift.name.charAt(0)}
+                />
+                <p className="text-xs text-muted-foreground">Leave empty to use symbol or first letter</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-visual-color">Custom Color (optional)</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="new-visual-color"
+                    type="color"
+                    value={newShift.visualTags?.color || newShift.color}
+                    onChange={(e) => setNewShift({
+                      ...newShift,
+                      visualTags: {
+                        ...newShift.visualTags,
+                        color: e.target.value
+                      }
+                    })}
+                    className="w-16 h-10 p-1"
+                  />
+                  <Input
+                    type="text"
+                    value={newShift.visualTags?.color || ''}
+                    onChange={(e) => setNewShift({
+                      ...newShift,
+                      visualTags: {
+                        ...newShift.visualTags,
+                        color: e.target.value
+                      }
+                    })}
+                    className="flex-1"
+                    placeholder={newShift.color}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">Leave empty to use shift color</p>
+              </div>
+            </div>
+            
             <div className="flex items-center gap-4">
               <div
                 className="w-16 h-16 rounded-md border"
@@ -1337,6 +1427,55 @@ const ShiftSetup = () => {
                     onChange={(e) => setEndColor(e.target.value)}
                     className="w-full h-10"
                   />
+                </div>
+              )}
+
+              {selectedIndex !== null && (
+                <div className="space-y-4 mt-4">
+                  <h3 className="text-sm font-medium">Visualization Tags</h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="visual-text">Text Display (optional)</Label>
+                    <Input
+                      id="visual-text"
+                      value={shiftTypes[selectedIndex].visualTags?.text || ''}
+                      onChange={(e) => updateShiftType(selectedIndex, 'visualTags.text', e.target.value)}
+                      className="w-full"
+                      placeholder={shiftTypes[selectedIndex].name}
+                    />
+                    <p className="text-xs text-muted-foreground">Leave empty to use shift name</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="visual-label">Label Display (optional)</Label>
+                    <Input
+                      id="visual-label"
+                      value={shiftTypes[selectedIndex].visualTags?.label || ''}
+                      onChange={(e) => updateShiftType(selectedIndex, 'visualTags.label', e.target.value)}
+                      className="w-full"
+                      maxLength={2}
+                      placeholder={shiftTypes[selectedIndex].symbol || shiftTypes[selectedIndex].name.charAt(0)}
+                    />
+                    <p className="text-xs text-muted-foreground">Leave empty to use symbol or first letter</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="visual-color">Custom Color (optional)</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="visual-color"
+                        type="color"
+                        value={shiftTypes[selectedIndex].visualTags?.color || shiftTypes[selectedIndex].color}
+                        onChange={(e) => updateShiftType(selectedIndex, 'visualTags.color', e.target.value)}
+                        className="w-16 h-10 p-1"
+                      />
+                      <Input
+                        type="text"
+                        value={shiftTypes[selectedIndex].visualTags?.color || ''}
+                        onChange={(e) => updateShiftType(selectedIndex, 'visualTags.color', e.target.value)}
+                        className="flex-1"
+                        placeholder={shiftTypes[selectedIndex].color}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">Leave empty to use shift color</p>
+                  </div>
                 </div>
               )}
 
