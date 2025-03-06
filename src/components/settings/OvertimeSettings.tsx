@@ -1,6 +1,6 @@
 
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { PillSwitch } from "@/components/ui/pill-switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { AppSettings } from "@/types/settings";
@@ -16,7 +16,7 @@ export function OvertimeSettings({ settings, onSave }: OvertimeSettingsProps) {
       <div className="space-y-1.5">
         <Label className="text-xs">Enable Overtime Tracking</Label>
         <div className="flex items-center space-x-2">
-          <Switch
+          <PillSwitch
             checked={settings.overtime?.enabled ?? true}
             onCheckedChange={(checked) => {
               onSave({
