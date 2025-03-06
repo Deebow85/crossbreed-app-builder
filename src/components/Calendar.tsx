@@ -387,6 +387,7 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
       const savedSwaps = localStorage.getItem('swaps');
       const savedNotes = localStorage.getItem('notes');
       const savedSettings = localStorage.getItem('appSettings');
+      const savedShifts = localStorage.getItem('calendarShifts');
 
       if (savedSwaps) {
         setSwaps(JSON.parse(savedSwaps));
@@ -398,6 +399,16 @@ const Calendar = ({ isSelectingMultiple = false }: CalendarProps) => {
         const settings = JSON.parse(savedSettings);
         if (settings.shiftTypes) {
           setShiftTypes(settings.shiftTypes);
+          
+          // Update existing shifts with new shift type data
+          if (savedShifts) {
+            const parsedShifts = JSON.parse(savedShifts);
+            const updatedShifts = parsedShifts.map((shift: ShiftAssignment) => {
+              const updatedShiftType = settings.shiftTypes.find((type: ShiftType) => type.name === shift.shiftType.name);
+              return updatedShiftType ? { ...shift, shiftType: updatedShiftType } : shift;
+            });
+            setShifts(updatedShifts);
+          }
         }
       }
     };
