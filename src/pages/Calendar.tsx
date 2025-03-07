@@ -9,6 +9,7 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/comp
 import { Calendar as CalendarUI } from "@/components/ui/calendar";
 import { AppSettings, defaultSettings } from "@/types/settings";
 import { useToast } from "@/components/ui/use-toast";
+import { ComparisonCalendar } from "@/components/ComparisonCalendar";
 
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -104,12 +105,10 @@ const Calendar = () => {
           </Button>
         </div>
 
-        <CalendarUI
-          mode="single"
-          selected={selectedDate}
-          onSelect={handleDateSelect}
-          initialFocus
-          className="mx-auto"
+        <ComparisonCalendar
+          currentDate={currentDate}
+          selectedDate={selectedDate}
+          onDateSelect={handleDateSelect}
         />
       </Card>
 
