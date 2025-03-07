@@ -10,18 +10,37 @@ const QR_CODE_API = "https://api.qrserver.com/v1/create-qr-code/";
 export function ShareQRCode() {
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
   const [appUrl, setAppUrl] = useState<string>("");
+  const [networkIp, setNetworkIp] = useState<string>("192.168.4.26"); // Default IP
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    // Get the app URL from the capacitor config or use the current URL if not available
-    const hostedAppUrl = "https://29ba2954-667b-4ebd-9b92-e8e6252aa0d3.lovableproject.com?forceHideBadge=true";
-    setAppUrl(hostedAppUrl);
+    // Get the current window location
+    const currentUrl = window.location.href;
+    // Remove any query parameters that might cause issues
+    const cleanUrl = currentUrl.split('?')[0];
     
-    // Generate QR code URL
-    const qrUrl = `${QR_CODE_API}?size=200x200&data=${encodeURIComponent(hostedAppUrl)}`;
+    // Replace localhost with the actual IP address for mobile access
+    let accessibleUrl = cleanUrl;
+    if (cleanUrl.includes('localhost') || cleanUrl.includes('127.0.0.1')) {
+      // Replace localhost with the computer's network IP
+      accessibleUrl = cleanUrl.replace(
+        /(https?:\/\/)(localhost|127\.0\.0\.1)(:[0-9]+)?(\/?.*)/, 
+        `$1${networkIp}$3$4`
+      );
+    }
+    
+    setAppUrl(accessibleUrl);
+    
+    // Generate QR code URL with higher resolution and error correction
+    const qrUrl = `${QR_CODE_API}?size=300x300&ecc=H&data=${encodeURIComponent(accessibleUrl)}`;
     setQrCodeUrl(qrUrl);
-  }, []);
+  }, [networkIp]);
+
+  // Function to handle IP address change
+  const handleIpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNetworkIp(e.target.value);
+  };
 
   const copyLinkToClipboard = () => {
     navigator.clipboard.writeText(appUrl).then(() => {
@@ -73,6 +92,23 @@ export function ShareQRCode() {
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col items-center justify-center p-4 space-y-4">
+          <div className="w-full mb-2">
+            <label htmlFor="networkIp" className="text-sm font-medium">
+              Your Network IP Address:
+            </label>
+            <input
+              id="networkIp"
+              type="text"
+              value={networkIp}
+              onChange={handleIpChange}
+              className="w-full p-2 mt-1 border rounded-md text-sm"
+              placeholder="192.168.x.x"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              This should match your computer's network IP address
+            </p>
+          </div>
+          
           {qrCodeUrl && (
             <div className="border rounded-lg p-2 bg-white">
               <img src={qrCodeUrl} alt="QR Code" width={200} height={200} />
