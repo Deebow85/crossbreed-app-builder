@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, CreditCard, HelpCircle, Settings as SettingsIcon, Paintbrush, Clock, ChevronDown, Bell } from "lucide-react";
+import { CalendarDays, CreditCard, HelpCircle, Settings as SettingsIcon, Paintbrush, Clock, ChevronDown, Bell, SplitSquareHorizontal } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -24,12 +24,14 @@ import { ThemeSettings } from "@/components/settings/ThemeSettings";
 import { PaydaySettings } from "@/components/settings/PaydaySettings";
 import { OvertimeSettings } from "@/components/settings/OvertimeSettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
+import { ComparisonSettings } from "@/components/settings/ComparisonSettings";
 import { AppSettings, defaultSettings } from "@/types/settings";
 
 const Settings = () => {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const [showTutorial, setShowTutorial] = useState(false);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+    comparison: false,
     calendar: false,
     theme: false,
     payment: false,
@@ -102,6 +104,24 @@ const Settings = () => {
 
       <Card className="flex-1 overflow-auto mb-20 w-full max-w-md">
         <div className="p-2 sm:p-4 space-y-3">
+          <Collapsible open={openSections.comparison} onOpenChange={() => toggleSection('comparison')}>
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex items-center justify-between w-full p-2"
+              >
+                <div className="flex items-center gap-2">
+                  <SplitSquareHorizontal className="h-4 w-4" />
+                  <span className="font-semibold">Calendar Comparison</span>
+                </div>
+                <ChevronDown className={cn("h-4 w-4 transition-transform", openSections.comparison && "transform rotate-180")} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <ComparisonSettings settings={settings} onSave={saveSettings} />
+            </CollapsibleContent>
+          </Collapsible>
+
           <Collapsible open={openSections.calendar} onOpenChange={() => toggleSection('calendar')}>
             <CollapsibleTrigger asChild>
               <Button
