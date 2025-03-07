@@ -4,7 +4,6 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, Settings, CheckSquare } from "lucide-react";
 import { AppSettings, defaultSettings } from "@/types/settings";
-import { ShareQRCode } from "./ShareQRCode";
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -97,7 +96,6 @@ const Layout = () => {
           
           <div className="flex gap-2" style={{ width: '150px', marginLeft: '10px' }}>
             <div className="flex-1 flex justify-end gap-2">
-              <ShareQRCode />
               <Button 
                 variant="ghost" 
                 className={`flex flex-col items-center justify-center h-16 w-16 rounded-none ${isNotesTrackingPage ? "bg-accent" : ""}`}

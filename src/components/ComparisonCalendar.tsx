@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Calendar as CalendarUI } from "@/components/ui/calendar";
-import { SplitSquareHorizontal, X } from "lucide-react";
+import { SplitSquareHorizontal, X, Share } from "lucide-react";
+import { ShareQRCode } from "./ShareQRCode";
 
 interface ComparisonCalendarProps {
   currentDate: Date;
@@ -40,7 +41,8 @@ export function ComparisonCalendar({ currentDate, selectedDate, onDateSelect }: 
 
   return (
     <div className="relative ComparisonCalendar">
-      <div className="absolute right-0 top-0 z-10">
+      <div className="absolute right-0 top-0 z-10 flex gap-2">
+        <ShareQRCode />
         <Button
           variant="outline"
           size="icon"
