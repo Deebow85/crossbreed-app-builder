@@ -2,14 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Banknote, ChevronLeft, ChevronRight, Clock, Settings, SplitSquareHorizontal } from "lucide-react";
+import { Banknote, ChevronLeft, ChevronRight, Clock, Settings } from "lucide-react";
 import { format, addDays, differenceInDays } from "date-fns";
 import { getNextPayday } from "@/utils/dateUtils";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Calendar as CalendarUI } from "@/components/ui/calendar";
 import { AppSettings, defaultSettings } from "@/types/settings";
 import { useToast } from "@/components/ui/use-toast";
-import { ComparisonCalendar } from "@/components/ComparisonCalendar";
 
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -105,10 +104,12 @@ const Calendar = () => {
           </Button>
         </div>
 
-        <ComparisonCalendar
-          currentDate={currentDate}
-          selectedDate={selectedDate}
-          onDateSelect={handleDateSelect}
+        <CalendarUI
+          mode="single"
+          selected={selectedDate}
+          onSelect={handleDateSelect}
+          initialFocus
+          className="mx-auto"
         />
       </Card>
 
@@ -133,31 +134,14 @@ const Calendar = () => {
             </div>
           </Button>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hover:bg-accent"
-              onClick={() => {
-                const comparisonCalendar = document.querySelector('.ComparisonCalendar');
-                if (comparisonCalendar) {
-                  const toggleButton = comparisonCalendar.querySelector('button');
-                  if (toggleButton) toggleButton.click();
-                }
-              }}
-            >
-              <SplitSquareHorizontal className="h-8 w-8" />
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hover:bg-accent"
-              onClick={() => navigate("/settings")}
-            >
-              <Settings className="h-8 w-8" />
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hover:bg-accent"
+            onClick={() => navigate("/settings")}
+          >
+            <Settings className="h-8 w-8" />
+          </Button>
         </div>
       </div>
     </div>

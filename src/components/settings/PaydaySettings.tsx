@@ -1,7 +1,7 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { PillSwitch } from "@/components/ui/pill-switch";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { AppSettings } from "@/types/settings";
@@ -116,7 +116,7 @@ export function PaydaySettings({ settings, onSave }: PaydaySettingsProps) {
       <div className="space-y-1.5">
         <Label className="text-xs">Enable Payday Tracking</Label>
         <div className="flex items-center space-x-2">
-          <PillSwitch
+          <Switch
             checked={settings.paydayEnabled ?? true}
             onCheckedChange={(checked) => {
               onSave({

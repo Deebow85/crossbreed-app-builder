@@ -1,5 +1,5 @@
 
-import { PillSwitch } from "@/components/ui/pill-switch"
+import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -79,7 +79,7 @@ export function CalendarSettings({ settings, onSave }: CalendarSettingsProps) {
     <div className="space-y-4 p-2">
       <div className="grid gap-2">
         <div className="flex items-center space-x-2">
-          <PillSwitch 
+          <Switch 
             id="show-overlapping-dates" 
             checked={settings.showOverlappingDates}
             onCheckedChange={(checked) => {
@@ -93,7 +93,7 @@ export function CalendarSettings({ settings, onSave }: CalendarSettingsProps) {
         </div>
 
         <div className="flex items-center space-x-2">
-          <PillSwitch 
+          <Switch 
             id="long-press-enabled" 
             checked={settings.longPressEnabled}
             onCheckedChange={(checked) => {
@@ -107,13 +107,14 @@ export function CalendarSettings({ settings, onSave }: CalendarSettingsProps) {
         </div>
         
         <div className="flex items-center space-x-2">
-          <PillSwitch 
+          <Switch 
             id="show-icon-titles" 
             checked={settings.showIconTitles}
             onCheckedChange={handleShowIconTitlesChange}
           />
           <Label htmlFor="show-icon-titles">Show Icon Titles</Label>
         </div>
+
         <div className="space-y-2">
           <h3 className="font-medium text-sm">Shift Visualizer</h3>
           <div className="flex flex-col gap-2 ml-6 mt-2">

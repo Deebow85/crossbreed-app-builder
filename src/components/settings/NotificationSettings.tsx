@@ -1,6 +1,6 @@
 
 import { Label } from "@/components/ui/label";
-import { PillSwitch } from "@/components/ui/pill-switch";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AppSettings } from "@/types/settings";
@@ -38,7 +38,7 @@ export function NotificationSettings({ settings, onSave }: NotificationSettingsP
       <div className="space-y-1.5">
         <Label className="text-xs">Enable Notifications</Label>
         <div className="flex items-center space-x-2">
-          <PillSwitch
+          <Switch
             checked={settings.notifications?.enabled ?? true}
             onCheckedChange={(checked) => {
               onSave({
@@ -72,7 +72,7 @@ export function NotificationSettings({ settings, onSave }: NotificationSettingsP
       <div className="space-y-1.5">
         <Label className="text-xs">Sound Notifications</Label>
         <div className="flex items-center space-x-2">
-          <PillSwitch
+          <Switch
             checked={settings.notifications?.sound ?? true}
             onCheckedChange={(checked) => {
               onSave({
@@ -91,7 +91,7 @@ export function NotificationSettings({ settings, onSave }: NotificationSettingsP
       <div className="space-y-1.5">
         <Label className="text-xs">Vibration</Label>
         <div className="flex items-center space-x-2">
-          <PillSwitch
+          <Switch
             checked={settings.notifications?.vibration ?? true}
             onCheckedChange={(checked) => {
               onSave({

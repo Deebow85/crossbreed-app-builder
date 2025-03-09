@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Settings, CheckSquare, SplitSquareHorizontal } from "lucide-react";
+import { CalendarDays, Settings, CheckSquare } from "lucide-react";
 import { AppSettings, defaultSettings } from "@/types/settings";
 
 const Layout = () => {
@@ -57,7 +57,7 @@ const Layout = () => {
 
       <nav className="fixed bottom-0 left-0 right-0 bg-background border-t py-2 z-50">
         <div className="container max-w-md mx-auto flex justify-between items-center px-4">
-          <div className="flex gap-4">
+          <div className="flex gap-2">
             <Button 
               variant={isIndexPage ? "ghost" : "ghost"}
               size="icon"
@@ -81,24 +81,6 @@ const Layout = () => {
             )}
           </div>
           
-          {isIndexPage && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute left-2/5 -translate-x-1/2 flex flex-col items-center justify-center h-16 w-16 rounded-none"
-              onClick={() => {
-                const comparisonCalendar = document.querySelector('.ComparisonCalendar');
-                if (comparisonCalendar) {
-                  const toggleButton = comparisonCalendar.querySelector('button');
-                  if (toggleButton) toggleButton.click();
-                }
-              }}
-            >
-              <SplitSquareHorizontal className="h-6 w-6" />
-              {settings.showIconTitles && <span className="text-xs mt-1">Split View</span>}
-            </Button>
-          )}
-          
           <div className="absolute left-1/2 -translate-x-1/2">
             <Button
               variant="ghost"
@@ -112,8 +94,8 @@ const Layout = () => {
             </Button>
           </div>
           
-          <div className="flex gap-2" style={{ width: '150px', marginLeft: '10px' }}>
-            <div className="flex-1 flex justify-end gap-2">
+          <div className="flex" style={{ width: '150px', marginLeft: '10px' }}>
+            <div className="flex-1 flex justify-end">
               <Button 
                 variant="ghost" 
                 className={`flex flex-col items-center justify-center h-16 w-16 rounded-none ${isNotesTrackingPage ? "bg-accent" : ""}`}
